@@ -6,6 +6,11 @@ import {dirname,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const booksDir=join(dirname(fileURLToPath(import.meta.url)),'..','public','books');
+const pdfFiles=readdirSync(booksDir).filter(f=>f.toLowerCase().endsWith('.pdf'));
+const temporaryPdfs=pdfFiles.filter(f=>/-(smaller|compressed|optimized)\.pdf$/i.test(f));
+if(temporaryPdfs.length){
+  throw new Error(`انقل نسخ PDF التجريبية خارج public/books قبل البناء: ${temporaryPdfs.join(', ')}`);
+}
 
 // القيم المعروفة من ملفات المنهج (للتحقق من صحة العدّ)
 const EXPECTED={
@@ -33,7 +38,7 @@ function countPages(buffer){
 }
 
 const manifest={};
-for(const file of readdirSync(booksDir).filter(f=>f.toLowerCase().endsWith('.pdf'))){
+for(const file of pdfFiles){
   const counted=countPages(readFileSync(join(booksDir,file)));
   manifest[file]=counted>0?counted:EXPECTED[file]??0;
   const expected=EXPECTED[file];

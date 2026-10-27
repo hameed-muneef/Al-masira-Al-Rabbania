@@ -1,0 +1,82 @@
+import {useEffect, useState} from 'react';
+
+export function prayerDate(now = new Date()) {
+  return `${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
+}
+
+export function parsePrayerTimes(data: unknown): Record<string,string> {
+  const names = {Fajr:'الفجر',Sunrise:'الشروق',Dhuhr:'الظهر',Asr:'العصر',Maghrib:'المغرب',Isha:'العشاء'};
+  const timings = data as Record<string,unknown> | undefined;
+  return Object.fromEntries(Object.entries(names).map(([key,name])=>{
+    const value = timings?.[key];
+    if(typeof value !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) throw new Error('Invalid prayer times');
+    return [name,value];
+  }));
+}
+
+const CACHE_KEY='rabbani-prayer-times-v1';
+type PrayerTimesCache={date:string;zone:string;times:Record<string,string>};
+function loadPrayerTimesCache(context:{date:string;zone:string}):PrayerTimesCache|null{
+  try{
+    const raw=localStorage.getItem(CACHE_KEY);
+    if(!raw)return null;
+    const entry=JSON.parse(raw) as PrayerTimesCache;
+    if(!entry||entry.date!==context.date||entry.zone!==context.zone||!entry.times||typeof entry.times!=='object')return null;
+    return entry;
+  }catch{return null}
+}
+
+export default function usePrayerTimes(enabled: boolean) {
+  const [context,setContext] = useState(()=>({date:prayerDate(),zone:Intl.DateTimeFormat().resolvedOptions().timeZone}));
+  const [attempt,setAttempt] = useState(0);
+  const [prayers,setPrayers] = useState<Record<string,string>>({});
+  const [status,setStatus] = useState('');
+  const [loading,setLoading] = useState(false);
+  useEffect(()=>{
+    const check = ()=>setContext(old=>{
+      const date=prayerDate(), zone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+      return old.date===date && old.zone===zone ? old : {date,zone};
+    });
+    const timer=window.setInterval(check,30000);
+    window.addEventListener('focus',check);
+    return ()=>{clearInterval(timer);window.removeEventListener('focus',check)};
+  },[]);
+  useEffect(()=>{
+    if(!enabled) return;
+    let active=true;
+    const controller=new AbortController();
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    if(!attempt){
+      const cached=loadPrayerTimesCache(context);
+      if(cached){
+        setPrayers(cached.times);
+        setStatus(`مواقيت اليوم محفوظة محليًا · ${context.date} · توقيت الجهاز: ${context.zone}`);
+        setLoading(false);
+        return ()=>{active=false};
+      }
+    }
+    setPrayers({});
+    setLoading(true);
+    setStatus('جارٍ تحديد موقعك من الجهاز أو المتصفح…');
+    const fail=(message:string)=>{if(active){setStatus(message);setLoading(false)}};
+    if(!navigator.geolocation || !window.isSecureContext){
+      fail('تحديد الموقع غير متاح. افتح الموقع عبر HTTPS أو استخدم الإدخال اليدوي.');
+    } else navigator.geolocation.getCurrentPosition(async position=>{
+      if(!active) return;
+      setStatus('جارٍ جلب مواقيت اليوم حسب موقعك…');
+      timeout=setTimeout(()=>controller.abort(),15000);
+      try {
+        const query=new URLSearchParams({latitude:String(position.coords.latitude),longitude:String(position.coords.longitude),timezonestring:context.zone});
+        const response=await fetch(`https://api.aladhan.com/v1/timings/${context.date}?${query}`,{signal:controller.signal});
+        if(!response.ok) throw new Error('Request failed');
+        const body=await response.json();
+        if(body.code!==200 || body.data?.date?.gregorian?.date!==context.date) throw new Error('Invalid date');
+        const times=parsePrayerTimes(body.data?.timings);
+        if(active){setPrayers(times);try{localStorage.setItem(CACHE_KEY,JSON.stringify({date:context.date,zone:context.zone,times}))}catch{}setStatus(`مواقيت اليوم حسب موقعك · ${context.date} · توقيت الجهاز: ${context.zone}`);setLoading(false)}
+      } catch {fail('تعذر جلب المواقيت. تحقق من الاتصال ثم أعد المحاولة، أو أدخلها يدويًا.')}
+      finally {clearTimeout(timeout)}
+    },error=>fail(error.code===1?'لم يُسمح بالوصول للموقع. فعّل إذن الموقع من المتصفح ثم أعد المحاولة، أو أدخل المواقيت يدويًا.':'تعذر تحديد موقعك. فعّل خدمة الموقع ثم أعد المحاولة، أو أدخل المواقيت يدويًا.'),{timeout:10000,maximumAge:0,enableHighAccuracy:false});
+    return ()=>{active=false;controller.abort();clearTimeout(timeout)};
+  },[enabled,context,attempt]);
+  return {prayers,status,loading,refresh:()=>setAttempt(value=>value+1)};
+}

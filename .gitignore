@@ -1,0 +1,11 @@
+node_modules/
+dist/
+output/
+tmp/
+*.tsbuildinfo
+.env.local
+.env.*.local
+*.local.png
+book-page-5.png
+book-reader-preview.png
+learning-preview.png

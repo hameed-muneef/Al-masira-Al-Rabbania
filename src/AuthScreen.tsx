@@ -20,7 +20,7 @@ export default function AuthScreen({onDemo,allowDemo=true,admin=false}:{onDemo:(
     setBusy(true);
     try{
       if(mode==='register'){
-        const {data,error}=await authClient.auth.signUp({email:email.trim(),password});
+        const {data,error}=await authClient.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:window.location.origin+(admin?'/admin':'/')}});
         if(error)throw error;
         if(!data.session)setMessage(admin?'افتح رسالة التأكيد في بريدك، ثم عُد إلى صفحة /admin لتسجيل الدخول بصلاحية المشرف.':'تم إرسال رسالة تأكيد إلى بريدك الإلكتروني. افتحها لتفعيل حسابك ثم سجّل الدخول.');
       }else{
@@ -34,6 +34,7 @@ export default function AuthScreen({onDemo,allowDemo=true,admin=false}:{onDemo:(
       <section className="auth-form-side" aria-labelledby="auth-title">
         <div className="auth-logo"><span><BookOpen size={25}/></span><div><strong>الرَّبَّانِيُّون</strong><small>{admin?'بوابة إدارة المنصة':'علمٌ يُثمر إيمانًا، وإيمانٌ يُثمر عملًا'}</small></div></div>
         <div className="auth-form-wrap">
+          <nav className="auth-role-switch" aria-label="اختيار الواجهة"><a href="/" aria-current={!admin?'page':undefined}>واجهة المستخدم</a><a href="/admin" aria-current={admin?'page':undefined}>دخول المشرف</a></nav>
           <span className="auth-eyebrow">{admin?'مدخل المشرفين':'مسيرتك تبدأ هنا'}</span>
           <h1 id="auth-title">{admin?(mode==='register'?'إنشاء حساب المشرف':'دخول المشرف'):mode==='register'?'أنشئ حسابك':'مرحبًا بعودتك'}</h1>
           <p className="auth-lead">{admin?'سجّل بالبريد المخصص للإدارة. تُفعّل الصلاحية بعد تأكيد البريد والتحقق من اعتماده.':mode==='register'?'خطوة صغيرة اليوم، وأثر يبقى معك كل يوم.':'أكمل ما بدأت، وتابع خطواتك في العلم والعمل.'}</p>
@@ -46,7 +47,7 @@ export default function AuthScreen({onDemo,allowDemo=true,admin=false}:{onDemo:(
             <button className="auth-submit" type="submit" disabled={busy||!authClient}>{busy?'جارٍ المتابعة...':mode==='register'?'إنشاء الحساب':'الدخول إلى حسابي'}<ArrowLeft size={18}/></button>
           </form>
           {!authClient&&<div className="auth-setup"><ShieldCheck size={19}/><p>الحسابات الحقيقية بانتظار ربط خدمة المصادقة. يمكنك الآن استخدام النسخة التجريبية على هذا الجهاز.</p></div>}
-          {allowDemo?<button className="auth-demo" onClick={onDemo}>استكشاف المنصة دون حساب <ArrowLeft size={17}/></button>:<a className="auth-demo" href="/">العودة إلى واجهة المستخدم <ArrowLeft size={17}/></a>}
+          {allowDemo&&<button className="auth-demo" onClick={onDemo}>استكشاف المنصة دون حساب <ArrowLeft size={17}/></button>}
         </div>
         <p className="auth-foot">الربانيون · مساحة تعينك على تنظيم يومك ومسيرتك</p>
       </section>

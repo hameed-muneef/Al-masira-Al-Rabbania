@@ -11,3 +11,7 @@ Cloudflare Pages has a 25 MiB limit per static asset. The `build:cloudflare` com
 7. In Supabase **Authentication → URL Configuration**, set **Site URL** to the new Pages production URL and add that URL plus its `/admin` path to **Redirect URLs**. Keep the Netlify URL only if you still intend to use it.
 
 Locally, `npm run build:cloudflare` produces the Cloudflare-ready `dist` folder using the Supabase URL in `.env.local`. The redirect build does not verify that the PDFs have already been uploaded, so complete step 2 before publishing.
+
+## If the dashboard created a Worker
+
+Workers Builds shows separate **Build command** and **Deploy command** fields instead of a build output directory. Set the build command to `npm run build:cloudflare` and keep the deploy command as `npx wrangler deploy`. The repository's `wrangler.jsonc` points static assets at `dist` and enables SPA routing for `/admin`. Save the build settings, push the configuration, and retry the deployment. The build log must include `Cloudflare Pages build ready: 16 PDF redirects to Supabase; 1 temporarily unavailable PDF omitted.` before Wrangler deploys assets.

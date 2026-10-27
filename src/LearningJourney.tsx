@@ -5,6 +5,7 @@ import {availableUnits, initialCurriculum, kindLabels, learningVideos, reviseUni
 import {savedBookPage,saveBookPage} from './reading-progress';
 import {uid} from './id';
 import {isUploadedBookUrl} from './book-upload';
+import {authClient} from './auth';
 import './learning-redesign.css';
 import './book-reader.css';
 import './learning-reader.css';
@@ -68,12 +69,14 @@ function ResourceLink({resource}:{resource:Resource}) {
   const allPdfPageCounts=useContext(PdfPageCountsContext);
   const [readerOpen,setReaderOpen]=useState(false);
   const closeReader=useCallback(()=>setReaderOpen(false),[]);
-  const href=safeUrl(resource.url);
+  const localHref=safeUrl(resource.url);
+  const cloudflareBook=import.meta.env.VITE_BOOKS_FROM_SUPABASE==='true'&&!!authClient&&/^\/books\/[a-z0-9_-]+\.pdf$/i.test(resource.url);
+  const href=cloudflareBook&&authClient?authClient.storage.from('journey-books').getPublicUrl(resource.url.slice('/books/'.length)).data.publicUrl:localHref;
   const temporarilyUnavailable=resource.url==='/books/qawaid-al-suluk.pdf';
   const bookMatch=resource.kind==='book'?/^https:\/\/shamela\.ws\/book\/37562\/(\d+)/.exec(resource.url):null;
   const bookPage=bookMatch?Number(bookMatch[1]):null;
   const remotePdf=isUploadedBookUrl(resource.url);
-  const pdfHere=!temporarilyUnavailable&&resource.kind==='book'&&!!href&&(/^\/books\/[a-z0-9_-]+\.pdf$/i.test(href)||remotePdf);
+  const pdfHere=!temporarilyUnavailable&&resource.kind==='book'&&!!href&&(/^\/books\/[a-z0-9_-]+\.pdf$/i.test(resource.url)||remotePdf);
   const lastReadPage=pdfHere?savedBookPage(resource.id,remotePdf?Number.MAX_SAFE_INTEGER:allPdfPageCounts[resource.url.slice('/books/'.length)]??1):null;
   const readHere=!!bookPage||pdfHere;
   return <div className="learning-resource"><span className="resource-symbol">{resource.kind==='video'?<Film size={19}/>:resource.kind==='book'?<BookOpen size={19}/>:<FileText size={19}/>}</span><div><span className="resource-kind">{kindLabels[resource.kind]} · {resource.level==='extra'?'استزادة اختيارية':'مصدر أساسي'}</span>{temporarilyUnavailable?<strong>{resource.title} — غير متاح حاليًا</strong>:readHere?<button type="button" className="resource-read" aria-expanded={readerOpen} aria-controls={bookPage?`reader-${resource.id}`:undefined} onClick={()=>setReaderOpen(!readerOpen)}>{resource.title}<BookOpen size={14}/></button>:href?<a href={href} target="_blank" rel="noopener noreferrer">{resource.title}<ExternalLink size={13}/></a>:<strong>{resource.title} — رابط غير صالح</strong>}<small>{resource.author} · {resource.reference}</small>{lastReadPage&&<small className="resource-progress">آخر صفحة وصلت إليها: {lastReadPage.toLocaleString('ar-EG')} · افتح الكتاب للمتابعة منها أو للانتقال إلى صفحة أخرى.</small>}{bookPage&&readerOpen&&<div id={`reader-${resource.id}`} className="learning-inline-reader"><Suspense fallback={<p className="muted">جارٍ تحميل الكتاب…</p>}><BookReader startPage={bookPage}/></Suspense></div>}{pdfHere&&href&&readerOpen&&<PdfBookReader resource={resource} href={href} onClose={closeReader}/>}</div></div>;

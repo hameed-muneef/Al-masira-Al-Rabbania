@@ -1,0 +1,40 @@
+.teacher-view{display:grid;gap:18px}
+.teacher-notice{padding:12px 16px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-selected);color:var(--color-success)}
+.teacher-notice.error{background:#f8ece9;border-color:#dfbbb4;color:var(--color-error)}
+.teacher-overview h2,.teacher-application h2{margin-top:0}
+.teacher-application form{display:grid;gap:14px}
+.teacher-application label{display:grid;gap:6px;font-size:14px;font-weight:700}
+.teacher-application input,.teacher-application textarea{width:100%;max-width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;color:var(--color-ink);font:inherit}
+.teacher-application .primary{justify-self:start}
+.teacher-status{display:flex;flex-wrap:wrap;gap:8px 16px;padding:12px;border-radius:var(--radius-sm);background:var(--color-selected)}
+.teacher-status strong{flex-basis:100%}
+.teacher-status p{flex-basis:100%;margin:0}
+@media(max-width:750px){.teacher-application .primary{width:100%}}
+.teacher-review-panel{margin-block:18px}
+.teacher-review-list{list-style:none;padding:0;display:grid;gap:8px}
+.teacher-review-list li{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px;border:1px solid var(--color-border);border-radius:var(--radius-sm)}
+.teacher-review-list li button{margin-inline-start:auto}
+.teacher-review-form{display:grid;gap:10px;padding:16px;border:1px solid var(--color-border);border-radius:var(--radius-sm)}
+.teacher-review-form p{margin:0;overflow-wrap:anywhere}
+.teacher-review-form label{display:grid;gap:5px}
+.teacher-review-form .feature-checkbox{display:flex;align-items:center;justify-content:flex-start;gap:8px}
+.teacher-review-form .feature-checkbox input{width:auto;margin:0;flex:none}
+.teacher-review-form select,.teacher-review-form textarea{width:100%;max-width:100%;padding:8px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);font:inherit}
+.teacher-review-form .teacher-suspend{display:flex;align-items:center;gap:8px}
+.teacher-review-actions{display:flex;gap:8px;flex-wrap:wrap}
+.course-manager{display:grid;gap:14px}
+.course-manager h2,.course-manager h3,.course-manager p{margin-block:0}
+.course-manager form{display:grid;gap:12px;padding:16px;border:1px solid var(--color-border);border-radius:var(--radius-sm)}
+.course-manager form label{display:grid;gap:5px;font-weight:700;font-size:14px}
+.course-manager input,.course-manager textarea,.course-manager select{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;color:var(--color-ink);font:inherit}
+.course-manager>.primary,.course-manager form>.primary{justify-self:start}
+.course-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.course-list li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px;border:1px solid var(--color-border);border-radius:var(--radius-sm)}
+.course-list li p{margin:4px 0;overflow-wrap:anywhere}
+.course-actions{display:flex;flex-wrap:wrap;gap:8px;align-content:start}
+@media(max-width:750px){.course-manager>.primary,.course-manager form>.primary{width:100%}}
+.course-lessons{flex-basis:100%;display:grid;gap:10px;padding:12px;background:var(--color-surface-soft);border-radius:var(--radius-sm)}
+.course-lessons h4,.course-lessons h5,.course-lessons p{margin-block:0}
+.course-lessons ol{padding-inline-start:24px;margin:0;display:grid;gap:10px}
+.course-lessons li{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--color-surface);overflow-wrap:anywhere}
+.course-lessons form{background:var(--color-surface)}

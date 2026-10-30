@@ -1,5 +1,6 @@
 import type {Period,State,Task} from './app-state';
 import type {DayRecords} from './day-tracking';
+import {isTaskDone,markTaskDone} from './task-periods';
 import {goalWeekKey,goalWeeksInYear} from './goal-plan';
 
 export function weekDays(weekStart:string):string[]{
@@ -51,8 +52,8 @@ export function replacePeriodTasks(state:State,period:Period,tasks:Task[]):State
     const date=task.scheduledDate;
     if((period!=='weekly'&&period!=='monthly')||!date||!dayRecords[date])continue;
     const previous=state.tasks.find(item=>item.id===task.id);
-    if(previous?.done===task.done)continue;
-    dayRecords[date]={...dayRecords[date],items:dayRecords[date].items.map(item=>item.id===`extra:${task.id}`?{...item,status:task.done?'done':'pending'}:item)};
+    if(previous&&isTaskDone(previous)===isTaskDone(task))continue;
+    dayRecords[date]={...dayRecords[date],items:dayRecords[date].items.map(item=>item.id===`extra:${task.id}`?{...item,status:isTaskDone(task)?'done':'pending'}:item)};
   }
   return {...state,tasks:[...state.tasks.filter(task=>task.period!==period),...tasks],dayRecords};
 }
@@ -61,6 +62,6 @@ export function updateDayRecords(state:State,dayRecords:DayRecords):State{
     if((task.period!=='weekly'&&task.period!=='monthly')||!task.scheduledDate)return task;
     const entry=dayRecords[task.scheduledDate]?.items.find(item=>item.id===`extra:${task.id}`);
     const previous=state.dayRecords?.[task.scheduledDate]?.items.find(item=>item.id===`extra:${task.id}`);
-    return entry&&entry.status!==previous?.status?{...task,done:entry.status==='done'}:task;
+    return entry&&entry.status!==previous?.status?markTaskDone(task,entry.status==='done'):task;
   })};
 }

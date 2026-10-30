@@ -1,13 +1,13 @@
 export type ActivityTiming = {anchor:string; offset:number};
 export const activityDuration = (duration?:number) => Number.isInteger(duration) && duration! > 0 && duration! <= 720 ? duration! : 30;
 export function activitySchedule(slot:string,items:{duration?:number;timing?:ActivityTiming}[],anchors:Record<string,string>) {
-  const base=items[0]?.timing ?? defaultActivityTiming(slot,0);
   let elapsed=0;
   return items.map(item=>{
     const duration=activityDuration(item.duration);
-    const start=resolveActivityTime({...base,offset:base.offset+elapsed},anchors);
-    elapsed+=duration;
-    const end=resolveActivityTime({...base,offset:base.offset+elapsed},anchors);
+    const base=item.timing??defaultActivityTiming(slot,0);
+    const start=resolveActivityTime({...base,offset:base.offset+(item.timing?0:elapsed)},anchors);
+    const end=resolveActivityTime({...base,offset:base.offset+(item.timing?duration:elapsed+duration)},anchors);
+    if(!item.timing)elapsed+=duration;
     return {start,end,duration};
   });
 }
@@ -20,6 +20,10 @@ export function offsetTime(time: string | undefined, offset: number) {
 }
 export const timeLabel = (time?: string) => time && offsetTime(time,0) ? new Intl.DateTimeFormat('ar-EG',{hour:'numeric',minute:'2-digit'}).format(new Date(`2000-01-01T${time}:00`)) : '';
 export function defaultActivityTiming(slot:string,index:number):ActivityTiming {
+  if(slot==='before-fajr-30')return {anchor:'الفجر',offset:-30};
+  if(/^after-(fajr|dhuhr|asr|maghrib|isha)-\d+$/.test(slot))return {anchor:slot,offset:0};
+  const match=/^time-(\d{2})-(\d{2})$/.exec(slot);
+  if(match)return {anchor:slot,offset:index*30};
   const defaults:Record<string,ActivityTiming>={before:{anchor:'الفجر',offset:-30},morning:{anchor:'الفجر',offset:20},sunrise:{anchor:'الشروق',offset:0},work:{anchor:'بداية العمل',offset:0},afternoon:{anchor:'الظهر',offset:20},evening:{anchor:'العصر',offset:20},sunset:{anchor:'المغرب',offset:20},night:{anchor:'العشاء',offset:20}};
   const base=defaults[slot] ?? {anchor:'الفجر',offset:0};
   return {...base,offset:base.offset+index*30};

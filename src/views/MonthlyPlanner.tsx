@@ -1,8 +1,10 @@
 import {useState} from 'react';
 import {CalendarDays,Plus,Trash2} from 'lucide-react';
 import type {Task} from '../app-state';
+import {isTaskDone,markTaskDone} from '../task-periods';
 import {goalPeriodKey} from '../goal-plan';
 import {monthDays,scheduleMonthlyTask,moveMonthlyTask} from '../weekly-planning';
+import {hijriDate} from '../hijri';
 import {uid} from '../id';
 import '../weekly-planning.css';
 
@@ -29,6 +31,7 @@ export default function MonthlyPlanner({tasks,onTasks}:Props){
         <button type="button" className="soft-btn" onClick={()=>changeMonth(goalPeriodKey('monthly'))}>الشهر الحالي</button>
       </div>
       <p className="week-range">{dateLabel(days[0])} — {dateLabel(days[days.length-1])}</p>
+      {hijriDate(days[0])&&<p className="week-hijri">الموافق هجريًا: {hijriDate(days[0])} — {hijriDate(days[days.length-1])}</p>}
       <p className="muted small">الشهور بالتقويم الميلادي. يظهر التاريخ بجوار كل يوم، مع مراعاة عدد أيام الشهر والسنة الكبيسة.</p>
     </section>
     <section className="panel" aria-label="مهام الشهر المختار">
@@ -41,11 +44,11 @@ export default function MonthlyPlanner({tasks,onTasks}:Props){
       <p className="muted small">عند تحديد يوم، تظهر المهمة وتنبيه بها في «تخطيط يومي» عند حلول ذلك التاريخ. عند النقل إلى شهر لا يحتوي اليوم المختار، تُحفظ المهمة دون يوم لتختار موعدًا جديدًا.</p>
       {!visible.length&&<p className="muted">لا توجد مهام لهذا الشهر بعد.</p>}
       <div className="task-list">{visible.map(task=><div className="weekly-task" key={task.id}>
-        <div className="task"><label className="task-main"><input type="checkbox" checked={task.done} onChange={()=>changeTask({...task,done:!task.done})}/><span className={task.done?'completed':''}>{task.title}</span></label><button className="icon-btn danger" aria-label={`حذف ${task.title}`} onClick={()=>onTasks(tasks.filter(item=>item.id!==task.id))}><Trash2 size={17}/></button></div>
+        <div className="task"><label className="task-main"><input type="checkbox" checked={isTaskDone(task)} onChange={()=>changeTask(markTaskDone(task,!isTaskDone(task)))}/><span className={isTaskDone(task)?'completed':''}>{task.title}</span></label><button className="icon-btn danger" aria-label={`حذف ${task.title}`} onClick={()=>onTasks(tasks.filter(item=>item.id!==task.id))}><Trash2 size={17}/></button></div>
         <div className="week-task-schedule"><label>اليوم<select aria-label={`يوم ${task.title}`} value={task.scheduledDate??''} onChange={event=>changeTask(scheduleMonthlyTask(task,monthKey,event.target.value))}><option value="">دون يوم محدد</option>{days.map(date=><option key={date} value={date}>{dateLabel(date)}</option>)}</select></label>
           <label>نقل إلى شهر<input aria-label={`شهر ${task.title}`} type="month" min="1970-01" max="9998-12" value={monthKey} onChange={event=>{const value=event.target.value;if(monthDays(value).length)changeTask(moveMonthlyTask(task,value))}}/></label></div>
       </div>)}</div>
     </section>
-    {unscheduled.length>0&&<section className="panel"><h2>مهام سابقة دون شهر محدد</h2><p className="muted">مهامك القديمة محفوظة؛ حدّد الشهر أعلاه ثم انقل المهمة إليه.</p>{unscheduled.map(task=><div className="task" key={task.id}><span className={task.done?'completed':''}>{task.title}</span><button type="button" className="soft-btn" onClick={()=>changeTask(scheduleMonthlyTask(task,monthKey))}>إلى الشهر المختار</button><button className="icon-btn danger" aria-label={`حذف ${task.title}`} onClick={()=>onTasks(tasks.filter(item=>item.id!==task.id))}><Trash2 size={17}/></button></div>)}</section>}
+    {unscheduled.length>0&&<section className="panel"><h2>مهام سابقة دون شهر محدد</h2><p className="muted">مهامك القديمة محفوظة؛ حدّد الشهر أعلاه ثم انقل المهمة إليه.</p>{unscheduled.map(task=><div className="task" key={task.id}><span className={isTaskDone(task)?'completed':''}>{task.title}</span><button type="button" className="soft-btn" onClick={()=>changeTask(scheduleMonthlyTask(task,monthKey))}>إلى الشهر المختار</button><button className="icon-btn danger" aria-label={`حذف ${task.title}`} onClick={()=>onTasks(tasks.filter(item=>item.id!==task.id))}><Trash2 size={17}/></button></div>)}</section>}
   </div>;
 }

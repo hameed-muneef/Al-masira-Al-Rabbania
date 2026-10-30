@@ -4,11 +4,13 @@ import {type DayRecords} from './day-tracking';
 import {type Goal} from './goal-plan';
 
 // أنواع الحالة المشتركة ومساعداتها، لاستخدامها في App والواجهات المستخرجة
-export type View='home'|'day'|'week'|'month'|'goals'|'learn'|'reflect'|'wird'|'settings';
+export type View='home'|'day'|'tasks'|'week'|'month'|'goals'|'learn'|'reflect'|'wird'|'circles'|'teacher'|'courses'|'study'|'profile'|'settings';
 export type Period='daily'|'weekly'|'monthly';
-export type Task={id:string;title:string;period:Period;done:boolean;optional:boolean;weekStart?:string;monthKey?:string;scheduledDate?:string};
+// doneKey: مفتاح الفترة التي تأشر فيها المهمة («يومي مع الله» جديد يوميًا، والأسبوعي والشهري مرتبطان بفترتهما)؛ راجع task-periods.ts
+export type Task={id:string;title:string;period:Period;done:boolean;optional:boolean;weekStart?:string;monthKey?:string;scheduledDate?:string;doneKey?:string;source?:{groupId:string;revision:number;position:number}};
+export type TaskSchedule={initialDate?:string;initialSlot?:string;confirmedDate?:string;confirmedSlot?:string;title:string;sourceLabel:string};
 export type Wird={id:string;title:string;target:number;count:number;period:Period;periodKey:string};
-export type State={curriculum?:Curriculum;dayPlan?:DayPlan;dayRecords?:DayRecords;tasks:Task[];goals:Goal[];wirds:Wird[];reflections:{id:string;date:string;text:string}[];lessonStep:number;prayers:Record<string,string>};
+export type State={curriculum?:Curriculum;dayPlan?:DayPlan;dayRecords?:DayRecords;taskSchedules?:Record<string,TaskSchedule>;tasks:Task[];goals:Goal[];wirds:Wird[];reflections:{id:string;date:string;text:string}[];lessonStep:number;prayers:Record<string,string>};
 
 export const today=()=>new Date().toLocaleDateString('en-CA');
 export const periodKey=(p:Period)=>{const d=new Date();if(p==='daily')return today();if(p==='monthly')return `${d.getFullYear()}-${d.getMonth()+1}`;const start=new Date(d.getFullYear(),0,1);return `${d.getFullYear()}-W${Math.ceil((((d.getTime()-start.getTime())/86400000)+start.getDay()+1)/7)}`};

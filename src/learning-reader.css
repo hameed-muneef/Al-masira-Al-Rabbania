@@ -39,3 +39,17 @@
 .book-jump input{width:76px;padding:6px 8px;border:1px solid #d4e1d3;border-radius:7px;background:#fff;color:#24533f;font:inherit;text-align:center}
 @media(max-width:600px){.learning-inline-reader{padding:14px 12px}.book-page-heading{flex-wrap:wrap}.book-jump{width:100%;justify-content:flex-start}}
 @media(max-width:600px){.fullscreen-book-header{gap:10px;min-height:60px;padding:8px 12px}.fullscreen-book-heading{font-size:14px}.fullscreen-book-heading svg{display:none}.fullscreen-book-close{padding:7px}.fullscreen-book-close span{display:none}.fullscreen-book-reader .pdf-reading-tools{gap:3px}.fullscreen-book-reader .pdf-reading-tools label{font-size:11px}.fullscreen-book-reader .pdf-reading-tools input{width:58px;min-height:34px;font-size:12px}.fullscreen-book-reader .pdf-reading-tools>span{font-size:11px}.fullscreen-book-reader .pdf-reading-footer{padding:8px 12px;gap:8px}.fullscreen-book-reader .pdf-reading-page-entry{width:100%}.fullscreen-book-reader .pdf-reading-hint{max-width:none}.fullscreen-book-reader .reading-last-page,.fullscreen-book-reader .reading-resume{font-size:11px}.fullscreen-book-reader .reading-save-status{bottom:70px}}
+.fullscreen-book-reader{height:100dvh}
+.fullscreen-book-header{flex-shrink:0;padding-top:max(8px,env(safe-area-inset-top))}
+.fullscreen-book-close{flex-shrink:0;min-width:44px;min-height:44px}
+.fullscreen-book-reader .pdf-reading-footer{padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.fullscreen-book-reader .reading-save-status{position:static;flex:none;margin:0;padding:5px 12px;background:#eaf1e9}
+@media(max-width:600px),(max-height:500px){
+  .fullscreen-book-reader .pdf-reading-footer{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:6px;padding-inline:10px}
+  .fullscreen-book-reader .pdf-reading-page-entry{width:auto;justify-content:flex-end}
+  .fullscreen-book-reader .pdf-reading-hint{display:none}
+  .fullscreen-book-reader .pdf-reading-tools input{font-size:16px;min-height:44px}
+  .fullscreen-book-reader .pdf-reading-navigation button,.fullscreen-book-reader .pdf-save-page,.fullscreen-book-reader .pdf-open-link{min-height:44px}
+  .fullscreen-book-reader .pdf-open-link{justify-content:flex-end}
+  .fullscreen-book-reader .reading-last-page,.fullscreen-book-reader .reading-resume{grid-column:1/-1}
+}

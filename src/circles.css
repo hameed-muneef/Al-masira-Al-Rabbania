@@ -1,0 +1,76 @@
+/* حلقات التواصي الخاص — TAW-002: أنماط العرض على هيئة الحلقة الخاصة، RTL ومتوافقة مع الجوال */
+.circles-view{display:grid;gap:18px}
+.circles-view .panel-head h2,.circles-view .panel-head h3{margin:0;font-size:18px;line-height:1.5}
+.circles-view .panel-head{flex-wrap:wrap}
+
+.circles-notice{margin:0;padding:12px 16px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-selected);color:var(--color-success);font-size:14px;line-height:1.8}
+.circles-notice.error{background:#f8ece9;border-color:#dfbbb4;color:var(--color-error)}
+
+.circles-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px}
+.circle-live-access{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.circle-live-access p{margin:6px 0 0}
+
+.circle-form form{display:grid;gap:14px;margin-top:16px}
+.circle-form .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.circle-form label{display:grid;gap:6px;font-size:14px;font-weight:700;color:var(--color-body)}
+.circle-form input,.circle-form select,.circle-form textarea{width:100%;min-height:42px;padding:9px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;font:inherit;color:var(--color-ink);box-sizing:border-box;line-height:1.6}
+.circle-form textarea{resize:vertical}
+.circle-form .primary{justify-self:start;min-width:150px}
+.circle-form>p{margin:2px 0 0}
+
+.circle-card h2{font-size:19px;color:var(--color-ink);margin:0}
+.circles-flag{border-radius:999px;padding:3px 12px;font-size:12px;font-weight:800;background:var(--color-selected);color:var(--color-success)}
+.circles-flag.closed{background:#f3e7d7;color:var(--color-warning)}
+.circles-role{border-radius:999px;padding:3px 12px;font-size:12px;font-weight:800;background:var(--color-surface-soft);color:var(--color-muted)}
+.circle-kind{margin:0 0 8px}
+.circle-meta{list-style:none;margin:0 0 10px;padding:0;display:flex;flex-wrap:wrap;gap:5px 18px;font-size:13px;color:var(--color-muted)}
+.circle-text{margin:6px 0;font-size:14px;line-height:1.85;overflow-wrap:anywhere}
+.circle-text strong{color:var(--color-ink)}
+.circle-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border)}
+.circle-actions .circles-notice{flex:1 1 100%}
+.circle-invites{margin-top:16px;padding-top:16px;border-top:1px solid var(--color-border)}
+.circle-invites h3{margin:0 0 10px;font-size:16px}
+.circle-invites ul{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px}
+.circle-invites li{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px}
+.circle-invites li select{padding:6px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface-soft);font:inherit}
+.circle-session-form{display:grid;gap:12px;margin-top:16px}
+.circle-session-form label{display:grid;gap:6px;font-size:14px;font-weight:700;color:var(--color-body)}
+.circle-session-form input,.circle-session-form textarea{width:100%;min-width:0;box-sizing:border-box;padding:9px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;font:inherit;color:var(--color-ink)}
+.circle-session-form .circle-meet-create,.circle-session-form .primary{justify-self:start}
+.circle-session-form p{margin:0}
+.circle-invite-created{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.circle-invite-created p{flex-basis:100%;margin:0;font-size:13px}
+.circle-invite-created input{flex:1;min-width:200px;padding:9px;border:1px solid var(--color-border);border-radius:var(--radius-sm)}
+.circle-preview{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--color-surface-soft)}
+.circle-preview .panel{width:min(100%,560px)}
+.circle-program{display:grid;gap:12px}
+.circle-program h3,.circle-program p,.circle-program ul{margin-block:0}
+.circle-program-intro{padding:10px 12px;background:var(--color-surface-soft);border-radius:var(--radius-sm)}
+.circle-program>p+ul{display:grid;gap:8px;padding:0;list-style:none}
+.circle-program>p+ul>li{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:#fff}
+.circle-program>p+ul>li .soft-btn{margin-inline-start:auto}
+.circle-progress{display:grid;gap:8px;padding:14px;border:1px solid var(--color-border);border-radius:var(--radius-sm)}
+.circle-progress h4{margin:0}
+.circle-scientific-program{margin-block:12px;padding:12px}
+.circle-scientific-program>summary{cursor:pointer;font-weight:800;color:var(--color-ink)}
+.review-filter{min-height:40px;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);font:inherit;background:#fff;color:var(--color-ink)}
+@media(max-width:600px){.review-filter{width:100%;box-sizing:border-box}.circle-progress li{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.circle-progress li .soft-btn{margin-inline-start:0}}
+.circle-progress-share{display:flex!important;align-items:center;gap:8px}
+.circle-progress-share input{width:auto!important;margin:0;flex:none}
+.circle-program li .soft-btn{margin-inline-start:10px}
+.circle-program ul{padding-inline-start:24px;line-height:1.9}
+.circle-program-editor,.circle-program-task{display:grid;gap:12px}
+.circle-program-editor label,.circle-program-task label,.circle-program>label{display:grid;gap:5px;font-size:14px;font-weight:700}
+.circle-program-editor input,.circle-program-editor select,.circle-program>label select{width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);font:inherit;background:#fff;color:var(--color-ink)}
+.circle-program-task{padding:14px;border:1px solid var(--color-border);border-radius:var(--radius-sm);grid-template-columns:repeat(2,minmax(0,1fr))}
+.circle-program-task label:first-child,.circle-program-task label:last-of-type{grid-column:1/-1}
+.circle-program-task>.soft-btn{justify-self:start}
+
+@media(max-width:750px){
+  .circle-form .form-grid{grid-template-columns:1fr}
+  .circle-form .primary{width:100%;justify-self:stretch}
+  .circles-toolbar>.primary{flex:1 1 auto;min-width:0}
+  .circle-card .panel-head{gap:8px}
+  .circle-program-task{grid-template-columns:1fr}
+  .circle-program-task label:first-child,.circle-program-task label:last-of-type{grid-column:auto}
+}

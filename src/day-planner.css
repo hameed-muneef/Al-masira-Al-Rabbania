@@ -44,6 +44,17 @@
 .tracking-header label,.tracking-toolbar label{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:#536b58}
 .tracking-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0}
 .tracking-toolbar button{font-size:13px}
+.prayer-log{padding:20px;background:white;border:1px solid #e0e7dc;border-radius:12px;margin:20px 0}
+.prayer-log h3{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:17px;color:#2d5340}
+.prayer-log p{margin:0 0 14px}
+.prayer-log-grid{display:grid;gap:10px}
+.prayer-log-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#fffefb;border:1px solid #e9ede2;border-radius:10px;padding:10px 14px}
+.prayer-log-row>span{font-size:14px;font-weight:700;color:#3d5546}
+.prayer-log-options{display:flex;gap:6px;flex-wrap:wrap}
+.prayer-chip{padding:5px 12px;border-radius:20px;border:1px solid #d8e0d0;background:#fbfcf9;font-size:12px;color:#52664d;cursor:pointer;transition:background .15s,border-color .15s}
+.prayer-chip:hover{background:#eef3ea}
+.prayer-chip.selected{background:#407453;border-color:#407453;color:white}
+@media(max-width:750px){.prayer-log{padding:15px}.prayer-log-row>span{flex-basis:100%}}
 .tracking-progress{padding:20px;background:white;border:1px solid #e0e7dc;border-radius:12px;margin:20px 0}
 .tracking-progress>div{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .tracking-progress strong{font-size:17px;color:#2d5340}
@@ -133,3 +144,126 @@
   .day-planner .slot-time{font-size:11px}
 }
 
+.prayer-timeline{align-items:start}.prayer-interval{min-width:0;margin-bottom:22px;padding:16px;border:1px solid var(--color-border);border-radius:16px;background:var(--color-panel,#fbfaf5)}.prayer-interval-heading{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--color-border)}.prayer-interval-heading h3{margin:0;color:var(--day-green,#285843);font-size:18px}.prayer-interval-heading span:not(.slot-marker){color:var(--day-muted,#718076);font-size:13px}.half-hour-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.half-hour-slots .day-slot{margin:0}.sunrise-marker{padding:7px 12px;border-radius:8px;background:#f6efdc}.prayer-timeline .slot-heading{align-items:flex-start}
+@media(max-width:750px){.prayer-interval{padding:12px}.half-hour-slots{grid-template-columns:1fr}.prayer-interval-heading h3{font-size:16px}}
+.day-plan-content .day-timeline.prayer-timeline{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:stretch}.day-plan-content .prayer-timeline .prayer-interval{width:100%;box-sizing:border-box;margin:0}.day-plan-content .prayer-timeline .half-hour-slots{grid-template-columns:minmax(0,1fr);gap:9px}.day-plan-content .prayer-interval-heading{justify-content:flex-start;text-align:right}.day-plan-content .prayer-interval-heading>div{display:grid;gap:3px}.day-plan-content .prayer-timeline .day-slot{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:start;gap:10px}.day-plan-content .prayer-timeline .day-slot>.slot-marker{margin:12px 0 0}.day-plan-content .prayer-timeline .slot-body{width:100%;box-sizing:border-box}.day-plan-content .prayer-timeline .slot-heading{flex-direction:row;align-items:center;justify-content:space-between;gap:12px}.day-plan-content .prayer-timeline .slot-add{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}.day-plan-content .prayer-timeline .slot-add input{min-width:0;width:100%;box-sizing:border-box}.day-plan-content .prayer-timeline .slot-activity{align-items:start}.day-plan-content .prayer-timeline .activity-schedule{min-width:0;flex-wrap:wrap}.day-plan-content .prayer-timeline .activity-edit input{min-width:0;box-sizing:border-box}
+@media(max-width:750px){.day-plan-content .prayer-timeline .day-slot{grid-template-columns:29px minmax(0,1fr);gap:7px}.day-plan-content .prayer-timeline .slot-heading{align-items:flex-start;flex-direction:column}.day-plan-content .prayer-timeline .slot-add{grid-template-columns:minmax(0,1fr)}.day-plan-content .prayer-timeline .slot-add button{justify-content:center}.day-plan-content .prayer-timeline .slot-activity{flex-wrap:wrap}}
+.day-plan-content .prayer-timeline{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.day-plan-content .prayer-interval{padding:18px 20px;margin:0;border-radius:16px;background:#faf9f4}.day-plan-content .prayer-interval-heading{justify-content:flex-start;text-align:right;margin:10px 0 8px;padding:0;border:0}.day-plan-content .prayer-interval-heading h3{font-size:17px}.day-plan-content .prayer-interval-heading span{font-size:12px}.day-plan-content .fixed-prayer-bar{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:12px;background:#244f40;color:#fff}.day-plan-content .fixed-prayer-bar strong{font-size:17px}.day-plan-content .fixed-prayer-bar>span{font-weight:700;color:#f2e7c9}.day-plan-content .fixed-prayer-bar small{margin-inline-start:auto;color:#d3e1d6}.day-plan-content .half-hour-list{display:grid;gap:8px}.day-plan-content .half-hour-row{display:grid;grid-template-columns:minmax(145px,190px) minmax(0,1fr);align-items:stretch;gap:12px;padding:10px 12px;border:1px solid #dce4d8;border-radius:12px;background:#fff}.day-plan-content .half-hour-time{display:grid;align-content:center;gap:4px;color:#315c48}.day-plan-content .half-hour-time strong{font-size:14px}.day-plan-content .half-hour-time span{font-size:11px;color:#879187}.day-plan-content .half-hour-content{display:grid;gap:7px;min-width:0}.day-plan-content .planned-activity-card{display:grid;gap:9px;padding:10px 12px;border-inline-start:3px solid #89a891;border-radius:9px;background:#f7f8f3}.day-plan-content .planned-activity-main{display:flex;align-items:center;gap:9px;min-width:0}.day-plan-content .planned-activity-main>strong{font-size:15px;line-height:1.6;overflow-wrap:anywhere}.day-plan-content .schedule-badge{flex:none;padding:3px 9px;border-radius:999px;font-size:11px}.day-plan-content .schedule-badge.initial{background:#f5ecd7;color:#816633}.day-plan-content .schedule-badge.confirmed{background:#e1eee4;color:#315f48}.day-plan-content .planned-activity-controls{display:flex;align-items:end;flex-wrap:wrap;gap:7px}.day-plan-content .planned-activity-controls label,.day-plan-content .planned-activity-add label{display:grid;gap:4px;font-size:11px;color:#6e7c71}.day-plan-content .planned-activity-controls input[type=time],.day-plan-content .planned-activity-add input{min-height:38px;padding:6px 9px;border:1px solid #d5dfd4;border-radius:8px;background:#fff;font:inherit}.day-plan-content .planned-activity-controls button{min-height:38px;font-size:12px}.day-plan-content .empty-slot-note{margin:0;color:#92988f;font-size:12px}.day-plan-content .add-half-hour{justify-self:start;display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:0;border-radius:7px;background:transparent;color:#537762;font:inherit;font-size:12px;cursor:pointer}.day-plan-content .add-half-hour:hover{background:#edf3eb}.day-plan-content .planned-activity-add{display:flex;align-items:end;flex-wrap:wrap;gap:8px;padding:10px;border:1px dashed #cfdccf;border-radius:9px;background:#fbfcf9}.day-plan-content .planned-activity-add label:first-child{flex:1 1 240px}.day-plan-content .planned-activity-add input{box-sizing:border-box;width:100%;min-width:0}.day-plan-content .rename-activity{display:flex;align-items:center;gap:6px;flex:1}.day-plan-content .rename-activity input{min-width:0;width:100%;padding:7px;border:1px solid #d5dfd4;border-radius:8px;font:inherit}.day-plan-content .sunrise-in-slot{margin:0;padding:6px 10px;border-radius:7px;background:#f6efdc;color:#85672e;font-size:12px}
+.day-plan-content .prayer-timeline{width:100%;min-width:0;grid-auto-columns:minmax(0,1fr)}.day-plan-content .prayer-timeline>.prayer-interval{width:100%;min-width:0;box-sizing:border-box;justify-self:stretch}.day-plan-content .prayer-interval>.half-hour-list{width:100%;min-width:0;grid-template-columns:minmax(0,1fr)}.day-plan-content .half-hour-list>.half-hour-row{width:100%;min-width:0;box-sizing:border-box;justify-self:stretch}.day-plan-content .half-hour-content,.day-plan-content .planned-activity-card{width:100%;min-width:0;box-sizing:border-box}.day-plan-content .fixed-prayer-bar{min-height:54px;padding:12px 18px;background:linear-gradient(90deg,#1e4d3d,#2c624e);border:1px solid #143c30;box-shadow:0 4px 12px #173f3418}.day-plan-content .prayer-bar-kicker{padding:4px 9px;border:1px solid #ffffff55;border-radius:999px;color:#f4e8c7;font-size:11px}.day-plan-content .fixed-prayer-bar strong{font-size:18px;white-space:nowrap}.day-plan-content .fixed-prayer-bar time{padding:6px 10px;border-radius:8px;background:#ffffff17;color:#fff2cc;font-size:15px;font-weight:800;white-space:nowrap}.day-plan-content .prayer-bar-duration{margin-inline-start:auto;padding:5px 9px;border-radius:999px;background:#dceadf;color:#244f40;font-size:12px;font-weight:700}
+@media(max-width:700px){.day-plan-content .prayer-interval{padding:12px}.day-plan-content .fixed-prayer-bar{align-items:flex-start;flex-wrap:wrap;gap:7px 10px}.day-plan-content .fixed-prayer-bar small{width:100%;margin:0}.day-plan-content .half-hour-row{grid-template-columns:minmax(0,1fr);gap:5px}.day-plan-content .half-hour-time{display:flex;align-items:center;justify-content:space-between}.day-plan-content .planned-activity-controls{align-items:stretch}.day-plan-content .planned-activity-controls label{width:100%}.day-plan-content .planned-activity-controls input[type=time]{width:100%;box-sizing:border-box}}
+@media(max-width:700px){.day-plan-content .fixed-prayer-bar{align-items:center;gap:8px;padding:11px}.day-plan-content .prayer-bar-kicker{width:100%;text-align:center}.day-plan-content .fixed-prayer-bar strong{font-size:16px}.day-plan-content .fixed-prayer-bar time{font-size:13px}.day-plan-content .prayer-bar-duration{margin-inline-start:auto}}
+
+/* === ترتيب وتوضيح خطة اليوم === */
+/* الفاصل بين الصلاة والنافذة بعدها: خط يربط الشريط بما بعده */
+.day-plan-content .prayer-interval{--interval-accent:#2f5a48;position:relative;padding:0 0 18px;border:1px solid #e3e8dd;border-radius:16px;background:#fbfaf6;overflow:hidden}
+.day-plan-content .prayer-interval>.fixed-prayer-bar,.day-plan-content .prayer-interval>.prayer-interval-heading{padding-inline:20px}
+.day-plan-content .prayer-interval>.fixed-prayer-bar{margin:0;border-start-end-radius:0;border-start-start-radius:0}
+
+/* شريط الصلاة: الاسم في الصدارة والوقت في الطرف المقابل */
+.day-plan-content .fixed-prayer-bar{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:14px 20px;background:linear-gradient(100deg,#244f40,#2f6150);color:#fff}
+.day-plan-content .fixed-prayer-bar .prayer-bar-kicker{display:none}
+.day-plan-content .fixed-prayer-bar>strong{font-size:18px;font-weight:800;color:#fff;white-space:nowrap}
+.day-plan-content .fixed-prayer-bar>svg{color:#e6d5a8}
+.day-plan-content .fixed-prayer-bar>time{justify-self:start;font-size:14px;font-weight:700;color:#f0e5c8;font-variant-numeric:tabular-nums}
+.day-plan-content .fixed-prayer-bar>.prayer-bar-duration{justify-self:end;font-size:12px;font-weight:700;color:#cfe0d4;background:#ffffff14;border:1px solid #ffffff26;border-radius:999px;padding:3px 10px}
+
+/* عنوان النافذة بعد الصلاة: يظهر مباشرة تحت الشريط */
+.day-plan-content .prayer-interval-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0;padding:14px 20px 10px;background:#f1f0e7;border-bottom:1px solid #e3e8dd}
+.day-plan-content .prayer-interval-heading>div{display:grid;gap:2px}
+.day-plan-content .prayer-interval-heading h3{margin:0;font-size:16px;font-weight:800;color:#244f40}
+.day-plan-content .prayer-interval-heading span{font-size:12px;color:#6f7d72}
+
+/* خط الشارة للشروق */
+.day-plan-content .prayer-note.sunrise-marker{margin:0;padding:9px 20px;background:#fdf6e6;color:#7a5a1f;font-size:12px;font-weight:700;border-bottom:1px solid #f0e3c6}
+
+/* صفوف الخانات: عمود الوقت كمرجع واضح */
+.day-plan-content .half-hour-list{display:grid;gap:7px;padding:12px 14px 0}
+.day-plan-content .half-hour-row{grid-template-columns:minmax(132px,168px) minmax(0,1fr);align-items:stretch;gap:12px;padding:10px 12px;border:1px solid #e2e8dd;border-radius:11px;background:#fff}
+.day-plan-content .half-hour-time{display:grid;align-content:center;gap:2px;padding-inline-end:12px;border-inline-end:2px solid #e6ebe1;text-align:center}
+.day-plan-content .half-hour-time strong{font-size:13px;color:#2f5a48;font-variant-numeric:tabular-nums}
+.day-plan-content .half-hour-time span{font-size:10px;color:#8b9789}
+
+/* صف فارغ: إضافة عمل */
+.day-plan-content .half-hour-row:has(.planned-activity-add){background:#fcfdfb;border-style:dashed}
+
+/* مربعات مواقيت الصلاة: الشروق مميّز */
+.day-plan-content .prayer-grid .prayer-name{font-weight:700;font-size:13px}
+.day-plan-content .prayer-grid .prayer-tag{display:inline-block;margin-inline-start:6px;font-size:10px;font-weight:700;color:#8a6a22;background:#f7ecd2;border-radius:999px;padding:1px 7px}
+.day-plan-content .prayer-grid .prayer-sunrise{background:#fdf7e9;border-color:#ecdcb5}
+.day-plan-content .prayer-grid .prayer-sunrise .prayer-name{color:#7a5a1f}
+
+/* شريط بداية اليوم: عنوان واضح وزر واحد */
+.day-plan-content .day-start-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:0 0 18px;padding:14px 18px;border-radius:14px;background:#f1f0e7;border:1px solid #e3e8dd}
+.day-plan-content .day-start-bar>div{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.day-plan-content .day-start-bar strong{font-size:16px;color:#244f40}
+.day-plan-content .day-start-bar p{margin:0;font-size:13px;color:#6f7d72}
+.day-plan-content .day-start-bar label{display:flex;align-items:center;gap:8px;font-size:13px;color:#41584c}
+
+@media(max-width:750px){
+  .day-plan-content .fixed-prayer-bar{grid-template-columns:auto minmax(0,1fr);gap:6px 10px}
+  .day-plan-content .fixed-prayer-bar>time{grid-column:1 / -1;justify-self:start}
+  .day-plan-content .fixed-prayer-bar>.prayer-bar-duration{justify-self:end}
+  .day-plan-content .half-hour-list{padding:10px 10px 0}
+  .day-plan-content .half-hour-row{grid-template-columns:1fr;gap:8px}
+  .day-plan-content .half-hour-time{display:flex;align-items:center;gap:8px;justify-content:flex-start;padding-inline-end:0;border-inline-end:0;border-bottom:1px solid #eef1ea;padding-bottom:6px}
+  .day-plan-content .day-start-bar>div{width:100%}
+}
+
+/* أدوات النشاط: الوقت ثم مجموعة أزرار متراصّة، وبطاقة أنظف */
+.day-plan-content .planned-activity-controls{display:flex;align-items:flex-end;flex-wrap:wrap;gap:8px;padding-top:2px}
+.day-plan-content .planned-activity-controls>label{display:flex;align-items:center;gap:6px;font-size:11px;color:#6e7c71;white-space:nowrap}
+.day-plan-content .planned-activity-controls>label input[type=time]{min-height:36px;width:118px;padding:5px 9px;text-align:center;font-variant-numeric:tabular-nums}
+.day-plan-content .planned-activity-controls .activity-actions{display:flex;align-items:center;gap:7px;margin-inline-start:auto}
+.day-plan-content .planned-activity-controls .activity-actions button{min-height:36px}
+.day-plan-content .planned-activity-card{grid-template-areas:"main main" "controls controls";gap:8px}
+.day-plan-content .planned-activity-main{grid-area:main}
+.day-plan-content .planned-activity-controls{grid-area:controls}
+.day-plan-content .planned-activity-card>small{grid-area:main;align-self:end;margin-top:-4px}
+
+/* أزل عمود الوقت الجانبي؛ وقت النشاط يبقى مع كل بطاقة وتتمدد البطاقة بعرض الفترة */
+.day-plan-content .half-hour-row{grid-template-columns:minmax(0,1fr);width:100%;min-width:0;box-sizing:border-box}
+.day-plan-content .half-hour-content{grid-column:1 / -1;width:100%;min-width:0}
+.day-plan-content .planned-activity-card{grid-template-columns:minmax(0,1fr);width:100%;min-width:0}
+.day-plan-content .planned-activity-controls .activity-actions{flex-wrap:wrap}
+.day-plan-content .prayer-interval{padding-bottom:16px}
+.day-plan-content .prayer-interval-heading{padding:16px 20px 12px;background:#f1f0e7;border-bottom:1px solid #e3e8dd}
+.day-plan-content .prayer-interval-heading h3{font-size:19px}
+.day-plan-content .half-hour-list{gap:9px;padding:14px 18px 4px}
+.day-plan-content .half-hour-row{display:block;padding:0;border:0;background:transparent}
+.day-plan-content .half-hour-content{display:grid;gap:9px}
+.day-plan-content .planned-activity-card{padding:14px 16px;border:1px solid #e2e8dd;border-inline-start:4px solid #6f9880;border-radius:12px;background:#fff;box-shadow:0 2px 7px #244f4008}
+.day-plan-content .planned-activity-main{justify-content:space-between}
+.day-plan-content .planned-activity-main>strong{font-size:16px}
+.day-plan-content .planned-activity-controls{align-items:center;padding-top:4px}
+.day-plan-content .planned-activity-controls>label{flex-direction:row;align-items:center}
+.day-plan-content .group-add-trigger{margin:8px 18px 0;padding:9px 12px;border:1px dashed #aebfae;border-radius:9px;background:#f7f8f3}
+.day-plan-content .group-activity-add{margin:10px 18px 0;align-items:end}
+.day-plan-content .group-activity-add label:first-child{flex:1 1 300px}
+.day-plan-content .group-activity-add label:nth-child(2){flex:0 0 170px}
+@media(max-width:750px){.day-plan-content .half-hour-list{padding:12px 10px 4px}.day-plan-content .planned-activity-card{padding:12px}.day-plan-content .planned-activity-main{align-items:flex-start}.day-plan-content .planned-activity-controls>label{flex-direction:column;align-items:stretch}.day-plan-content .group-add-trigger{margin-inline:10px}.day-plan-content .group-activity-add{margin-inline:10px}.day-plan-content .group-activity-add label:nth-child(2){flex:1 1 100%}}
+
+/* اسم العمل المُعادلت: صف واحد مضغوط */
+.day-plan-content .rename-activity{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.day-plan-content .rename-activity input{flex:1;min-width:0;min-height:36px;padding:5px 9px}
+.day-plan-content .rename-activity button{min-height:36px;flex:none}
+
+@media(max-width:750px){
+  .day-plan-content .planned-activity-controls>label{width:100%}
+  .day-plan-content .planned-activity-controls>label input[type=time]{width:100%}
+  .day-plan-content .planned-activity-controls .activity-actions{margin-inline-start:0;width:100%;flex-wrap:wrap}
+  .day-plan-content .planned-activity-controls .activity-actions button{flex:1 1 auto;justify-content:center}
+}
+
+/* الوقت بالعربية بجانب منتقي الوقت، ليتسق الشكل مع شريط الصلاة */
+.day-plan-content .prayer-grid .prayer{flex-direction:column;align-items:stretch;gap:4px}
+.day-plan-content .prayer-grid .prayer-name{font-weight:700;font-size:13px;color:#2f5a48}
+.day-plan-content .prayer-grid .prayer input[type=time]{text-align:center;font-variant-numeric:tabular-nums}
+.day-plan-content .prayer-grid .prayer-time-text{font-size:11px;color:#6f7d72;text-align:center;font-variant-numeric:tabular-nums}
+.day-plan-content .prayer-grid .prayer-sunrise .prayer-time-text{color:#8a6a22}
+.day-plan-content .planned-activity-controls>label .time-text{font-size:12px;font-weight:700;color:#2f5a48;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* ترتيب حقل الوقت: العنوان ثم الحقل ثم الوقت العربي، قراءة من اليمين لليسار */
+.day-plan-content .planned-activity-controls>label{flex-direction:column;align-items:stretch;gap:3px}
+.day-plan-content .planned-activity-controls>label .time-label{font-size:11px;color:#6e7c71;font-weight:600}
+.day-plan-content .planned-activity-controls>label input[type=time]{text-align:center;font-variant-numeric:tabular-nums}
+.day-plan-content .planned-activity-controls>label .time-text{font-size:12px;font-weight:700;color:#2f5a48;text-align:center}

@@ -1,10 +1,10 @@
-import {RotateCcw} from 'lucide-react';
+import {Globe,Lock,RotateCcw,UserRound} from 'lucide-react';
 import {type State,periodKey,createSeed} from '../app-state';
 
-type Props={state:State;onReplace:(state:State)=>void;notify:(message:string)=>void};
+type Props={state:State;onReplace:(state:State)=>void;notify:(message:string)=>void;onOpenProfile?:()=>void};
 
-// إعدادات المستخدم: تصدير واستيراد بيانات المتصفح وإعادة الضبط.
-export default function SettingsView({state,onReplace,notify}:Props) {
+// إعدادات المستخدم: الملف الشخصي وإعدادات الحساب، وتصدير واستيراد بيانات المتصفح وإعادة الضبط.
+export default function SettingsView({state,onReplace,notify,onOpenProfile}:Props) {
   const exportData=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));a.download='rabbaniyyun-data.json';a.click();URL.revokeObjectURL(a.href)};
   const importData=(file:File)=>{
     const reader=new FileReader();
@@ -23,6 +23,6 @@ export default function SettingsView({state,onReplace,notify}:Props) {
   const reset=()=>{
     if(window.confirm('هل تريد حذف كل البيانات المحلية؟ لا يمكن التراجع.')){onReplace(createSeed());notify('تمت إعادة الضبط')}
   };
-  return <><div className="page-intro"><span className="eyebrow">المنصة</span><h1>الإعدادات والبيانات</h1><p>النسخة التجريبية تعمل محليًا في المتصفح، دون تسجيل حساب أو إرسال بياناتك إلى خادم.</p></div><section className='panel'><h3>تصدير بياناتك</h3><p className="muted">احتفظ بنسخة JSON من أنشطتك وأهدافك ومحاسبتك.</p><button className="primary" onClick={exportData}>تصدير البيانات</button></section><section className='panel'><h3>استيراد البيانات</h3><p className="muted">استعد نسخة JSON صدّرتها من هذا الجهاز أو جهاز آخر. ستُستبدل البيانات الحالية المحفوظة في هذا المتصفح.</p><input type="file" accept="application/json,.json" aria-label="ملف بيانات JSON" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)importData(file)}}/></section><section className="panel"><h3>إعادة ضبط التجربة</h3><p className="muted">سيحذف هذا جميع بياناتك المحلية في هذا المتصفح.</p><button className="outline-danger" onClick={reset}><RotateCcw size={17}/> حذف البيانات المحلية</button></section></>;
+  return <><div className="page-intro"><span className="eyebrow">المنصة</span><h1>الإعدادات والبيانات</h1><p>نسخة تجريبية تعمل محليًا في المتصفح، وتُزامَن بيانات حسابك في السحابة عند تسجيل الدخول.</p></div>{onOpenProfile&&<section className='panel'><h3><UserRound size={18}/> الملف الشخصي وإعدادات الحساب</h3><p className="muted">اسمك وبلدك وعمرك، والمنطقة الزمنية واللغة والمدينة ومواعيد اليوم، وتفضيلات الإشعارات، وحذف الحساب.</p><button className="primary" onClick={onOpenProfile}><Globe size={17}/> فتح حسابي</button></section>}<section className='panel'><h3><Lock size={18}/> الخصوصية</h3><p className="muted">اسمك وبلدك وعمرك ملكك وحدك ولا يظهران لغيرك. محاسبة نفسك («حاسب نفسك») لا تُعرض على أحد ولا تدخل في أي إجمالي. الحلقات خاصة ولا يوجد دليل عام. لا تُسجَّل لقاءات Meet داخل المنصة.</p></section><section className='panel'><h3>تصدير بياناتك</h3><p className="muted">احتفظ بنسخة JSON من أنشطتك وأهدافك ومحاسبتك.</p><button className="primary" onClick={exportData}>تصدير البيانات</button></section><section className='panel'><h3>استيراد البيانات</h3><p className="muted">استعد نسخة JSON صدّرتها من هذا الجهاز أو جهاز آخر. ستُستبدل البيانات الحالية المحفوظة في هذا المتصفح.</p><input type="file" accept="application/json,.json" aria-label="ملف بيانات JSON" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)importData(file)}}/></section><section className="panel"><h3>إعادة ضبط التجربة</h3><p className="muted">سيحذف هذا جميع بياناتك المحلية في هذا المتصفح.</p><button className="outline-danger" onClick={reset}><RotateCcw size={17}/> حذف البيانات المحلية</button></section></>;
 }
 

@@ -1,13 +1,19 @@
 import {useState,type FormEvent} from 'react';
-import {ArrowLeft,BookOpen,Eye,EyeOff,LockKeyhole,Mail,ShieldCheck} from 'lucide-react';
+import {ArrowLeft,BookOpen,Eye,EyeOff,Globe,LockKeyhole,Mail,ShieldCheck,UserRound} from 'lucide-react';
 import {authClient} from './auth';
+import {countries} from './user-profile';
 import './auth.css';
 
-export default function AuthScreen({onDemo,allowDemo=true,admin=false}:{onDemo:()=>void;allowDemo?:boolean;admin?:boolean}){
+export default function AuthScreen({onDemo,allowDemo=true,admin=false,reset=false}:{onDemo:()=>void;allowDemo?:boolean;admin?:boolean;reset?:boolean}){
   const [mode,setMode]=useState<'login'|'register'>(admin?'login':'register');
+  const [forgot,setForgot]=useState(false);
   const [email,setEmail]=useState('');
   const [password,setPassword]=useState('');
   const [confirm,setConfirm]=useState('');
+  const [firstName,setFirstName]=useState('');
+  const [lastName,setLastName]=useState('');
+  const [country,setCountry]=useState('');
+  const [age,setAge]=useState('');
   const [visible,setVisible]=useState(false);
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState('');
@@ -16,13 +22,48 @@ export default function AuthScreen({onDemo,allowDemo=true,admin=false}:{onDemo:(
   async function submit(event:FormEvent){
     event.preventDefault();setError('');setMessage('');
     if(!authClient){setError('إنشاء الحسابات غير مفعّل بعد. يمكنك استكشاف النسخة المحلية أدناه.');return}
+    if(reset){
+      if(password!==confirm){setError('كلمتا المرور غير متطابقتين.');return}
+      setBusy(true);
+      try{
+        const {data:{session}}=await authClient.auth.getSession();
+        if(!session)throw new Error('رابط الاستعادة غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.');
+        const {error}=await authClient.auth.updateUser({password});
+        if(error)throw error;
+        await authClient.auth.signOut();
+        setMessage('تم تغيير كلمة المرور. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.');
+        setPassword('');setConfirm('');
+      }catch(err){setError(err instanceof Error?err.message:'تعذّر تغيير كلمة المرور. حاول مرة أخرى.')}finally{setBusy(false)}
+      return;
+    }
+    if(forgot){
+      setBusy(true);
+      try{
+        const returnTo=admin?'admin':'home';
+        const {error}=await authClient.auth.resetPasswordForEmail(email.trim(),{redirectTo:`${window.location.origin}/reset-password?returnTo=${returnTo}`});
+        if(error)throw error;
+        setMessage('إذا كان البريد مرتبطًا بحساب، ستصلك رسالة تحتوي على رابط تغيير كلمة المرور.');
+      }catch(err){setError(err instanceof Error?err.message:'تعذّر إرسال رابط الاستعادة. حاول مرة أخرى.')}finally{setBusy(false)}
+      return;
+    }
+    if(admin&&mode!=='login'){setError('استخدم حسابًا إداريًا معتمدًا لتسجيل الدخول.');return}
     if(mode==='register'&&password!==confirm){setError('كلمتا المرور غير متطابقتين.');return}
+    if(mode==='register'){
+      const first=firstName.trim(), last=lastName.trim();
+      const ageNumber=Number(age);
+      if(!first||!last){setError('الاسم الأول والاسم الأخير مطلوبان.');return}
+      if(!country){setError('اختر بلدك.');return}
+      if(!age||!Number.isInteger(ageNumber)||ageNumber<13||ageNumber>100){setError('أدخل عمرًا بين 13 و100 سنة.');return}
+    }
     setBusy(true);
     try{
       if(mode==='register'){
         const {data,error}=await authClient.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:window.location.origin+(admin?'/admin':'/')}});
         if(error)throw error;
-        if(!data.session)setMessage(admin?'افتح رسالة التأكيد في بريدك، ثم عُد إلى صفحة /admin لتسجيل الدخول بصلاحية المشرف.':'تم إرسال رسالة تأكيد إلى بريدك الإلكتروني. افتحها لتفعيل حسابك ثم سجّل الدخول.');
+        // The profile is attached right after the account is confirmed and the
+        // user signs in; until then it waits in this browser only.
+        try{sessionStorage.setItem('rabbani-profile-draft',JSON.stringify({firstName:firstName.trim(),lastName:lastName.trim(),country,age:Number(age)}))}catch{}
+        if(!data.session)setMessage(admin?'افتح رسالة التأكيد في بريدك، ثم عُد إلى صفحة /admin لتسجيل الدخول بصلاحية المشرف.':'تم إرسال رسالة تأكيد إلى بريدك الإلكتروني. افتحها لتفعيل حسابك ثم سجّل الدخول، وسنكمل ملفك الشخصي مباشرة.');
       }else{
         const {error}=await authClient.auth.signInWithPassword({email:email.trim(),password});
         if(error)throw error;
@@ -34,18 +75,44 @@ export default function AuthScreen({onDemo,allowDemo=true,admin=false}:{onDemo:(
       <section className="auth-form-side" aria-labelledby="auth-title">
         <div className="auth-logo"><span><BookOpen size={25}/></span><div><strong>الرَّبَّانِيُّون</strong><small>{admin?'بوابة إدارة المنصة':'علمٌ يُثمر إيمانًا، وإيمانٌ يُثمر عملًا'}</small></div></div>
         <div className="auth-form-wrap">
-          <nav className="auth-role-switch" aria-label="اختيار الواجهة"><a href="/" aria-current={!admin?'page':undefined}>واجهة المستخدم</a><a href="/admin" aria-current={admin?'page':undefined}>دخول المشرف</a></nav>
-          <span className="auth-eyebrow">{admin?'مدخل المشرفين':'مسيرتك تبدأ هنا'}</span>
-          <h1 id="auth-title">{admin?(mode==='register'?'إنشاء حساب المشرف':'دخول المشرف'):mode==='register'?'أنشئ حسابك':'مرحبًا بعودتك'}</h1>
-          <p className="auth-lead">{admin?'سجّل بالبريد المخصص للإدارة. تُفعّل الصلاحية بعد تأكيد البريد والتحقق من اعتماده.':mode==='register'?'خطوة صغيرة اليوم، وأثر يبقى معك كل يوم.':'أكمل ما بدأت، وتابع خطواتك في العلم والعمل.'}</p>
-          <div className="auth-tabs" role="group" aria-label="طريقة الدخول"><button type="button" className={mode==='register'?'selected':''} onClick={()=>switchMode('register')}>إنشاء حساب</button><button type="button" className={mode==='login'?'selected':''} onClick={()=>switchMode('login')}>تسجيل الدخول</button></div>
+          {admin&&<nav className="auth-role-switch" aria-label="اختيار الواجهة"><a href="/">واجهة المستخدم</a><a href="/admin" aria-current="page">دخول المشرف</a></nav>}
+          <span className="auth-eyebrow">{reset?'استعادة الحساب':admin?'مدخل المشرفين':'مسيرتك تبدأ هنا'}</span>
+          <h1 id="auth-title">{reset?'تعيين كلمة مرور جديدة':forgot?'نسيت كلمة المرور؟':admin?'دخول المشرف':mode==='register'?'أنشئ حسابك':'مرحبًا بعودتك'}</h1>
+          <p className="auth-lead">{reset?'اختر كلمة مرور جديدة لحسابك.':forgot?'أدخل بريد حسابك وسنرسل إليك رابطًا لتغيير كلمة المرور.':admin?'سجّل بالبريد المخصص للإدارة. تُفعّل الصلاحية بعد تأكيد البريد والتحقق من اعتماده.':mode==='register'?'خطوة صغيرة اليوم، وأثر يبقى معك كل يوم.':'أكمل ما بدأت، وتابع خطواتك في العلم والعمل.'}</p>
+          {!admin&&!forgot&&!reset&&<div className="auth-tabs" role="group" aria-label="طريقة الدخول"><button type="button" className={mode==='register'?'selected':''} onClick={()=>switchMode('register')}>إنشاء حساب</button><button type="button" className={mode==='login'?'selected':''} onClick={()=>switchMode('login')}>تسجيل الدخول</button></div>}
           <form className="auth-form" onSubmit={submit}>
-            <label htmlFor="auth-email">البريد الإلكتروني</label><div className="auth-input"><Mail size={18}/><input id="auth-email" type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email" placeholder="name@example.com" required dir="ltr"/></div>
-            <label htmlFor="auth-password">كلمة المرور</label><div className="auth-input"><LockKeyhole size={18}/><input id="auth-password" type={visible?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} autoComplete={mode==='register'?'new-password':'current-password'} minLength={6} placeholder="ستة أحرف على الأقل" required/><button type="button" aria-label={visible?'إخفاء كلمة المرور':'إظهار كلمة المرور'} onClick={()=>setVisible(!visible)}>{visible?<EyeOff size={18}/>:<Eye size={18}/>}</button></div>
-            {mode==='register'&&<><label htmlFor="auth-confirm">تأكيد كلمة المرور</label><div className="auth-input"><LockKeyhole size={18}/><input id="auth-confirm" type={visible?'text':'password'} value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password" placeholder="أعد كتابة كلمة المرور" required/></div></>}
+            {mode==='register'&&!admin&&<>
+              <fieldset className="auth-profile-fields">
+                <legend>ملفك الشخصي</legend>
+                <div className="auth-field-row">
+                  <label htmlFor="auth-first-name">الاسم الأول</label>
+                  <div className="auth-input"><UserRound size={18}/><input id="auth-first-name" value={firstName} onChange={e=>setFirstName(e.target.value)} autoComplete="given-name" placeholder="مثال: محمد" required/></div>
+                </div>
+                <div className="auth-field-row">
+                  <label htmlFor="auth-last-name">الاسم الأخير</label>
+                  <div className="auth-input"><UserRound size={18}/><input id="auth-last-name" value={lastName} onChange={e=>setLastName(e.target.value)} autoComplete="family-name" placeholder="مثال: أحمد" required/></div>
+                </div>
+                <div className="auth-field-row">
+                  <label htmlFor="auth-country">البلد</label>
+                  <div className="auth-input"><Globe size={18}/><select id="auth-country" value={country} onChange={e=>setCountry(e.target.value)} required><option value="" disabled>اختر البلد</option>{countries.map(item=><option key={item} value={item}>{item}</option>)}</select></div>
+                </div>
+                <div className="auth-field-row">
+                  <label htmlFor="auth-age">العمر</label>
+                  <div className="auth-input"><UserRound size={18}/><input id="auth-age" type="number" inputMode="numeric" min={13} max={100} value={age} onChange={e=>setAge(e.target.value)} placeholder="مثال: 28" required/></div>
+                </div>
+                <p className="auth-hint">تُحفظ هذه البيانات في حسابك وحده، ولا تظهر لغيرك. لا نشاركها مع أي جهة.</p>
+              </fieldset>
+            </>}
+            {!reset&&<><label htmlFor="auth-email">البريد الإلكتروني</label><div className="auth-input"><Mail size={18}/><input id="auth-email" type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email" placeholder="name@example.com" required dir="ltr"/></div></>}
+            {!forgot&&<>
+            <label htmlFor="auth-password">كلمة المرور</label><div className="auth-input"><LockKeyhole size={18}/><input id="auth-password" type={visible?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} autoComplete={mode==='register'||reset?'new-password':'current-password'} minLength={6} placeholder="ستة أحرف على الأقل" required/><button type="button" aria-label={visible?'إخفاء كلمة المرور':'إظهار كلمة المرور'} onClick={()=>setVisible(!visible)}>{visible?<EyeOff size={18}/>:<Eye size={18}/>}</button></div>
+            {(mode==='register'||reset)&&<><label htmlFor="auth-confirm">تأكيد كلمة المرور</label><div className="auth-input"><LockKeyhole size={18}/><input id="auth-confirm" type={visible?'text':'password'} value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password" placeholder="أعد كتابة كلمة المرور" required/></div></>}
+            </>}
             {error&&<p className="auth-error" role="alert">{error}</p>}{message&&<p className="auth-success" role="status">{message}</p>}
-            <button className="auth-submit" type="submit" disabled={busy||!authClient}>{busy?'جارٍ المتابعة...':mode==='register'?'إنشاء الحساب':'الدخول إلى حسابي'}<ArrowLeft size={18}/></button>
+            {!(reset&&message)&&<button className="auth-submit" type="submit" disabled={busy||!authClient}>{busy?'جارٍ المتابعة...':reset?'حفظ كلمة المرور':forgot?'إرسال رابط الاستعادة':mode==='register'?'إنشاء الحساب':'الدخول إلى حسابي'}<ArrowLeft size={18}/></button>}
           </form>
+          {!reset&&((forgot||mode==='login')&&<button type="button" className="auth-text-action" onClick={()=>{setForgot(!forgot);setError('');setMessage('')}}>{forgot?'العودة إلى تسجيل الدخول':'نسيت كلمة المرور؟'}</button>)}
+          {reset&&<a className="auth-text-action" href={new URLSearchParams(window.location.search).get('returnTo')==='admin'?'/admin':'/'}>العودة إلى تسجيل الدخول</a>}
           {!authClient&&<div className="auth-setup"><ShieldCheck size={19}/><p>الحسابات الحقيقية بانتظار ربط خدمة المصادقة. يمكنك الآن استخدام النسخة التجريبية على هذا الجهاز.</p></div>}
           {allowDemo&&<button className="auth-demo" onClick={onDemo}>استكشاف المنصة دون حساب <ArrowLeft size={17}/></button>}
         </div>

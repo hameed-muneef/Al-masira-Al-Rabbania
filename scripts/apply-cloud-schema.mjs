@@ -16,7 +16,8 @@ if(!host||!password||!projectRef){
   console.error('Set SUPABASE_POOLER_HOST, SUPABASE_DB_PASSWORD and SUPABASE_PROJECT_REF in the process environment.');
   process.exit(1);
 }
-const ca=process.env.SUPABASE_DB_CA_FILE?await readFile(process.env.SUPABASE_DB_CA_FILE,'utf8'):undefined;
+const caPath=process.env.SUPABASE_DB_CA_FILE?.replace(/^\/mnt\/([a-z])\//,(_,drive)=>`${drive.toUpperCase()}:/`);
+const ca=caPath?await readFile(caPath,'utf8'):undefined;
 const client=new Client({host,port:5432,user:`postgres.${projectRef}`,database:'postgres',password,ssl:{rejectUnauthorized:true,...(ca?{ca}:{})},connectionTimeoutMillis:12000});
 try{
   await client.connect();

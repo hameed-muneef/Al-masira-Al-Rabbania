@@ -1,7 +1,8 @@
 import {useEffect,useState,type FormEvent} from 'react';
 import {Globe,Lock,LogOut,Mail,Save,ShieldCheck,Trash2,UserRound} from 'lucide-react';
 import {authClient} from '../auth';
-import {ageFrom,countries,displayName,emptyProfile,fetchProfile,saveProfile,saveSettings,type Profile} from '../user-profile';
+import CountrySelector from '../CountrySelector';
+import {ageFrom,displayName,emptyProfile,fetchProfile,saveProfile,saveSettings,type Profile} from '../user-profile';
 import '../profile.css';
 
 type Props={user:{id:string;email?:string}|null;notify:(message:string)=>void;onProfileSaved?:()=>void};
@@ -48,6 +49,7 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
 
   const saveIdentity=async(event:FormEvent)=>{
     event.preventDefault();if(!user||busy)return;
+    if(!draft.country){setError('اختر بلدك من قائمة البلدان.');return}
     setBusy(true);setError('');
     try{
       const age=draft.age?Number(draft.age):null;
@@ -104,7 +106,7 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
         <div className="form-grid">
           <label>الاسم الأول<input required maxLength={60} value={draft.firstName} onChange={event=>setDraft(current=>({...current,firstName:event.target.value}))}/></label>
           <label>الاسم الأخير<input required maxLength={60} value={draft.lastName} onChange={event=>setDraft(current=>({...current,lastName:event.target.value}))}/></label>
-          <label>البلد<select required value={draft.country} onChange={event=>setDraft(current=>({...current,country:event.target.value}))}><option value="" disabled>اختر البلد</option>{countries.map(item=><option key={item} value={item}>{item}</option>)}</select></label>
+          <label>البلد<CountrySelector id="profile-country" value={draft.country} onChange={country=>setDraft(current=>({...current,country}))} required/></label>
           <label>العمر<input type="number" min={13} max={100} inputMode="numeric" value={draft.age} onChange={event=>setDraft(current=>({...current,age:event.target.value}))} placeholder="مثال: 28"/></label>
         </div>
         <p className="muted small">البريد الإلكتروني: <bdi dir="ltr">{user.email}</bdi>{age!==null&&` · العمر: ${age} سنة`} — العمر يُحفظ كسنة ميلاد ليبقى صحيحًا مع مرور الوقت.</p>

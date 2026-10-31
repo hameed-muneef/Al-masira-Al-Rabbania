@@ -1,4 +1,5 @@
 import {authClient} from './auth';
+export {countries} from './country-data';
 
 // ملف المستخدم الشخصي وإعدادات الحساب. يُخزَّن في public.user_preferences
 // المملوك للمستخدم وحده، فبيانات الاسم والبلد لا يراها أحد آخر.
@@ -41,13 +42,6 @@ export const ageFrom=(birthYear:number|null):number|null=>{
   if(month<7)age-=1; // قاعدة النصف السنوي تُبقي العمر قريبًا من الواقع
   return age;
 };
-
-export const countries=[
-  'مصر','السعودية','الإمارات','الكويت','قطر','البحرين','عُمان','اليمن','الأردن',
-  'فلسطين','سوريا','لبنان','العراق','السودان','ليبيا','تونس','الجزائر','المغرب',
-  'موريتانيا','الصومال','جيبوتي','جزر القمر','اليونان','تركيا','أوروبا','أمريكا الشمالية',
-  'أمريكا الجنوبية','أوقيانوسيا','أخرى',
-];
 
 export async function fetchProfile(userId:string):Promise<Profile|null>{
   if(!authClient)return null;

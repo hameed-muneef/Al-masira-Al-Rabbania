@@ -1,7 +1,7 @@
 import {useState,type FormEvent} from 'react';
-import {ArrowLeft,Eye,EyeOff,Globe,LockKeyhole,Mail,ShieldCheck,UserRound} from 'lucide-react';
+import {ArrowLeft,Eye,EyeOff,LockKeyhole,Mail,ShieldCheck,UserRound} from 'lucide-react';
 import {authClient} from './auth';
-import {countries} from './user-profile';
+import CountrySelector from './CountrySelector';
 import './auth.css';
 
 export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;reset?:boolean}){
@@ -52,7 +52,7 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
       const first=firstName.trim(), last=lastName.trim();
       const ageNumber=Number(age);
       if(!first||!last){setError('الاسم الأول والاسم الأخير مطلوبان.');return}
-      if(!countries.includes(country)){setError('اختر بلدك من قائمة البلدان.');return}
+      if(!country){setError('اختر بلدك من قائمة البلدان.');return}
       if(!age||!Number.isInteger(ageNumber)||ageNumber<13||ageNumber>100){setError('أدخل عمرًا بين 13 و100 سنة.');return}
     }
     setBusy(true);
@@ -94,7 +94,7 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
                 </div>
                 <div className="auth-field-row">
                   <label htmlFor="auth-country">البلد</label>
-                  <div className="auth-input"><Globe size={18}/><input id="auth-country" list="auth-country-options" value={country} onChange={e=>setCountry(e.target.value)} autoComplete="country-name" placeholder="ابحث عن بلدك" required/><datalist id="auth-country-options">{countries.map(item=><option key={item} value={item}/>)}</datalist></div>
+                  <CountrySelector id="auth-country" value={country} onChange={setCountry} required/>
                 </div>
                 <div className="auth-field-row">
                   <label htmlFor="auth-age">العمر</label>

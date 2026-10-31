@@ -4,7 +4,7 @@
 .teacher-overview h2,.teacher-application h2{margin-top:0}
 .teacher-application form{display:grid;gap:14px}
 .teacher-application label{display:grid;gap:6px;font-size:14px;font-weight:700}
-.teacher-application input,.teacher-application textarea{width:100%;max-width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;color:var(--color-ink);font:inherit}
+.teacher-application input,.teacher-application textarea{width:100%;max-width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#F8F6EF;color:var(--color-ink);font:inherit}
 .teacher-application .primary{justify-self:start}
 .teacher-status{display:flex;flex-wrap:wrap;gap:8px 16px;padding:12px;border-radius:var(--radius-sm);background:var(--color-selected)}
 .teacher-status strong{flex-basis:100%}
@@ -24,7 +24,7 @@
 .teacher-review-actions{display:flex;gap:8px;flex-wrap:wrap}
 .platform-price-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .platform-price-fields label{display:grid;gap:5px;font-size:13px;font-weight:700}
-.platform-price-fields input,.platform-price-fields select{width:100%;min-width:0;box-sizing:border-box;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;font:inherit;color:var(--color-ink)}
+.platform-price-fields input,.platform-price-fields select{width:100%;min-width:0;box-sizing:border-box;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#F8F6EF;font:inherit;color:var(--color-ink)}
 .platform-audit-list{display:grid;gap:7px;padding:0;list-style:none}
 .platform-audit-list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:#fff}
 .platform-audit-list li small{grid-column:1/-1;color:var(--color-muted)}
@@ -34,7 +34,7 @@
 .course-manager h2,.course-manager h3,.course-manager p{margin-block:0}
 .course-manager form{display:grid;gap:12px;padding:16px;border:1px solid var(--color-border);border-radius:var(--radius-sm)}
 .course-manager form label{display:grid;gap:5px;font-weight:700;font-size:14px}
-.course-manager input,.course-manager textarea,.course-manager select{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;color:var(--color-ink);font:inherit}
+.course-manager input,.course-manager textarea,.course-manager select{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#F8F6EF;color:var(--color-ink);font:inherit}
 .course-manager>.primary,.course-manager form>.primary{justify-self:start}
 .course-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .course-list li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px;border:1px solid var(--color-border);border-radius:var(--radius-sm)}

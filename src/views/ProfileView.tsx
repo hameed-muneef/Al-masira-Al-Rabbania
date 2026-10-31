@@ -14,7 +14,7 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
   const [draft,setDraft]=useState({firstName:'',lastName:'',country:'',age:'',gender:''});
-  const [settings,setSettings]=useState({timezone:'Africa/Cairo',locale:'ar',city:'',workStart:'',sleepTime:'',notifications:true,sounds:true,emailDigest:false});
+  const [settings,setSettings]=useState({timezone:'Africa/Cairo',locale:'ar',city:'',workStart:'',sleepTime:'',notifications:true,prayerTimes:{} as Record<string,string>});
   const [confirmDelete,setConfirmDelete]=useState(false);
 
   const load=async()=>{
@@ -39,8 +39,7 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
         workStart:base.work_start?.slice(0,5)??'',
         sleepTime:base.sleep_time?.slice(0,5)??'',
         notifications:base.notification_preferences.enabled!==false,
-        sounds:base.notification_preferences.sounds!==false,
-        emailDigest:base.notification_preferences.email_digest===true,
+        prayerTimes:(base.prayer_settings.times&&typeof base.prayer_settings.times==='object'?base.prayer_settings.times:{}) as Record<string,string>,
       }));
     }catch(caught){setError(caught instanceof Error?caught.message:'تعذر تحميل بيانات الحساب.')}
     finally{setLoading(false)}
@@ -69,7 +68,8 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
         city:settings.city,
         workStart:settings.workStart||null,
         sleepTime:settings.sleepTime||null,
-        notificationPreferences:{enabled:settings.notifications,sounds:settings.sounds,email_digest:settings.emailDigest},
+        prayerSettings:{times:settings.prayerTimes},
+        notificationPreferences:{enabled:settings.notifications},
       });
       await load();
       notify('حُفظت إعدادات الحساب.');
@@ -125,9 +125,8 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
         <fieldset className="profile-switches">
           <legend>الإشعارات</legend>
           <label className="profile-switch"><input type="checkbox" checked={settings.notifications} onChange={event=>setSettings(current=>({...current,notifications:event.target.checked}))}/><span>تفعيل الإشعارات داخل المنصة</span></label>
-          <label className="profile-switch"><input type="checkbox" checked={settings.sounds} onChange={event=>setSettings(current=>({...current,sounds:event.target.checked}))}/><span>أصوات التنبيه</span></label>
-          <label className="profile-switch"><input type="checkbox" checked={settings.emailDigest} onChange={event=>setSettings(current=>({...current,emailDigest:event.target.checked}))}/><span>ملخّص أسبوعي بالبريد</span></label>
         </fieldset>
+        <fieldset className="profile-switches"><legend>أوقات الصلاة اليدوية (اختياري)</legend><p className="muted small">تُحفظ في حسابك وتُستخدم عند إيقاف تحديد المواقيت تلقائيًا في مخطط اليوم.</p><div className="form-grid">{['الفجر','الشروق','الظهر','العصر','المغرب','العشاء'].map(name=><label key={name}>وقت {name}<input type="time" dir="ltr" value={settings.prayerTimes[name]??''} onChange={event=>setSettings(current=>({...current,prayerTimes:{...current.prayerTimes,[name]:event.target.value}}))}/></label>)}</div></fieldset>
         <button className="primary" type="submit" disabled={busy}><Save size={17}/> {busy?'جارٍ الحفظ…':'حفظ الإعدادات'}</button>
       </form>
     </section>

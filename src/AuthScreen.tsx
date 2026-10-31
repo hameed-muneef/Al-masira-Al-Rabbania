@@ -1,5 +1,5 @@
 import {useState,type FormEvent} from 'react';
-import {ArrowLeft,BookOpen,Eye,EyeOff,Globe,LockKeyhole,Mail,ShieldCheck,UserRound} from 'lucide-react';
+import {ArrowLeft,Eye,EyeOff,Globe,LockKeyhole,Mail,ShieldCheck,UserRound} from 'lucide-react';
 import {authClient} from './auth';
 import {countries} from './user-profile';
 import './auth.css';
@@ -52,7 +52,7 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
       const first=firstName.trim(), last=lastName.trim();
       const ageNumber=Number(age);
       if(!first||!last){setError('الاسم الأول والاسم الأخير مطلوبان.');return}
-      if(!country){setError('اختر بلدك.');return}
+      if(!countries.includes(country)){setError('اختر بلدك من قائمة البلدان.');return}
       if(!age||!Number.isInteger(ageNumber)||ageNumber<13||ageNumber>100){setError('أدخل عمرًا بين 13 و100 سنة.');return}
     }
     setBusy(true);
@@ -73,13 +73,13 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
   return <main className="auth-page" dir="rtl">
     <div className="auth-shell">
       <section className="auth-form-side" aria-labelledby="auth-title">
-        <div className="auth-logo"><span><BookOpen size={25}/></span><div><strong>الرَّبَّانِيُّون</strong><small>{admin?'بوابة إدارة المنصة':'علمٌ يُثمر إيمانًا، وإيمانٌ يُثمر عملًا'}</small></div></div>
+        <div className="auth-logo"><span><img src="/brand/book-mark.svg" alt=""/></span><div><strong>الرَّبَّانِيُّون</strong><small>{admin?'بوابة إدارة المنصة':'على هدي الكتاب والسنة'}</small></div></div>
         <div className="auth-form-wrap">
           {admin&&<nav className="auth-role-switch" aria-label="اختيار الواجهة"><a href="/">واجهة المستخدم</a><a href="/admin" aria-current="page">دخول المشرف</a></nav>}
           <span className="auth-eyebrow">{reset?'استعادة الحساب':admin?'مدخل المشرفين':'مسيرتك تبدأ هنا'}</span>
           <h1 id="auth-title">{reset?'تعيين كلمة مرور جديدة':forgot?'نسيت كلمة المرور؟':admin?'دخول المشرف':mode==='register'?'أنشئ حسابك':'مرحبًا بعودتك'}</h1>
           <p className="auth-lead">{reset?'اختر كلمة مرور جديدة لحسابك.':forgot?'أدخل بريد حسابك وسنرسل إليك رابطًا لتغيير كلمة المرور.':admin?'سجّل بالبريد المخصص للإدارة. تُفعّل الصلاحية بعد تأكيد البريد والتحقق من اعتماده.':mode==='register'?'خطوة صغيرة اليوم، وأثر يبقى معك كل يوم.':'أكمل ما بدأت، وتابع خطواتك في العلم والعمل.'}</p>
-          {!admin&&!forgot&&!reset&&<div className="auth-tabs" role="group" aria-label="طريقة الدخول"><button type="button" className={mode==='register'?'selected':''} onClick={()=>switchMode('register')}>إنشاء حساب</button><button type="button" className={mode==='login'?'selected':''} onClick={()=>switchMode('login')}>تسجيل الدخول</button></div>}
+          {!admin&&!forgot&&!reset&&<div className="auth-tabs" role="group" aria-label="طريقة الدخول"><button type="button" className={mode==='register'?'selected':''} aria-pressed={mode==='register'} onClick={()=>switchMode('register')}>إنشاء حساب</button><button type="button" className={mode==='login'?'selected':''} aria-pressed={mode==='login'} onClick={()=>switchMode('login')}>تسجيل الدخول</button></div>}
           <form className="auth-form" onSubmit={submit}>
             {mode==='register'&&!admin&&<>
               <fieldset className="auth-profile-fields">
@@ -94,7 +94,7 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
                 </div>
                 <div className="auth-field-row">
                   <label htmlFor="auth-country">البلد</label>
-                  <div className="auth-input"><Globe size={18}/><select id="auth-country" value={country} onChange={e=>setCountry(e.target.value)} required><option value="" disabled>اختر البلد</option>{countries.map(item=><option key={item} value={item}>{item}</option>)}</select></div>
+                  <div className="auth-input"><Globe size={18}/><input id="auth-country" list="auth-country-options" value={country} onChange={e=>setCountry(e.target.value)} autoComplete="country-name" placeholder="ابحث عن بلدك" required/><datalist id="auth-country-options">{countries.map(item=><option key={item} value={item}/>)}</datalist></div>
                 </div>
                 <div className="auth-field-row">
                   <label htmlFor="auth-age">العمر</label>
@@ -105,8 +105,8 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
             </>}
             {!reset&&<><label htmlFor="auth-email">البريد الإلكتروني</label><div className="auth-input"><Mail size={18}/><input id="auth-email" type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email" placeholder="name@example.com" required dir="ltr"/></div></>}
             {!forgot&&<>
-            <label htmlFor="auth-password">كلمة المرور</label><div className="auth-input"><LockKeyhole size={18}/><input id="auth-password" type={visible?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} autoComplete={mode==='register'||reset?'new-password':'current-password'} minLength={6} placeholder="ستة أحرف على الأقل" required/><button type="button" aria-label={visible?'إخفاء كلمة المرور':'إظهار كلمة المرور'} onClick={()=>setVisible(!visible)}>{visible?<EyeOff size={18}/>:<Eye size={18}/>}</button></div>
-            {(mode==='register'||reset)&&<><label htmlFor="auth-confirm">تأكيد كلمة المرور</label><div className="auth-input"><LockKeyhole size={18}/><input id="auth-confirm" type={visible?'text':'password'} value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password" placeholder="أعد كتابة كلمة المرور" required/></div></>}
+            <label htmlFor="auth-password">كلمة المرور</label><div className="auth-input"><LockKeyhole size={18}/><input id="auth-password" type={visible?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} autoComplete={mode==='register'||reset?'new-password':'current-password'} minLength={6} placeholder="ستة أحرف على الأقل" required dir="ltr"/><button type="button" aria-label={visible?'إخفاء كلمة المرور':'إظهار كلمة المرور'} onClick={()=>setVisible(!visible)}>{visible?<EyeOff size={18}/>:<Eye size={18}/>}</button></div>
+            {(mode==='register'||reset)&&<><label htmlFor="auth-confirm">تأكيد كلمة المرور</label><div className="auth-input"><LockKeyhole size={18}/><input id="auth-confirm" type={visible?'text':'password'} value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password" placeholder="أعد كتابة كلمة المرور" required dir="ltr"/></div></>}
             </>}
             {error&&<p className="auth-error" role="alert">{error}</p>}{message&&<p className="auth-success" role="status">{message}</p>}
             {!(reset&&message)&&<button className="auth-submit" type="submit" disabled={busy||!authClient}>{busy?'جارٍ المتابعة...':reset?'حفظ كلمة المرور':forgot?'إرسال رابط الاستعادة':mode==='register'?'إنشاء الحساب':'الدخول إلى حسابي'}<ArrowLeft size={18}/></button>}
@@ -115,9 +115,9 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
           {reset&&<a className="auth-text-action" href={new URLSearchParams(window.location.search).get('returnTo')==='admin'?'/admin':'/'}>العودة إلى تسجيل الدخول</a>}
           {!authClient&&<div className="auth-setup"><ShieldCheck size={19}/><p>خدمة المصادقة غير متاحة حاليًا؛ تسجيل الدخول وإنشاء الحسابات متوقفان.</p></div>}
         </div>
-        <p className="auth-foot">الربانيون · مساحة تعينك على تنظيم يومك ومسيرتك</p>
+        <p className="auth-foot">الرَّبَّانِيُّون · على هدي الكتاب والسنة</p>
       </section>
-      <aside className="auth-story"><div className="auth-story-top"><span className="auth-star">✦</span><span>مساحة للعلم والعمل</span></div><div className="auth-story-center"><div className="auth-arch"><BookOpen size={60} strokeWidth={1.25}/></div><span className="auth-story-kicker">رحلة تتجدد كل يوم</span><h2>اعلم، واعمل،<br/>واثبت على الطريق.</h2><p>خطّط ليومك، تابع أهدافك، واقرأ ما ينفعك في مكان واحد يرافقك في مسيرتك إلى الله.</p></div><div className="auth-story-bottom"><span>يومي مع الله</span><span>السير إلى الله</span><span>المؤمن القوي</span></div></aside>
+      <aside className="auth-story"><div className="auth-story-center"><div className="auth-brand-lockup"><img src="/brand/book-mark.svg" alt=""/><div className="auth-brand-copy"><strong>الرَّبَّانِيُّون</strong><span>علمٌ نافع، وعملٌ صالح، وقلبٌ خاشع.</span><small>على هدي الكتاب والسنة</small></div></div><p>مساحة تجمع العلم والعمل، وتعينك على الثبات في مسيرتك إلى الله.</p><blockquote className="auth-rabbani-verse"><p>﴿وَلَٰكِن كُونُوا رَبَّانِيِّينَ بِمَا كُنتُمْ تُعَلِّمُونَ الْكِتَابَ وَبِمَا كُنتُمْ تَدْرُسُونَ﴾</p><cite>سورة آل عمران، الآية ٧٩</cite></blockquote><p className="auth-rabbani-note">نتعلم كتاب الله ونعلمه، ونسعى أن يكون العلم طريقًا إلى العمل والصلاح.</p></div><div className="auth-story-bottom"><span>يومي مع الله</span><span>السير إلى الله</span><span>المؤمن القوي</span></div></aside>
     </div>
   </main>
 }

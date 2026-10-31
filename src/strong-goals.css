@@ -8,16 +8,16 @@
 .goal-period-heading h2{font-size:22px;line-height:1.5;color:var(--color-ink);margin:4px 0}
 .goal-period-heading p{font-size:13px;color:var(--color-muted);margin:0;line-height:1.8}
 .goal-period-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.goal-period-card{--period-accent:#31584b;--period-tint:#dce5db;--period-border:#c5d4c7;min-width:0;background:linear-gradient(180deg,var(--period-tint),#f3f1e9 130px);border:1px solid var(--period-border);border-inline-start:4px solid var(--period-accent);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-soft)}
+.goal-period-card{--period-accent:#244638;--period-tint:#dce5dc;--period-border:#c5d4c7;min-width:0;background:linear-gradient(180deg,var(--period-tint),#f2efe5 130px);border:1px solid var(--period-border);border-inline-start:4px solid var(--period-accent);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-soft)}
 .goal-period-card-weekly{--period-accent:#4e6953;--period-tint:#e2e9dc;--period-border:#cbd8c8}
-.goal-period-card-monthly{--period-accent:#806640;--period-tint:#eee9da;--period-border:#ded2ba}
-.goal-period-card-yearly{--period-accent:#53685a;--period-tint:#e5ebe3;--period-border:#cbd8cd}
+.goal-period-card-monthly{--period-accent:#786137;--period-tint:#eee9da;--period-border:#ded2ba}
+.goal-period-card-yearly{--period-accent:#718078;--period-tint:#e5ebe3;--period-border:#cbd8cd}
 .goal-period-card-head{display:flex;align-items:center;gap:12px;padding-bottom:15px;border-bottom:1px solid var(--period-border)}
-.goal-period-icon{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;background:#f3f1e9;color:var(--period-accent);border:1px solid var(--period-border);border-radius:12px}
+.goal-period-icon{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;background:#f2efe5;color:var(--period-accent);border:1px solid var(--period-border);border-radius:12px}
 .goal-period-title{min-width:0}
 .goal-period-card-head h3{font-size:19px;font-weight:800;line-height:1.4;color:var(--period-accent);margin:0}
 .goal-period-card-head small{display:block;color:#66766a;font-size:12px;font-weight:600;line-height:1.5;margin-top:3px}
-.goal-period-count{margin-inline-start:auto;color:var(--period-accent);background:#f3f1e9;border:1px solid var(--period-border);border-radius:20px;padding:5px 11px;font-size:14px;font-weight:800;white-space:nowrap}
+.goal-period-count{margin-inline-start:auto;color:var(--period-accent);background:#f2efe5;border:1px solid var(--period-border);border-radius:20px;padding:5px 11px;font-size:14px;font-weight:800;white-space:nowrap}
 .goal-period-count span{font-size:11px;font-weight:600;color:#68776c}
 .goal-period-card-list{max-height:280px;overflow:auto;scrollbar-color:#c6d5c6 transparent}
 .goal-period-empty{font-size:14px;color:#67746b;line-height:1.8;margin:15px 0 2px}
@@ -60,7 +60,7 @@
 .goal-meta{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;border-bottom:1px solid var(--color-border);padding:14px 0;margin-bottom:14px}
 .goal-meta span{display:inline-flex;align-items:center;gap:6px;background:#f4f6f1;color:#506a56;border-radius:20px;padding:5px 11px;font-size:12px}
 .goal-meta span:last-child{background:#f4efdf;color:#6f5a2d}
-.goal-plan-body{background:#f7f9f5;border:1px solid #e5ece2;border-radius:12px;padding:14px;margin-top:14px}
+.goal-plan-body{background:#F2EFE5;border:1px solid #e5ece2;border-radius:12px;padding:14px;margin-top:14px}
 .goal-plan-body h4{color:var(--color-primary);font-size:16px;margin:0 0 8px}
 .goal-action-row{display:flex;align-items:center;gap:10px;min-height:52px;padding:7px 0;border-bottom:1px solid #edf0ea}
 .goal-action-row label{display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer;color:var(--color-ink);font-weight:600;line-height:1.6}
@@ -71,16 +71,16 @@
 .goal-add-step input{flex:1;min-width:180px}
 .goal-add-step select{min-width:115px}
 .goal-add-step button{display:flex;align-items:center;gap:5px;white-space:nowrap}
-.goal-step-edit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;background:#f7f9f5;border-radius:8px}
+.goal-step-edit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;background:#F2EFE5;border-radius:8px}
 .goal-step-edit input{flex:1;min-width:160px}
 .goal-step-edit select{min-width:110px}
 .goal-step-history{padding:5px 29px 9px;color:#5e735f;font-size:12px}
 .goal-step-history summary{cursor:pointer;width:fit-content}
 .goal-step-history ul{margin:7px 0;padding-inline-start:21px;line-height:1.9}
-.goal-edit-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#f7f9f5;padding:16px;border-radius:10px;margin-top:15px}
+.goal-edit-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#F2EFE5;padding:16px;border-radius:10px;margin-top:15px}
 .goal-edit-form label:nth-child(2){grid-column:1/-1;grid-row:2}
 .goal-edit-form>div{display:flex;gap:8px;align-items:end}
-.goal-history{background:#fff;border:1px solid var(--color-border);border-radius:18px;padding:24px;margin:8px 0 20px;box-shadow:var(--shadow-soft)}
+.goal-history{background:#F8F6EF;border:1px solid var(--color-border);border-radius:18px;padding:24px;margin:8px 0 20px;box-shadow:var(--shadow-soft)}
 .goal-history-heading{display:flex;align-items:center;gap:13px}
 .goal-history-icon{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;background:#e8f0e8;color:var(--color-primary);border-radius:12px}
 .goal-history-heading h2{margin:0;color:var(--color-ink);font-size:22px}
@@ -89,9 +89,9 @@
 .goal-history-filters{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 12px}
 .goal-history-filters button{border:1px solid var(--color-border);background:#f8faf7;color:var(--color-body);border-radius:20px;padding:7px 15px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .goal-history-filters button.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
-.goal-history-period-picker{display:flex;align-items:end;gap:12px;flex-wrap:wrap;background:#f7f9f5;border:1px solid #e5ece2;border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.goal-history-period-picker{display:flex;align-items:end;gap:12px;flex-wrap:wrap;background:#F2EFE5;border:1px solid #e5ece2;border-radius:12px;padding:12px 14px;margin-bottom:16px}
 .goal-history-period-picker label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800;color:var(--color-ink)}
-.goal-history-period-picker input,.goal-history-period-picker select{min-height:40px;min-width:150px;border:1px solid var(--color-border);border-radius:8px;background:#fff;color:var(--color-ink);padding:5px 9px;font:inherit}
+.goal-history-period-picker input,.goal-history-period-picker select{min-height:40px;min-width:150px;border:1px solid var(--color-border);border-radius:8px;background:#F8F6EF;color:var(--color-ink);padding:5px 9px;font:inherit}
 .goal-history-selected{margin-inline-start:auto;align-self:center;color:var(--color-primary);font-size:14px;line-height:1.6}
 .goal-history-empty{color:var(--color-muted);font-size:14px;background:#f8faf7;padding:18px;border-radius:10px;line-height:1.8}
 .goal-history-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}

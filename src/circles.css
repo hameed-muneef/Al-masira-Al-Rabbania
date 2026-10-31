@@ -13,7 +13,7 @@
 .circle-form form{display:grid;gap:14px;margin-top:16px}
 .circle-form .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 .circle-form label{display:grid;gap:6px;font-size:14px;font-weight:700;color:var(--color-body)}
-.circle-form input,.circle-form select,.circle-form textarea{width:100%;min-height:42px;padding:9px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;font:inherit;color:var(--color-ink);box-sizing:border-box;line-height:1.6}
+.circle-form input,.circle-form select,.circle-form textarea{width:100%;min-height:42px;padding:9px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#F8F6EF;font:inherit;color:var(--color-ink);box-sizing:border-box;line-height:1.6}
 .circle-form textarea{resize:vertical}
 .circle-form .primary{justify-self:start;min-width:150px}
 .circle-form>p{margin:2px 0 0}
@@ -35,7 +35,7 @@
 .circle-invites li select{padding:6px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface-soft);font:inherit}
 .circle-session-form{display:grid;gap:12px;margin-top:16px}
 .circle-session-form label{display:grid;gap:6px;font-size:14px;font-weight:700;color:var(--color-body)}
-.circle-session-form input,.circle-session-form textarea{width:100%;min-width:0;box-sizing:border-box;padding:9px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#fff;font:inherit;color:var(--color-ink)}
+.circle-session-form input,.circle-session-form textarea{width:100%;min-width:0;box-sizing:border-box;padding:9px 12px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);background:#F8F6EF;font:inherit;color:var(--color-ink)}
 .circle-session-form .circle-meet-create,.circle-session-form .primary{justify-self:start}
 .circle-session-form p{margin:0}
 .circle-invite-created{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -53,7 +53,7 @@
 .circle-progress h4{margin:0}
 .circle-scientific-program{margin-block:12px;padding:12px}
 .circle-scientific-program>summary{cursor:pointer;font-weight:800;color:var(--color-ink)}
-.review-filter{min-height:40px;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);font:inherit;background:#fff;color:var(--color-ink)}
+.review-filter{min-height:40px;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);font:inherit;background:#F8F6EF;color:var(--color-ink)}
 @media(max-width:600px){.review-filter{width:100%;box-sizing:border-box}.circle-progress li{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.circle-progress li .soft-btn{margin-inline-start:0}}
 .circle-progress-share{display:flex!important;align-items:center;gap:8px}
 .circle-progress-share input{width:auto!important;margin:0;flex:none}
@@ -61,7 +61,7 @@
 .circle-program ul{padding-inline-start:24px;line-height:1.9}
 .circle-program-editor,.circle-program-task{display:grid;gap:12px}
 .circle-program-editor label,.circle-program-task label,.circle-program>label{display:grid;gap:5px;font-size:14px;font-weight:700}
-.circle-program-editor input,.circle-program-editor select,.circle-program>label select{width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);font:inherit;background:#fff;color:var(--color-ink)}
+.circle-program-editor input,.circle-program-editor select,.circle-program>label select{width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--color-border-strong);border-radius:var(--radius-sm);font:inherit;background:#F8F6EF;color:var(--color-ink)}
 .circle-program-task{padding:14px;border:1px solid var(--color-border);border-radius:var(--radius-sm);grid-template-columns:repeat(2,minmax(0,1fr))}
 .circle-program-task label:first-child,.circle-program-task label:last-of-type{grid-column:1/-1}
 .circle-program-task>.soft-btn{justify-self:start}

@@ -1,18 +1,18 @@
 .learning-journey{
-  --learn-bg:#e8ede6;
-  --learn-surface:#f3f1e9;
-  --learn-overview:#31584b;
+  --learn-bg:#e5ebe3;
+  --learn-surface:#f2efe5;
+  --learn-overview:#244638;
   --learn-hero:#eee5d5;
   --learn-navigation:#dce7e1;
   --learn-stations:#e6eadf;
-  --learn-green:#293a30;
-  --learn-green-soft:#31584b;
-  --learn-gold:#806640;
-  --learn-text:#293a30;
-  --learn-muted:#5d7062;
-  --learn-border:#ccd8cd;
-  --learn-tint:#dce5db;
-  --learn-reading:#f3f1e9;
+  --learn-green:#263c32;
+  --learn-green-soft:#244638;
+  --learn-gold:#786137;
+  --learn-text:#263c32;
+  --learn-muted:#718078;
+  --learn-border:#D4DDD3;
+  --learn-tint:#dce5dc;
+  --learn-reading:#f2efe5;
   --learn-sources:#e2ebde;
   --learn-videos:#e3eeea;
   color:var(--learn-text);
@@ -20,8 +20,8 @@
   padding:0;
   min-width:0;
 }
-.main-learning{background:#e8ede6}
-.main-learning .topbar{min-height:78px;padding-block:9px;background:#f3f1e9;border-color:#ccd8cd}
+.main-learning{background:#e5ebe3}
+.main-learning .topbar{min-height:78px;padding-block:9px;background:#f2efe5;border-color:#D4DDD3}
 .main-learning .content{padding-block-start:16px}
 .main-learning .back{margin-bottom:10px}
 .admin-main{width:100%;min-width:0}
@@ -30,12 +30,12 @@
 .learning-journey :is(button,a,summary,input,select,textarea):focus-visible{outline:3px solid var(--learn-gold);outline-offset:3px}
 .learning-journey button{transition:background-color .18s,border-color .18s,color .18s,transform .18s}
 .learning-journey button:active:not(:disabled){transform:translateY(1px)}
-.learning-overview{display:flex;align-items:center;justify-content:space-between;gap:clamp(18px,2vw,30px);min-width:0;margin-bottom:20px;padding:clamp(19px,2.2vw,28px);border:1px solid #293a30;border-radius:16px;background:linear-gradient(115deg,#293a30 0%,#31584b 100%);box-shadow:0 12px 30px rgba(41,58,48,.14);color:#f3f1e9}
+.learning-overview{display:flex;align-items:center;justify-content:space-between;gap:clamp(18px,2vw,30px);min-width:0;margin-bottom:20px;padding:clamp(19px,2.2vw,28px);border:1px solid #263c32;border-radius:16px;background:linear-gradient(115deg,#263c32 0%,#244638 100%);box-shadow:0 12px 30px rgba(41,58,48,.14);color:#f2efe5}
 .learning-journey .learning-intro{flex:1 1 430px;min-width:0;margin:0;padding:0;border:0}
 .learning-intro .eyebrow,.learning-hero .eyebrow,.learning-article>.eyebrow{color:var(--learn-gold);font-size:13px;font-weight:700}
 .learning-overview .eyebrow{color:#d3ba8f}
-.learning-journey .learning-intro h1{font-size:clamp(24px,1.8vw,27px);font-weight:700;line-height:1.4;color:#f3f1e9;margin:6px 0}
-.learning-journey .learning-intro p{font-size:15px;line-height:1.8;max-width:58ch;color:#dce5db;margin:0;margin-bottom:0}
+.learning-journey .learning-intro h1{font-size:clamp(24px,1.8vw,27px);font-weight:700;line-height:1.4;color:#f2efe5;margin:6px 0}
+.learning-journey .learning-intro p{font-size:15px;line-height:1.8;max-width:58ch;color:#dce5dc;margin:0;margin-bottom:0}
 .learning-overview-actions{flex:0 1 530px;min-width:0}
 .learning-toolbar{display:flex;justify-content:flex-start;gap:7px;flex-wrap:wrap;margin:0}
 .learning-toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:8px 12px;border:1px solid var(--learn-border);border-radius:9px;background:var(--learn-surface);color:var(--learn-green);font-size:12px;font-weight:700;white-space:nowrap}
@@ -45,7 +45,7 @@
 .learning-context-note{margin:9px 0 0;color:#bcd1c4;font-size:12px;line-height:1.6}
 .learning-overview .learning-toolbar button{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.32);color:#fff}
 .learning-overview .learning-toolbar button:hover{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.45)}
-.learning-overview .learning-toolbar button.primary{background:#fff;border-color:#fff;color:#1c4234}
+.learning-overview .learning-toolbar button.primary{background:#F8F6EF;border-color:#fff;color:#1c4234}
 .learning-overview .learning-toolbar button.primary:hover{background:#eef5f0;border-color:#eef5f0}
 .learning-overview .journey-library-jump{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff}
 .learning-overview .journey-library-jump:hover{background:rgba(255,255,255,.22)}
@@ -76,11 +76,11 @@
 .path-roadmap-list>li:first-child .path-station::before{top:50%}
 .path-roadmap-list>li:last-child .path-station::before{bottom:50%}
 .path-station.done::before,.path-station.open::before{background:#a9c3ad}
-.path-station:hover:not(:disabled){background:#dce5db}
+.path-station:hover:not(:disabled){background:#dce5dc}
 .path-station.selected{background:#cfe1d4;border-color:#9fbea8;box-shadow:inset -3px 0 var(--learn-green)}
 .path-station:disabled{cursor:not-allowed;opacity:1}
 .path-station:disabled:hover{background:#edf3ee}
-.path-station-icon{position:relative;z-index:1;display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:50%;border:2px solid #d9e4dc;background:#fff;color:var(--learn-gold);font-size:13px;font-weight:700}
+.path-station-icon{position:relative;z-index:1;display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:50%;border:2px solid #d9e4dc;background:#F8F6EF;color:var(--learn-gold);font-size:13px;font-weight:700}
 .path-station.open .path-station-icon{border-color:var(--learn-gold);background:#fdf9f0;color:var(--learn-gold);box-shadow:0 0 0 3px rgba(128,104,62,.14)}
 .path-station.done .path-station-icon{border-color:var(--learn-green);background:var(--learn-green);color:#fff}
 .path-station.locked .path-station-icon{background:#f2f5f1;color:#87968c;border-color:#e0e9e1}
@@ -108,7 +108,7 @@
 .learning-stations h3{margin:3px 7px 10px;color:var(--learn-green);font-size:16px;font-weight:700}
 .learning-stations button{display:flex;align-items:center;gap:11px;width:100%;min-height:47px;padding:8px 10px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--learn-muted);text-align:right;font-size:14px;line-height:1.5}
 .learning-stations button:hover:not(:disabled){background:var(--learn-tint);color:var(--learn-green)}
-.learning-stations button.selected{background:#dce5db;border-color:#b9cbbd;color:var(--learn-green);font-weight:700}
+.learning-stations button.selected{background:#dce5dc;border-color:#b9cbbd;color:var(--learn-green);font-weight:700}
 .learning-stations button.finished:not(.selected){color:var(--learn-green-soft)}
 .learning-stations button:disabled{opacity:.62;cursor:not-allowed}
 .learning-stations button>span:first-child{display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:50%;background:#eef1eb;color:var(--learn-green-soft);font-size:12px;font-weight:700}
@@ -129,7 +129,7 @@
 .station-source-list li{min-width:0;padding-inline-start:3px}
 .station-source-list li::marker{color:#315b42;font-size:13px;font-weight:800}
 .station-source-list li:first-child .learning-resource{border-top:0}
-.resource-symbol{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:9px;background:#dce5db;color:var(--learn-green)}
+.resource-symbol{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:9px;background:#dce5dc;color:var(--learn-green)}
 .learning-resource>div{min-width:0;flex:1}
 .resource-kind{display:block;color:var(--learn-gold);font-size:11px;font-weight:700;line-height:1.7}
 .learning-journey .learning-resource :is(a,.resource-read){display:inline-flex;align-items:center;gap:6px;color:var(--learn-green);font-size:14px;font-weight:700;line-height:1.6;text-decoration:none;overflow-wrap:anywhere}
@@ -165,7 +165,7 @@
 .journey-library-heading h2{margin:0 0 4px;color:var(--learn-green);font-size:20px}
 .journey-library-heading p{margin:0;color:var(--learn-muted);font-size:13px;line-height:1.7}
 .journey-library-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
-.journey-library-card{min-width:0;padding:18px;border:1px solid var(--learn-border);border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(18,56,46,.04),0 8px 22px rgba(18,56,46,.06)}
+.journey-library-card{min-width:0;padding:18px;border:1px solid var(--learn-border);border-radius:14px;background:#F8F6EF;box-shadow:0 1px 2px rgba(18,56,46,.04),0 8px 22px rgba(18,56,46,.06)}
 .journey-library-card>h3{margin:0 0 10px;color:var(--learn-green);font-size:17px;line-height:1.6}
 .journey-library-card h4{margin:14px 0 6px;color:var(--learn-gold);font-size:13px}
 .journey-library-card .learning-resource{padding:10px 0}

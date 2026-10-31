@@ -1,17 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="الربانيون">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1d4f43"/>
-      <stop offset="1" stop-color="#163d34"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <g fill="none" stroke="#f4f1ea" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M96 150v212c0 14 10 24 24 24h100c14 0 26 12 26 26 0-14 12-26 26-26h100c14 0 24-10 24-24V150c0-14-10-24-24-24H272c-14 0-26 12-26 26 0-14-12-26-26-26H120c-14 0-24 10-24 24z"/>
-    <path d="M256 152v260" stroke-width="14"/>
-    <path d="M148 190h66" stroke-width="12"/>
-    <path d="M298 190h66" stroke-width="12"/>
-    <path d="M148 240h66" stroke-width="12"/>
-    <path d="M298 240h66" stroke-width="12"/>
-  </g>
+  <rect width="512" height="512" rx="96" fill="#244638"/>
+  <path d="M256 150c-49-42-118-56-192-43v254c74-13 143 1 192 43 49-42 118-56 192-43V107c-74-13-143 1-192 43Z" fill="none" stroke="#D5B77B" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M256 151v251" fill="none" stroke="#D5B77B" stroke-width="20" stroke-linecap="round"/>
 </svg>

@@ -38,6 +38,11 @@ test('circle live sessions and announcements: founder manages, members read, oth
     await db.exec('begin');
     await applyMigrations(client, await readMigrations());
     await db.exec('commit');
+    await db.query('insert into public.admin_accounts(user_id) values($1)',[outsider]);
+    await asUser(outsider,async()=>{
+      await db.query('select public.save_platform_feature_pricing($1,$2,$3,$4,$5,$6,$7,$8)',
+        ['circle_live','جلسات التواصي المباشرة','',true,true,null,null,null]);
+    });
     await db.query(`insert into public.study_groups(id, founder_id, name, kind) values ('44444444-4444-4444-8444-444444444444', '${founder}', 'حلقة', 'friends')`);
     await db.query(`insert into public.group_members(group_id,user_id,role) values ('44444444-4444-4444-8444-444444444444','${founder}','founder'), ('44444444-4444-4444-8444-444444444444','${member}','member')`);
     const circleId = '44444444-4444-4444-8444-444444444444';
@@ -102,10 +107,10 @@ test('circle live sessions and announcements: founder manages, members read, oth
     await asUser(member, async () => {
       await assert.rejects(db.query('select public.reveal_circle_meeting_url($1)',[sessionId]),e=>e.code==='42501');
     });
-    await db.query('insert into public.admin_accounts(user_id) values($1)',[outsider]);
     await asUser(outsider, async () => {
-      await db.query('select public.save_platform_feature($1,$2,$3,$4,$5)',['notes_plus','ملاحظات إضافية','وصف',true,true]);
-      await assert.rejects(db.query('select public.save_platform_feature($1,$2,$3,$4,$5)',['circle_live','جلسات التواصي','',true,false]),e=>e.code==='22023');
+      await db.query('select public.save_platform_feature($1,$2,$3,$4,$5)',['study_circles','المدارسة','وصف',true,true]);
+      await db.query('select public.save_platform_feature($1,$2,$3,$4,$5)',['circle_live','جلسات التواصي','',true,false]);
+      assert.equal((await db.query("select requires_premium from public.platform_features where key='circle_live'")).rows[0].requires_premium,false);
       await db.query('select public.set_member_feature($1,$2,$3)',['member@example.test','circle_live',true]);
       assert.equal((await db.query('select * from public.list_member_features($1)',['member@example.test'])).rows.length,1);
     });

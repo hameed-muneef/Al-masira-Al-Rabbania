@@ -4,7 +4,7 @@ import {authClient} from './auth';
 import {countries} from './user-profile';
 import './auth.css';
 
-export default function AuthScreen({onDemo,allowDemo=true,admin=false,reset=false}:{onDemo:()=>void;allowDemo?:boolean;admin?:boolean;reset?:boolean}){
+export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;reset?:boolean}){
   const [mode,setMode]=useState<'login'|'register'>(admin?'login':'register');
   const [forgot,setForgot]=useState(false);
   const [email,setEmail]=useState('');
@@ -21,7 +21,7 @@ export default function AuthScreen({onDemo,allowDemo=true,admin=false,reset=fals
   const switchMode=(next:'login'|'register')=>{setMode(next);setError('');setMessage('');setPassword('');setConfirm('')};
   async function submit(event:FormEvent){
     event.preventDefault();setError('');setMessage('');
-    if(!authClient){setError('إنشاء الحسابات غير مفعّل بعد. يمكنك استكشاف النسخة المحلية أدناه.');return}
+    if(!authClient){setError('خدمة المصادقة غير متاحة حاليًا. يرجى المحاولة لاحقًا.');return}
     if(reset){
       if(password!==confirm){setError('كلمتا المرور غير متطابقتين.');return}
       setBusy(true);
@@ -113,8 +113,7 @@ export default function AuthScreen({onDemo,allowDemo=true,admin=false,reset=fals
           </form>
           {!reset&&((forgot||mode==='login')&&<button type="button" className="auth-text-action" onClick={()=>{setForgot(!forgot);setError('');setMessage('')}}>{forgot?'العودة إلى تسجيل الدخول':'نسيت كلمة المرور؟'}</button>)}
           {reset&&<a className="auth-text-action" href={new URLSearchParams(window.location.search).get('returnTo')==='admin'?'/admin':'/'}>العودة إلى تسجيل الدخول</a>}
-          {!authClient&&<div className="auth-setup"><ShieldCheck size={19}/><p>الحسابات الحقيقية بانتظار ربط خدمة المصادقة. يمكنك الآن استخدام النسخة التجريبية على هذا الجهاز.</p></div>}
-          {allowDemo&&<button className="auth-demo" onClick={onDemo}>استكشاف المنصة دون حساب <ArrowLeft size={17}/></button>}
+          {!authClient&&<div className="auth-setup"><ShieldCheck size={19}/><p>خدمة المصادقة غير متاحة حاليًا؛ تسجيل الدخول وإنشاء الحسابات متوقفان.</p></div>}
         </div>
         <p className="auth-foot">الربانيون · مساحة تعينك على تنظيم يومك ومسيرتك</p>
       </section>

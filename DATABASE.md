@@ -18,6 +18,14 @@ automatic backfill. Existing data is neither overwritten nor copied into a secon
 independently editable representation. New tables start empty. Do not switch reads
 to them until a separately tested conversion and client cutover are implemented.
 
+Cloud user-state payloads store personal `curriculumProgress`, not copies of the
+shared curriculum units and resources. `saveCloudState` strips the shared catalog
+before upsert; `load_my_user_state()` returns only personal progress from legacy
+payloads that still contain a curriculum snapshot. Migration
+`202610310005_compact_user_state.sql` is applied to the connected Supabase project.
+The client retains an owner-RLS fallback for compatibility with environments where
+the RPC has not yet been deployed.
+
 ## Data map
 
 | Feature | Tables | Key decisions |

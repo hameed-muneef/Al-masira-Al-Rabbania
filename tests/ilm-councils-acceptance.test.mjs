@@ -34,6 +34,10 @@ test('ilm councils: lifecycle, publishing gates, entitlement, submission privacy
     await applyMigrations(client, await readMigrations());
     await db.exec('commit');
     await db.query('insert into public.admin_accounts(user_id) values($1)', [admin]);
+    await asUser(admin,async()=>{
+      await db.query('select public.save_platform_feature_pricing($1,$2,$3,$4,$5,$6,$7,$8)',
+        ['circle_live','جلسات التواصي المباشرة','',true,true,null,null,null]);
+    });
 
     // 1) قبل الاعتماد: لا إنشاء ولا نشر.
     await asUser(teacher, async () => {

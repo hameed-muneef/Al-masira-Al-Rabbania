@@ -22,7 +22,7 @@ test('mudarasa foundation: create, membership, invites, join, materials, plan, p
   }
   try {
     await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
-      create schema auth; create schema storage;
+      create schema auth; create schema storage; create schema extensions;
       create table auth.users(id uuid primary key, email text, email_confirmed_at timestamptz);
       create function auth.uid() returns uuid language sql stable as $$
         select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
@@ -30,7 +30,7 @@ test('mudarasa foundation: create, membership, invites, join, materials, plan, p
       grant usage on schema auth, public to anon, authenticated;
       create table storage.buckets(id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
       create table storage.objects(id uuid primary key, bucket_id text, name text);
-      alter table storage.objects enable row level security; create extension if not exists pgcrypto;`);
+      alter table storage.objects enable row level security; create extension if not exists pgcrypto with schema extensions;`);
     await db.exec(`insert into auth.users(id) values ('${creator}'),('${supervisor}'),('${teacher}'),('${member}'),('${outsider}'),('${admin}')`);
     await db.exec('begin');
     await applyMigrations(client, await readMigrations());

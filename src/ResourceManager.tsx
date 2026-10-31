@@ -1,8 +1,8 @@
 import {useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
-import {ArrowDown,ArrowUp,Plus,Trash2,X} from 'lucide-react';
+import {Archive,ArrowDown,ArrowUp,Plus,X} from 'lucide-react';
 import {kindLabels,reviseUnit,safeUrl,stationTitles,type Curriculum,type Resource,type Unit} from './curriculum';
-import {assignResource,removeResource,reorderResource} from './resource-management';
+import {archiveResource,assignResource,reorderResource} from './resource-management';
 import {uploadBookPdf} from './book-upload';
 import {uid} from './id';
 import './resource-manager.css';
@@ -18,7 +18,7 @@ export default function ResourceManager({data,unit,disabled,onChange}:Props){
     {unit.resources.length===0&&<p className="muted">لا توجد مصادر بعد. أضف مصدرًا من الزر أعلاه.</p>}
     <ol className="managed-resources">{unit.resources.map((resource,index)=><li key={resource.id}>
       <button type="button" className="managed-resource-title" disabled={disabled} onClick={()=>setEditing(resource)}><strong>{resource.title||'مصدر دون عنوان'}</strong><small>{kindLabels[resource.kind]} · {resource.level==='basic'?'أساسي':'استزادة'} · {unit.stations.filter(station=>station.sourceIds.includes(resource.id)).length} خطوة</small></button>
-      <div className="managed-resource-actions"><button type="button" className="icon-btn" disabled={disabled||index===0} aria-label={`تقديم ${resource.title}`} onClick={()=>saveUnit(reorderResource(unit,resource.id,-1))}><ArrowUp size={17}/></button><button type="button" className="icon-btn" disabled={disabled||index===unit.resources.length-1} aria-label={`تأخير ${resource.title}`} onClick={()=>saveUnit(reorderResource(unit,resource.id,1))}><ArrowDown size={17}/></button><button type="button" className="icon-btn danger" disabled={disabled} aria-label={`حذف ${resource.title}`} onClick={()=>{if(window.confirm(`حذف «${resource.title}» وروابطه من هذه المحطة؟ سيُحذف الملف المرفوع من التخزين بعد الحفظ إذا لم يعد مستخدمًا في المنهج أو الأرشيف. الروابط الخارجية والملفات المرفقة بالتطبيق لا تُحذف من خادمها.`))saveUnit(removeResource(unit,resource.id))}}><Trash2 size={17}/></button></div>
+      <div className="managed-resource-actions"><button type="button" className="icon-btn" disabled={disabled||index===0} aria-label={`تقديم ${resource.title}`} onClick={()=>saveUnit(reorderResource(unit,resource.id,-1))}><ArrowUp size={17}/></button><button type="button" className="icon-btn" disabled={disabled||index===unit.resources.length-1} aria-label={`تأخير ${resource.title}`} onClick={()=>saveUnit(reorderResource(unit,resource.id,1))}><ArrowDown size={17}/></button><button type="button" className="icon-btn" disabled={disabled} aria-label={`أرشفة ${resource.title}`} onClick={()=>{if(window.confirm(`أرشفة «${resource.title}» وإزالة روابطه من المحطة؟ سيبقى محفوظًا ويمكن استعادته لاحقًا.`))onChange(archiveResource(data,unit.id,resource.id))}}><Archive size={17}/></button></div>
     </li>)}</ol>
     {editing&&<ResourceDialog resource={editing} unit={unit} units={data.units} onClose={()=>setEditing(null)} onSave={(resource,target,stations)=>{const next=assignResource(data,unit.id,target,resource,stations);onChange(next);setEditing(null)}}/>}
   </section>;

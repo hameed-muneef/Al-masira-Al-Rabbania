@@ -2,6 +2,9 @@ import {useEffect,useState,type FormEvent} from 'react';
 import {ArrowRight,BookOpen,CalendarDays,Check,ClipboardCopy,Plus,RefreshCw,Users} from 'lucide-react';
 import {authClient} from '../auth';
 import StudyTracksView from './StudyTracksView';
+import StudyMeetingsPanel from './StudyMeetingsPanel';
+import StudyNotesPanel from './StudyNotesPanel';
+import StudyQuestionsPanel from './StudyQuestionsPanel';
 import '../mudarasa.css';
 
 type Circle={
@@ -23,9 +26,13 @@ const categoryNames:Record<string,string>={aqeedah:'العقيدة',tafsir:'ال
 const modeNames:Record<string,string>={sync:'متزامنة',async:'غير متزامنة',supervised:'بإشراف معلم'};
 const statusNames:Record<string,string>={active:'نشطة',paused:'متوقفة مؤقتًا',completed:'مكتملة',cancelled:'ملغاة'};
 const roleNames:Record<string,string>={creator:'المؤسس',supervisor:'المشرف',teacher:'المعلم',member:'عضو'};
-const tabs=[['overview','نظرة عامة'],['material','المادة'],['plan','الخطة'],['members','الأعضاء']] as const;
+const tabs=[['overview','نظرة عامة'],['material','المادة'],['plan','الخطة'],['notes','الفوائد'],['questions','الأسئلة'],['meetings','الاجتماعات'],['members','الأعضاء']] as const;
 
-function errorText(error:unknown){return error instanceof Error?error.message:'حدث خطأ. حاول مرة أخرى.'}
+function errorText(error:unknown){
+  if(error instanceof Error)return error.message;
+  if(typeof error==='object'&&error!==null&&'message' in error&&typeof error.message==='string')return error.message;
+  return 'حدث خطأ. حاول مرة أخرى.';
+}
 
 export default function StudyCirclesView({user}:{user:{id:string}|null}){
   const [section,setSection]=useState<'circles'|'tracks'>('circles');
@@ -139,7 +146,9 @@ export default function StudyCirclesView({user}:{user:{id:string}|null}){
     try{
       const {data,error:inviteError}=await authClient.rpc('create_study_invite',{p_circle_id:selected.id});
       if(inviteError)throw inviteError;
-      setInviteCode(String(data??''));setNotice('أُنشئ رمز الدعوة. أرسله لمن تريد دعوته.');
+      const code=typeof data==='string'?data:'';
+      if(!code)throw new Error('لم يُرجع الخادم رمز الدعوة. تحقق من تحديث قاعدة البيانات ثم أعد المحاولة.');
+      setInviteCode(code);setNotice('أُنشئ رمز الدعوة. أرسله لمن تريد دعوته.');
     }catch(caught){setError(errorText(caught))}finally{setBusy(false)}
   };
 
@@ -256,6 +265,9 @@ export default function StudyCirclesView({user}:{user:{id:string}|null}){
             {canEditPlan&&selected.status==='active'&&<section className="panel"><h3>إضافة مهمة للخطة</h3><form className="mudarasa-inline-form" onSubmit={event=>void addTask(event)}><label>المهمة<input name="title" required maxLength={200} placeholder="مثل: قراءة الفصل الأول"/></label><button className="primary" disabled={busy}><Plus size={16}/> إضافة</button></form></section>}
             {detail.tasks.length===0?<section className="panel mudarasa-empty"><h3>الخطة لم تبدأ بعد</h3><p>يضيف المؤسس أو المشرف مهام القراءة هنا.</p></section>:<ol className="mudarasa-plan">{detail.tasks.map(task=>{const done=detail.completed.includes(task.id);return <li key={task.id}><div><strong>{task.position}. {task.title}</strong>{task.target_date&&<span className="muted"> · {task.target_date}</span>}</div><button className={done?'soft-btn':'primary'} disabled={busy} onClick={()=>void markTask(task.id,!done)}>{done?<><Check size={15}/> أُنجزت</>:'تسجيل الإنجاز'}</button></li>})}</ol>}
           </div>}
+          {tab==='notes'&&<StudyNotesPanel circleId={selected.id} userId={user.id} active={selected.status==='active'}/>}
+          {tab==='questions'&&<StudyQuestionsPanel circleId={selected.id} userId={user.id} active={selected.status==='active'} isStaff={Boolean(canReview||ownRole==='teacher')} isTeacher={ownRole==='teacher'}/>}
+          {tab==='meetings'&&<StudyMeetingsPanel circleId={selected.id} userId={user.id} active={selected.status==='active'} isStaff={Boolean(canEditMaterial)} memberIds={detail.members.map(member=>member.member_id)}/>}
           {tab==='members'&&<div className="mudarasa-section">
             <section className="panel"><h3>الأعضاء</h3><ul className="mudarasa-members">{detail.members.map(member=><li key={member.member_id}><span><bdi>{member.member_id.slice(0,8)}</bdi></span><span className="mudarasa-role">{roleNames[member.member_role]??member.member_role}</span></li>)}</ul></section>
             {canReview&&<section className="panel"><h3>طلبات الانضمام <span className="mudarasa-count">{detail.requests.length}</span></h3>{detail.requests.length===0?<p className="muted">لا توجد طلبات معلقة.</p>:<ul className="mudarasa-requests">{detail.requests.map(request=><li key={request.id}><div><strong><bdi>{request.user_id.slice(0,8)}</bdi></strong><p>{request.note||'بلا ملاحظة'}</p></div><div className="mudarasa-actions"><button className="primary" disabled={busy} onClick={()=>void reviewRequest(request.id,true)}><Check size={15}/> قبول</button><button className="soft-btn" disabled={busy} onClick={()=>void reviewRequest(request.id,false)}>رفض</button></div></li>)}</ul>}</section>}

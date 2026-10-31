@@ -10,6 +10,11 @@ In Supabase **Authentication → URL Configuration**, set **Site URL** to the fi
 
 Connect the GitHub repository to Netlify. [netlify.toml](netlify.toml) specifies Node 22, `npm run deploy:check && npm run build`, `dist` as the publish directory, and a rewrite so refreshing `/admin` loads the app.
 
+The Netlify configuration also sets baseline response headers: `X-Frame-Options`,
+`X-Content-Type-Options`, a frame-ancestors-only Content Security Policy,
+`Referrer-Policy`, and a restrictive `Permissions-Policy`. Verify these on the
+deployed URL; local builds cannot confirm host-applied headers.
+
 Use the Git-connected build rather than Netlify's drag-and-drop uploader: the bundled book PDFs make the publish folder roughly 268 MB. The PDFs are fetched when opened and are not pre-cached by the PWA, but they still count toward deployment size and bandwidth.
 
 Set these **environment variables** in Netlify for the production deploy:

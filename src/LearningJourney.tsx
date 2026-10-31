@@ -1,9 +1,10 @@
 import {lazy,Suspense,createContext,useContext,useCallback,useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
-import {ArrowDown, ArrowUp, BookOpen, Check, ExternalLink, FileText, Film, Lock, Plus, Settings2, X} from 'lucide-react';
+import {Archive,ArchiveRestore,ArrowDown, ArrowUp, BookOpen, Check, ExternalLink, FileText, Film, Lock, Plus, Settings2, X} from 'lucide-react';
 import {availableUnits, initialCurriculum, kindLabels, learningVideos, reviseUnit, safeUrl, stationTitles, statusLabels, transitionUnit, unitErrors, videoResourceId, type Curriculum, type Resource, type Unit} from './curriculum';
 import {savedBookPage,saveBookPage} from './reading-progress';
 import {uid} from './id';
+import {restoreResource} from './resource-management';
 import {isUploadedBookUrl} from './book-upload';
 import {authClient} from './auth';
 import './learning-redesign.css';
@@ -166,11 +167,45 @@ function CurriculumEditor({data,onSave,onChange}:{data:Curriculum;onSave:(unit:U
   const selectedUnit=newUnit??data.units.find(u=>u.id===selected);
   const choose=(id:string)=>{if(dirty){setNotice('احفظ تعديلاتك أو ألغها قبل الانتقال إلى محطة أخرى.');return;}setNewUnit(null);setSelected(id);setNotice('');};
   const reorder=(id:string,direction:number)=>{if(dirty){setNotice('احفظ التعديلات أو ألغها قبل إعادة الترتيب.');return;}const units=[...data.units];const index=units.findIndex(u=>u.id===id);const other=index+direction;if(other<0||other>=units.length)return;[units[index],units[other]]=[units[other],units[index]];onChange({...data,units});};
+  const archiveSelected=()=>{
+    if(dirty||newUnit||!selectedUnit){setNotice('احفظ التعديلات أو ألغها قبل أرشفة المحطة.');return;}
+    if(data.units.length<=1){setNotice('يجب إبقاء محطة واحدة على الأقل في المنهج.');return;}
+    if(!window.confirm(`أرشفة محطة «${selectedUnit.title}»؟ يمكن استعادتها لاحقًا من قائمة الأرشيف.`))return;
+    const units=data.units.filter(unit=>unit.id!==selectedUnit.id);
+    onChange({...data,units,archivedUnits:[...(data.archivedUnits??[]),selectedUnit]});
+    setSelected(units[0]?.id??'');setNotice('تمت أرشفة المحطة مع جميع مصادرها.');
+  };
+  const restoreUnit=(id:string)=>{
+    if(dirty){setNotice('احفظ التعديلات أو ألغها قبل استعادة محطة.');return;}
+    const unit=data.archivedUnits?.find(item=>item.id===id);
+    if(!unit){setNotice('المحطة المؤرشفة غير موجودة.');return;}
+    onChange({...data,units:[...data.units,unit],archivedUnits:data.archivedUnits?.filter(item=>item.id!==id)});
+    setNewUnit(null);setSelected(id);setNotice('تمت استعادة المحطة.');
+  };
+  const restoreArchivedResource=(id:string)=>{
+    if(dirty){setNotice('احفظ التعديلات أو ألغها قبل استعادة مصدر.');return;}
+    try{onChange(restoreResource(data,id));setNotice('تمت استعادة المصدر إلى محطته الأصلية.');}
+    catch(error){setNotice(error instanceof Error?error.message:'تعذرت استعادة المصدر.');}
+  };
   return <>
     <div className="hint">تُحفظ تعديلات المصادر في المنهج المشترك، وتحتاج المحطات المعدّلة إلى مراجعة جديدة قبل النشر. احفظ تعديل نص المحطة قبل إدارة مصادرها.</div>
     {notice&&<p role="status" className="hint">{notice}</p>}
-    <div className="editor-layout"><aside className="panel editor-units"><h3>محطات المنهج</h3>{data.units.map((u,i)=><div className="editor-unit" key={u.id}><button className={selectedUnit?.id===u.id?'selected':''} onClick={()=>choose(u.id)}>{i+1}. {u.title}{u.focus&&<span className="path-station-focus">{u.focus}</span>}<span className="path-station-summary">{u.summary}</span><small>{statusLabels[u.status]}</small></button><div className="reorder-buttons"><button type="button" className="icon-btn" disabled={i===0||dirty} aria-label={`تقديم ${u.title}`} onClick={()=>reorder(u.id,-1)}><ArrowUp size={14}/></button><button type="button" className="icon-btn" disabled={i===data.units.length-1||dirty} aria-label={`تأخير ${u.title}`} onClick={()=>reorder(u.id,1)}><ArrowDown size={14}/></button></div></div>)}<button className="soft-btn" onClick={()=>{if(dirty){setNotice('احفظ التعديلات أو ألغها أولًا.');return;}setNewUnit({id:uid(),title:'',summary:'',stations:stationTitles.map(()=>({body:'',sourceIds:[]})),resources:[],status:'draft',revision:0,reviewer:'',reviewNote:''});setNotice('');}}><Plus size={16}/> محطة جديدة</button></aside>
-    {selectedUnit&&<div>{!newUnit&&<ResourceManager data={data} unit={selectedUnit} disabled={dirty} onChange={onChange}/>}<UnitEditor key={`${selectedUnit.id}-${selectedUnit.revision}-${selectedUnit.status}`} unit={selectedUnit} onDirty={setDirty} onSave={unit=>{onSave(unit);setSelected(unit.id);setNewUnit(null);setDirty(false);setNotice('تم حفظ المسودة.');}} onStatus={unit=>{onChange({...data,units:data.units.map(u=>u.id===unit.id?unit:u)});setNotice('جارٍ حفظ حالة المحطة.');}}/></div>}</div>
+    <div className="editor-layout">
+      <aside className="panel editor-units">
+        <h3>محطات المنهج</h3>
+        {data.units.map((u,i)=><div className="editor-unit" key={u.id}>
+          <button className={selectedUnit?.id===u.id?'selected':''} onClick={()=>choose(u.id)}>{i+1}. {u.title}{u.focus&&<span className="path-station-focus">{u.focus}</span>}<span className="path-station-summary">{u.summary}</span><small>{statusLabels[u.status]}</small></button>
+          <div className="reorder-buttons"><button type="button" className="icon-btn" disabled={i===0||dirty} aria-label={`تقديم ${u.title}`} onClick={()=>reorder(u.id,-1)}><ArrowUp size={14}/></button><button type="button" className="icon-btn" disabled={i===data.units.length-1||dirty} aria-label={`تأخير ${u.title}`} onClick={()=>reorder(u.id,1)}><ArrowDown size={14}/></button></div>
+        </div>)}
+        <button className="soft-btn" onClick={()=>{if(dirty){setNotice('احفظ التعديلات أو ألغها أولًا.');return;}setNewUnit({id:uid(),title:'',summary:'',stations:stationTitles.map(()=>({body:'',sourceIds:[]})),resources:[],status:'draft',revision:0,reviewer:'',reviewNote:''});setNotice('');}}><Plus size={16}/> محطة جديدة</button>
+        {!!data.archivedUnits?.length&&<div className="curriculum-archive-list"><h4>المحطات المؤرشفة</h4>{data.archivedUnits.map(unit=><div key={unit.id}><span>{unit.title}</span><button type="button" disabled={dirty} onClick={()=>restoreUnit(unit.id)}><ArchiveRestore size={15}/> استعادة</button></div>)}</div>}
+        {!!data.archivedResources?.length&&<div className="curriculum-archive-list"><h4>المصادر المؤرشفة</h4>{data.archivedResources.map(item=><div key={item.resource.id}><span>{item.resource.title}<small>{item.unitTitle}</small></span><button type="button" disabled={dirty} onClick={()=>restoreArchivedResource(item.resource.id)}><ArchiveRestore size={15}/> استعادة</button></div>)}</div>}
+      </aside>
+      {selectedUnit&&<div>
+        {!newUnit&&<><div className="curriculum-archive-actions"><span>أرشفة المحطة تحفظ تقدم المتعلمين ويمكن التراجع عنها.</span><button type="button" disabled={dirty||data.units.length<=1} onClick={archiveSelected}><Archive size={16}/> أرشفة هذه المحطة</button></div><ResourceManager data={data} unit={selectedUnit} disabled={dirty} onChange={onChange}/></>}
+        <UnitEditor key={`${selectedUnit.id}-${selectedUnit.revision}-${selectedUnit.status}`} unit={selectedUnit} onDirty={setDirty} onSave={unit=>{onSave(unit);setSelected(unit.id);setNewUnit(null);setDirty(false);setNotice('تم حفظ المسودة.');}} onStatus={unit=>{onChange({...data,units:data.units.map(u=>u.id===unit.id?unit:u)});setNotice('جارٍ حفظ حالة المحطة.');}}/>
+      </div>}
+    </div>
   </>;
 }
 
@@ -201,4 +236,3 @@ function UnitEditor({unit,onSave,onStatus,onDirty}:{unit:Unit;onSave:(unit:Unit)
     </section>
   </section>;
 }
-

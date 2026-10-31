@@ -1,6 +1,6 @@
 import {Component, type ErrorInfo, type ReactNode} from 'react';
 
-type Props={children: ReactNode};
+type Props={children: ReactNode;fallback?:ReactNode};
 type State={hasError:boolean};
 
 // حاجز أخطاء عام: عند أي خلل غير متوقع لا تتحول الصفحة إلى فراغ،
@@ -41,6 +41,7 @@ export default class ErrorBoundary extends Component<Props,State> {
 
   override render() {
     if(!this.state.hasError) return this.props.children;
+    if(this.props.fallback)return this.props.fallback;
     return <div dir="rtl" style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#163d34',color:'#f4f1ea',fontFamily:'Tajawal, sans-serif',padding:'24px'}}>
       <div style={{maxWidth:560,textAlign:'center',display:'grid',gap:16}}>
         <h1 style={{fontSize:24,margin:0}}>حدث خطأ غير متوقع</h1>

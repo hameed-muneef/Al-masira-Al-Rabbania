@@ -3,13 +3,15 @@ import {CalendarDays,Lock,Plus,Pencil,RefreshCw,Users,Link2,Megaphone} from 'luc
 import {authClient} from '../auth';
 import '../circles.css';
 import CircleProgram from './CircleProgram';
+import TawasiMentorshipPanel from './TawasiMentorshipPanel';
 
 // حلقات التواصي الخاص: المصدر ترحيلات TAW-001/002 في Supabase عبر RLS ووظائف خادم محدودة.
 // لا دليل عام ولا ظهور لغير الأعضاء؛ كل الاستعلامات بشأن حلقات المستخدم فقط.
 export type Circle={id:string;name:string;description:string;goal:string;kind:string;status:'active'|'closed';member_limit:number;starts_on:string|null;ends_on:string|null;participation_rules:string};
 type MembershipRow={role:'founder'|'manager'|'assistant'|'member';joined_at:string;study_group:Circle|null};
 type Draft={name:string;kind:string;memberLimit:string;startsOn:string;endsOn:string;goal:string;description:string;rules:string};
-type StatusFlag='loading'|'ready'|'error';
+type StatusFlag='loading'|'ready'|'error'|'denied';
+type CirclesMode='tawasi'|'science';
 type InviteRow={invite_id:string;invite_status:'active'|'revoked';invite_expires_at:string;invite_max_uses:number;invite_uses_count:number};
 type JoinRequest={id:string;user_id:string;requested_at:string;status:'pending'|'accepted'|'rejected'};
 type MemberRow={user_id:string;role:'founder'|'manager'|'assistant'|'member';joined_at:string};
@@ -31,7 +33,7 @@ const countLabel=(value:number)=>value.toLocaleString('ar-EG');
 const dateLabel=(value:string)=>new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric',calendar:'gregory'}).format(new Date(`${value}T12:00:00`));
 const roleLabel=(role:MemberRow['role'])=>({founder:'المؤسس',manager:'مسؤول',assistant:'مساعد',member:'عضو'})[role];
 
-export default function CirclesView({user}:{user:{id:string}|null}){
+export default function CirclesView({user,mode='tawasi',admin=false,embedded=false}:{user:{id:string}|null;mode?:CirclesMode;admin?:boolean;embedded?:boolean}){
   const [rows,setRows]=useState<MembershipRow[]|null>(null);
   const [status,setStatus]=useState<StatusFlag>(authClient?'loading':'ready');
   const [loadError,setLoadError]=useState('');
@@ -70,6 +72,11 @@ export default function CirclesView({user}:{user:{id:string}|null}){
     if(!authClient||!user)return;
     setStatus('loading');setLoadError('');
     try{
+      if(mode==='science'&&!admin){
+        const {data:allowed,error:accessError}=await authClient.rpc('has_feature_access' as any,{p_feature_key:'private_circles'});
+        if(accessError)throw accessError;
+        if(!allowed){setRows([]);setStatus('denied');return}
+      }
       const {data,error}=await authClient.from('group_members')
         .select('role,joined_at,study_group:study_groups(*)').eq('user_id',user.id).order('joined_at');
       if(error)throw error;
@@ -77,7 +84,7 @@ export default function CirclesView({user}:{user:{id:string}|null}){
     }catch(error){setStatus('error');setLoadError(isMissingGroupsSchema(error)
       ?'جداول التواصي غير متاحة في قاعدة البيانات المتصلة بهذا التطبيق. تحقّق من إعدادات الاتصال ثم أعد المحاولة.'
       :messageOf(error))}
-  },[user?.id]);
+  },[user?.id,mode,admin]);
   useEffect(()=>{
     if(!authClient||!user){setStatus('ready');setRows([])}
     else void load();
@@ -312,29 +319,35 @@ export default function CirclesView({user}:{user:{id:string}|null}){
     }catch(error){say(messageOf(error),true)}finally{setBusy(false)}
   };
 
-  const heading=<div className="page-intro"><span className="eyebrow">التواصي</span><h1>تعال نؤمن ساعة</h1><p>تواصي بين إخوة موثوقين؛ إنشاؤه ومتابعته من الحساب دون أي عرض عام.</p></div>;
+  const heading=mode==='science'?<div className={embedded?'circle-section-heading':'page-intro'}><span className="eyebrow">مجالس العلم</span><h1>مجالسك العلمية الخاصة</h1><p>مجالسك التعليمية الخاصة وبرامجها وأعضاؤها، مع الاحتفاظ ببياناتها وسجلها.</p></div>:<div className="page-intro"><span className="eyebrow">التواصي</span><h1>تعال نؤمن ساعة</h1><p>تواصي بين إخوة موثوقين؛ إنشاؤه ومتابعته من الحساب دون أي عرض عام.</p></div>;
   if(!user||!authClient)return <div className="circles-view">{heading}<section className="panel"><div className="panel-head"><Lock size={20}/><h2>عضوية موثوقة</h2></div><p>إنشاء الحلقات وإدارتها يحتاج تسجيل الدخول بواسطة حساب موثق؛ عُد بعد الدخول.</p></section></div>;
   if(status==='loading')return <div className="circles-view">{heading}<div className="auth-loading" role="status">جارٍ تحميل حلقاتك…</div></div>;
+  if(status==='denied')return <div className="circles-view">{heading}<section className="panel feature-access-required"><h2>مجالسك الخاصة غير مشمولة باستحقاق الحساب</h2><p>يمكنك استكشاف الدورات العامة، أما إدارة المجالس الخاصة فتتطلب تفعيل ميزة التواصي الخاص.</p></section></div>;
   if(status==='error')return <div className="circles-view">{heading}<section className="panel"><div className="panel-head"><RefreshCw size={20}/><h2>تعذر التحميل</h2></div><p role="alert">{loadError}</p><button className="soft-btn" onClick={()=>void load()}>إعادة المحاولة</button></section></div>;
 
-  const memberships=rows??[];
+  const memberships=(rows??[]).filter(row=>{
+    const kind=row.study_group?.kind;
+    const scientific=['book','course','program'].includes(kind??'');
+    return mode==='science'?scientific:!scientific;
+  });
   return <div className="circles-view">
-    {heading}
-    <section className="panel"><div className="panel-head"><Lock size={20}/><h2>قواعد الحلقة</h2></div>
-      <p className="muted small">كل الحلقات خاصة بلا دليل أو بحث. رابط الدعوة يعرض تعريفًا محدودًا فقط؛ الانضمام يتطلب طلبًا وموافقة مسؤول الحلقة، ولا يمنح الرابط العضوية تلقائيًا.</p>
-    </section>
-    <section className="panel circle-live-access" aria-label="صلاحية اللقاءات المباشرة">
+    {!embedded&&heading}
+    {mode==='tawasi'&&<TawasiMentorshipPanel userId={user.id}/>}
+    {mode==='science'&&<section className="panel"><div className="panel-head"><Lock size={20}/><h2>خصوصية المجالس العلمية الخاصة</h2></div>
+      <p className="muted small">هذه المجالس خاصة بلا دليل أو بحث عام. رابط الدعوة يعرض تعريفًا محدودًا فقط؛ والانضمام يتطلب طلبًا وموافقة مسؤول المجلس، ولا يمنح الرابط العضوية تلقائيًا.</p>
+    </section>}
+    {mode==='tawasi'&&<section className="panel circle-live-access" aria-label="صلاحية اللقاءات المباشرة">
       <div><strong>جلسات التواصي المباشرة</strong><p className="muted small" role="status">{meetingAccessError?`تعذر فحص الصلاحية: ${meetingAccessError}`:meetingAccess===null?'جارٍ فحص صلاحية فتح رابط Meet…':meetingAccess?'يمكنك فتح رابط Meet لجلسة مجدولة داخل حلقة أنت عضو فيها.':'فتح رابط Meet يتطلب اشتراك Premium فعّالًا أو منح الميزة من إدارة المنصة.'}</p><p className="muted small">إنشاء الحلقة وإدارة أعضائها متاحان دون هذه الصلاحية. يظهر رابط اللقاء بعد إنشاء الحلقة وجدولة جلسة لها.</p></div>
       <button className="soft-btn" type="button" onClick={()=>void refreshMeetingAccess()}>تحديث الصلاحية</button>
-    </section>
+    </section>}
     {notice&&<p className={`circles-notice${noticeIsError?' error':''}`} role={noticeIsError?'alert':'status'}>{notice}</p>}
-    <div className="circles-toolbar"><button className="primary" aria-expanded={formOpen} aria-controls="circle-form" onClick={()=>{if(formOpen){setFormOpen(false);setEditingId(null)}else openCreate()}}><Plus size={17}/>{formOpen?'إلغاء النموذج':'مجلس ذكر جديد'}</button></div>
+    <div className="circles-toolbar"><button className="primary" aria-expanded={formOpen} aria-controls="circle-form" onClick={()=>{if(formOpen){setFormOpen(false);setEditingId(null)}else openCreate()}}><Plus size={17}/>{formOpen?'إلغاء النموذج':mode==='science'?'مجلس علمي خاص جديد':'مجلس تواصٍ جديد'}</button></div>
     {formOpen&&<section id="circle-form" className="panel circle-form" aria-labelledby="circle-form-title">
-      <div className="panel-head"><Users size={20}/><h2 id="circle-form-title">{editingId?'تعديل بيانات المجلس':'إنشاء مجلس ذكر خاص'}</h2></div>
+      <div className="panel-head"><Users size={20}/><h2 id="circle-form-title">{editingId?'تعديل بيانات المجلس':mode==='science'?'إنشاء مجلس علمي خاص':'إنشاء مجلس تواصٍ خاص'}</h2></div>
       <form onSubmit={e=>{e.preventDefault();void save()}}>
         <div className="form-grid">
           <label>اسم الحلقة<input required maxLength={120} aria-label="اسم الحلقة" value={draft.name} onChange={e=>set({name:e.target.value})}/></label>
-          <label>نوع الحلقة<select required aria-label="نوع الحلقة" value={draft.kind} onChange={e=>set({kind:e.target.value})}><option value="" disabled>اختَر النوع</option>{kindOptions.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+          <label>نوع الحلقة<select required aria-label="نوع الحلقة" value={draft.kind} onChange={e=>set({kind:e.target.value})}><option value="" disabled>اختَر النوع</option>{kindOptions.filter(([value])=>mode==='science'?['book','course','program'].includes(value):!['book','course','program'].includes(value)).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
           <label>سعة الأعضاء<input type="number" required min={2} max={100} step={1} aria-label="سعة الأعضاء" value={draft.memberLimit} onChange={e=>set({memberLimit:e.target.value})}/></label>
           <label>بداية الفترة<input type="date" aria-label="بداية الفترة" value={draft.startsOn} onChange={e=>set({startsOn:e.target.value})}/></label>
           <label>نهاية الفترة<input type="date" aria-label="نهاية الفترة" value={draft.endsOn} onChange={e=>set({endsOn:e.target.value})}/></label>
@@ -342,11 +355,11 @@ export default function CirclesView({user}:{user:{id:string}|null}){
         <label>هدف الحلقة<textarea rows={2} maxLength={2000} aria-label="هدف الحلقة" value={draft.goal} onChange={e=>set({goal:e.target.value})}/></label>
         <label>وصف الحلقة<textarea rows={2} maxLength={2000} aria-label="وصف الحلقة" value={draft.description} onChange={e=>set({description:e.target.value})}/></label>
         <label>قواعد المشاركة<textarea rows={3} maxLength={2000} aria-label="قواعد المشاركة" value={draft.rules} onChange={e=>set({rules:e.target.value})}/></label>
-        <p className="muted small">برامج المتابعة اليومية (الصلاة والقرآن والأذكار) تُضيف في مهمة قوالب البرامج؛ هنا تُسجَّل بيانات الحلقة الأساسية فقط، وإدارتها من صاحبها وحده على الخادم.</p>
-        <button className="primary" type="submit" disabled={busy}>{busy?'جارٍ الحفظ…':editingId?'حفظ التعديلات':'إنشاء مجلس الذكر'}</button>
+        <p className="muted small">{mode==='science'?'تظهر المجالس العلمية الخاصة هنا ضمن «مجالس العلم»، وتبقى مخصصة للأعضاء المدعوين.':'برامج المتابعة اليومية (الصلاة والقرآن والأذكار) تُضاف في مهام الخطط؛ تُدار الحلقة من مؤسسها.'}</p>
+        <button className="primary" type="submit" disabled={busy}>{busy?'جارٍ الحفظ…':editingId?'حفظ التعديلات':mode==='science'?'إنشاء المجلس العلمي':'إنشاء مجلس التواصي'}</button>
       </form>
     </section>}
-    {memberships.length===0&&<section className="panel"><div className="panel-head"><Users size={20}/><h2>لا مجلس ذكر بعد</h2></div><p className="muted">لم تُنشئ مجلس ذكر أو تنضم إلى واحد حتى الآن. أنشئ مجلسًا أولًا، ثم افتح «الجلسات» داخله وحدد الموعد ورابط Google Meet. يظهر زر فتح الرابط للعضو المصرح له بعد حفظ الجلسة.</p></section>}
+    {memberships.length===0&&<section className="panel"><div className="panel-head"><Users size={20}/><h2>{mode==='science'?'لا مجالس علمية خاصة بعد':'لا مجالس تواصٍ بعد'}</h2></div><p className="muted">{mode==='science'?'لم تُنشئ مجلسًا علميًا خاصًا أو تنضم إلى واحد حتى الآن. أنشئ مجلسًا أو تابع مجالس العلم المنشورة.':'لم تُنشئ مجلس تواصٍ أو تنضم إلى واحد حتى الآن. أنشئ مجلسًا للرفقة والتذكير والمساندة.'}</p></section>}
     {memberships.map(row=>{
       const circle=row.study_group;
       if(!circle)return null;
@@ -358,7 +371,7 @@ export default function CirclesView({user}:{user:{id:string}|null}){
         {circle.goal&&<p className="circle-text"><strong>الهدف:</strong> {circle.goal}</p>}
         {circle.description&&<p className="circle-text"><strong>الوصف:</strong> {circle.description}</p>}
         {circle.participation_rules&&<p className="circle-text"><strong>قواعد المشاركة:</strong> {circle.participation_rules}</p>}
-        <p className="muted small circle-purpose-note">هذا القسم مخصص لمجالس الذكر والتأمل والتواصي الجماعي. الدراسة والواجبات العملية توجد ضمن «مجالس العلم».</p>
+        <p className="muted small circle-purpose-note">{mode==='science'?'مجلس علمي خاص؛ محتواه وخطته متاحان لأعضائه فقط.':'مجلس للرفقة والتذكير والمساندة بين أعضائه.'}</p>
         {['book','course','program'].includes(circle.kind)&&<details className="panel circle-scientific-program"><summary>الواجب العملي للمجلس العلمي</summary><CircleProgram groupId={circle.id} canEdit={row.role==='founder'} userId={user.id}/></details>}
         <div className="circle-actions"><button className="soft-btn" disabled={busy} aria-expanded={sessionGroup===circle.id} aria-controls={`sessions-${circle.id}`} onClick={()=>void toggleCircleSessions(circle.id)}>الجلسات</button><button className="soft-btn" disabled={busy} aria-expanded={announcementGroup===circle.id} aria-controls={`announcements-${circle.id}`} onClick={()=>void toggleAnnouncements(circle.id)}>تنبيهات المجلس</button></div>
         {sessionGroup===circle.id&&<section className="panel circle-invites" id={`sessions-${circle.id}`}>

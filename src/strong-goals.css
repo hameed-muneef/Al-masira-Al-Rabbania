@@ -74,6 +74,7 @@
 .goal-step-edit{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;background:#F2EFE5;border-radius:8px}
 .goal-step-edit input{flex:1;min-width:160px}
 .goal-step-edit select{min-width:110px}
+.goal-custom-date{display:flex;align-items:center;gap:8px;color:var(--color-ink,#244638);font-size:13px}.goal-custom-date input{min-width:150px}.goal-period-card-custom{--period-accent:#786137;--period-tint:#eee9da;--period-border:#ded2ba}
 .goal-step-history{padding:5px 29px 9px;color:#5e735f;font-size:12px}
 .goal-step-history summary{cursor:pointer;width:fit-content}
 .goal-step-history ul{margin:7px 0;padding-inline-start:21px;line-height:1.9}

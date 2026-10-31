@@ -3,7 +3,8 @@ export const stationTitles = ['تعلّم المعنى بمصادره', 'عِش 
 export type Resource = {id:string; kind:'source'|'book'|'video'; title:string; author:string; reference:string; url:string; level:'basic'|'extra'};
 export type Station = {body:string; sourceIds:string[]};
 export type Unit = {id:string; title:string; focus?:string; summary:string; stations:Station[]; resources:Resource[]; status:'draft'|'review'|'approved'|'published'; revision:number; reviewer:string; reviewNote:string};
-export type Curriculum = {units:Unit[]; progress:Record<string,number>; archivedUnits?:Unit[]; playlistImported?:boolean; mediaVersion?:number};
+export type ArchivedResource = {unitId:string; unitTitle:string; resource:Resource; stationIndexes:number[]};
+export type Curriculum = {units:Unit[]; progress:Record<string,number>; archivedUnits?:Unit[]; archivedResources?:ArchivedResource[]; playlistImported?:boolean; mediaVersion?:number};
 export const statusLabels = {draft:'مسودة',review:'قيد المراجعة',approved:'معتمد',published:'منشور'};
 export const kindLabels = {source:'مصدر',book:'كتاب',video:'فيديو'};
 export function safeUrl(value:string):string|null {

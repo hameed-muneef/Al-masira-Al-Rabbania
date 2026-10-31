@@ -49,6 +49,18 @@ test('compact user-state RPC strips shared curriculum while preserving legacy pr
       assert.deepEqual(payload.curriculumProgress,{beginning:5});
       assert.equal('curriculum' in payload,false);
       assert.equal((await db.query('select payload from public.user_data')).rows[0].payload.curriculum.units[0].id,'shared');
+      const goalState={goals:[{id:'g',createdAt:'2026-10-31',targetDate:'2026-11-05',steps:[{id:'s',period:'custom',customDate:'2026-10-31',done:{}}]}]};
+      await db.query('update public.user_data set payload=$2 where user_id=$1',[owner,JSON.stringify(goalState)]);
+      for(const customDate of ['2026-10-30','2026-11-06','2026-02-31','']){
+        const invalid={...goalState,goals:[{...goalState.goals[0],steps:[{...goalState.goals[0].steps[0],customDate}]}]};
+        await assert.rejects(db.query('update public.user_data set payload=$2 where user_id=$1',[owner,JSON.stringify(invalid)]),error=>error.code==='22023');
+      }
+      const shortened={...goalState,goals:[{...goalState.goals[0],targetDate:'2026-11-04',steps:[{...goalState.goals[0].steps[0],customDate:'2026-11-05'}]}]};
+      await assert.rejects(db.query('update public.user_data set payload=$2 where user_id=$1',[owner,JSON.stringify(shortened)]),error=>error.code==='22023');
+      const invalidRange={...goalState,goals:[{...goalState.goals[0],createdAt:'2026-11-06'}]};
+      await assert.rejects(db.query('update public.user_data set payload=$2 where user_id=$1',[owner,JSON.stringify(invalidRange)]),error=>error.code==='22023');
+      const invalidGoalDate={...goalState,goals:[{...goalState.goals[0],targetDate:'2026-02-31'}]};
+      await assert.rejects(db.query('update public.user_data set payload=$2 where user_id=$1',[owner,JSON.stringify(invalidGoalDate)]),error=>error.code==='22023');
     });
     await asUser(other,async()=>{
       assert.equal((await db.query('select public.load_my_user_state() as value')).rows[0].value,null);

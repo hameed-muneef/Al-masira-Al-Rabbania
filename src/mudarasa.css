@@ -62,6 +62,10 @@
 .mudarasa-requests{display:grid}
 .mudarasa-requests li p{margin:5px 0 0;color:var(--color-muted)}
 .mudarasa-requests li .mudarasa-actions{margin-inline-start:auto}
+.mudarasa-question-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mudarasa-question-heading h3{margin:8px 0}
+.mudarasa-question-pinned,.mudarasa-teacher-verified{display:inline-flex;align-items:center;gap:4px;color:var(--color-success);font-size:13px;font-weight:700}
+.mudarasa-question-replies{display:grid;gap:10px;padding-top:10px;border-top:1px solid var(--color-border)}
 .mudarasa-topline{display:flex;justify-content:flex-start}
 @media(max-width:750px){
   .mudarasa-form-grid,.mudarasa-grid,.mudarasa-columns{grid-template-columns:1fr}

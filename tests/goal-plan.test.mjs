@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import ts from 'typescript';
 const source=readFileSync(new URL('../src/goal-plan.ts',import.meta.url),'utf8');
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-const {goalPeriodKey,goalPeriodLabel,goalIsoWeek,goalWeekKey,goalWeeksInYear,goalSteps,stepsForPeriod,daysToGoal}=await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
+const {goalPeriodKey,goalPeriodLabel,goalIsoWeek,goalWeekKey,goalWeeksInYear,goalSteps,stepsForPeriod,daysToGoal,goalStepDueDate,formatGoalDate,isGoalDateInRange,goalStepOccurrence}=await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
 
 test('daily, Monday-based weekly, and monthly progress keys roll over correctly',()=>{
   const sunday=new Date(2026,9,25,12),monday=new Date(2026,9,26,12);
@@ -26,6 +26,40 @@ test('period cards collect only matching steps across goals, including saved leg
 });
 test('existing goals keep their action as a first plan step',()=>{
   assert.deepEqual(goalSteps({id:'old',title:'تعلم',benefit:'النفع',action:'قراءة يومية',period:'daily'}),[{id:'legacy-old',title:'قراءة يومية',period:'daily',done:{}}]);
+});
+test('custom date steps are one-time, use local calendar dates, and keep their completion history when edited',()=>{
+  const step={id:'once',title:'قراءة فصل',period:'custom',customDate:'2026-10-31',done:{'2026-10-30':true}};
+  assert.equal(goalPeriodKey(step.period,new Date(2026,9,31,23),step.customDate),'2026-10-31');
+  assert.equal(goalStepDueDate(step,new Date(2026,10,1,0)),'2026-10-31');
+  assert.match(formatGoalDate(step.customDate),/أكتوبر/);
+  assert.equal(goalPeriodLabel('custom',step.customDate),formatGoalDate(step.customDate));
+  const edited={...step,customDate:'2026-11-02'};
+  assert.deepEqual(edited.done,{'2026-10-30':true});
+  assert.equal(goalStepDueDate(edited),'2026-11-02');
+  assert.equal(stepsForPeriod([{id:'g',title:'هدف',benefit:'',steps:[step]}],'custom').length,1);
+});
+test('daily incomplete goal steps carry forward until completion or the inclusive deadline',()=>{
+  const goal={id:'active',createdAt:'2026-10-31',targetDate:'2026-11-05'};
+  const step={id:'daily',title:'قراءة',period:'daily',done:{}};
+  for(const date of ['2026-10-31','2026-11-01','2026-11-02','2026-11-03','2026-11-04','2026-11-05'])assert.equal(goalStepOccurrence(goal,step,date),true,date);
+  assert.equal(goalStepOccurrence(goal,step,'2026-11-06'),false);
+  const completed={...step,done:{'2026-11-02':true}};
+  assert.equal(goalStepOccurrence(goal,completed,'2026-11-03'),false);
+  assert.equal(goalStepOccurrence({...goal,createdAt:'2026-11-01'},step,'2026-10-31'),false);
+});
+test('custom and recurring occurrences stay inside the inclusive goal date range',()=>{
+  const goal={id:'bounded',createdAt:'2026-10-31',targetDate:'2026-11-05'};
+  const custom={id:'custom',title:'موعد',period:'custom',customDate:'2026-11-05',done:{}};
+  assert.equal(goalStepOccurrence(goal,custom,'2026-11-05'),true);
+  assert.equal(isGoalDateInRange(goal,'2026-10-30'),false);
+  assert.equal(isGoalDateInRange(goal,'2026-11-06'),false);
+  const weekly={id:'weekly',title:'أسبوعي',period:'weekly',done:{}};
+  assert.equal(goalStepOccurrence(goal,weekly,'2026-11-01'),true);
+  assert.equal(goalStepOccurrence(goal,weekly,'2026-11-08'),false);
+  const monthlyGoal={...goal,createdAt:'2026-10-01',targetDate:'2026-10-31'};
+  const monthly={id:'monthly',title:'شهري',period:'monthly',done:{}};
+  assert.equal(goalStepOccurrence(monthlyGoal,monthly,'2026-10-31'),true);
+  assert.equal(goalStepOccurrence(monthlyGoal,monthly,'2026-11-30'),false);
 });
 test('deadline counts calendar days, including same day and overdue',()=>{
   const now=new Date(2026,9,23,23,30);

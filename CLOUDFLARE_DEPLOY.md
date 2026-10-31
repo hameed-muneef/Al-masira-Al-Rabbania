@@ -12,6 +12,12 @@ Cloudflare Pages has a 25 MiB limit per static asset. The `build:cloudflare` com
 
 Locally, `npm run build:cloudflare` produces the Cloudflare-ready `dist` folder using the Supabase URL in `.env.local`. The redirect build does not verify that the PDFs have already been uploaded, so complete step 2 before publishing.
 
+`public/_headers` adds baseline browser security headers to static responses,
+including anti-framing, MIME-sniffing protection, a frame-ancestors-only Content
+Security Policy, a referrer policy, and a restrictive permissions policy. Verify
+the response headers on the deployed Worker URL; a successful build alone does not
+prove that a host applied them.
+
 ## If the dashboard created a Worker
 
 Workers Builds shows separate **Build command** and **Deploy command** fields instead of a build output directory. Set the build command to `npm run build:cloudflare` and keep the deploy command as `npx wrangler deploy`. The repository's `wrangler.jsonc` names the live Worker `al-rabaniyoon`, points static assets at `dist`, and enables SPA routing for `/admin`. The Worker name must match the Worker whose URL you open; otherwise Wrangler can publish to a different Worker. The Cloudflare build makes book readers use their Supabase public URLs directly, because an unmatched `/books/...` navigation on a Worker can otherwise fall back to the app homepage. Save the build settings, push the configuration, and retry the deployment. The build log must include `Cloudflare Pages build ready: 16 PDF redirects to Supabase; 1 temporarily unavailable PDF omitted.` before Wrangler deploys assets. The PDFs must be uploaded to `journey-books` for the reader to display them.

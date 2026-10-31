@@ -3,6 +3,43 @@ import {reviseUnit,type Curriculum,type Resource,type Unit} from './curriculum';
 export function removeResource(unit:Unit,id:string):Unit{
   return {...unit,resources:unit.resources.filter(resource=>resource.id!==id),stations:unit.stations.map(station=>({...station,sourceIds:station.sourceIds.filter(sourceId=>sourceId!==id)}))};
 }
+export function archiveResource(data:Curriculum,unitId:string,id:string):Curriculum{
+  const unit=data.units.find(item=>item.id===unitId);
+  const resource=unit?.resources.find(item=>item.id===id);
+  if(!unit||!resource)throw new Error('المصدر المختار غير موجود.');
+  if(data.archivedResources?.some(item=>item.resource.id===id))throw new Error('المصدر مؤرشف بالفعل.');
+  const stationIndexes=unit.stations.flatMap((station,index)=>station.sourceIds.includes(id)?[index]:[]);
+  return {
+    ...data,
+    units:data.units.map(item=>item.id===unitId?reviseUnit(removeResource(item,id)):item),
+    archivedResources:[...(data.archivedResources??[]),{unitId,unitTitle:unit.title,resource,stationIndexes}]
+  };
+}
+export function restoreResource(data:Curriculum,id:string):Curriculum{
+  const archived=data.archivedResources?.find(item=>item.resource.id===id);
+  if(!archived)throw new Error('المصدر المؤرشف غير موجود.');
+  const isActive=data.units.some(item=>item.id===archived.unitId);
+  const sourceUnits=isActive?data.units:(data.archivedUnits??[]);
+  const unit=sourceUnits.find(item=>item.id===archived.unitId);
+  if(!unit)throw new Error('المحطة الأصلية غير موجودة؛ لم يُغيّر الأرشيف.');
+  if(unit.resources.some(item=>item.id===id))throw new Error('المصدر موجود بالفعل في المحطة الأصلية.');
+  const restoreTo=(item:Unit)=>item.id!==archived.unitId?item:reviseUnit({
+    ...item,
+    resources:[...item.resources,archived.resource],
+    stations:item.stations.map((station,index)=>({
+      ...station,
+      sourceIds:archived.stationIndexes.includes(index)
+        ?[...station.sourceIds.filter(sourceId=>sourceId!==id),id]
+        :station.sourceIds.filter(sourceId=>sourceId!==id)
+    }))
+  });
+  return {
+    ...data,
+    units:isActive?data.units.map(restoreTo):data.units,
+    archivedUnits:isActive?data.archivedUnits:data.archivedUnits?.map(restoreTo),
+    archivedResources:data.archivedResources?.filter(item=>item.resource.id!==id)
+  };
+}
 export function reorderResource(unit:Unit,id:string,direction:-1|1):Unit{
   const resources=[...unit.resources];
   const index=resources.findIndex(resource=>resource.id===id),other=index+direction;

@@ -3,6 +3,7 @@ import {BookOpen,RefreshCw} from 'lucide-react';
 import {authClient} from '../auth';
 import CourseMaterials from './CourseMaterials';
 import CourseAssignments from './CourseAssignments';
+import CirclesView from './CirclesView';
 import '../teacher.css';
 
 type Course={id:string;teacher_id:string;kind:string;title:string;summary:string;objectives:string;prerequisites:string;level:string;category:string;schedule_description:string;starts_at:string|null;time_zone:string;capacity:number;access:string;registration:string;youtube_url:string;status:string};
@@ -13,7 +14,7 @@ const kindLabel=(k:string)=>({lesson:'درس منفرد',series:'سلسلة در
 const levelLabel=(l:string)=>({all:'للجميع',beginner:'مبتدئ',intermediate:'متوسط',advanced:'متقدم'}[l]??l);
 const fmtDate=(v:string|null)=>v?new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(v)):null;
 
-export default function CoursesView({user,navigate}:{user:{id:string}|null;navigate?:(view:any)=>void}){
+export default function CoursesView({user,navigate,admin=false}:{user:{id:string}|null;navigate?:(view:any)=>void;admin?:boolean}){
   const [courses,setCourses]=useState<Course[]>([]);
   const [regs,setRegs]=useState<Registration[]>([]);
   const [teachers,setTeachers]=useState<Record<string,TeacherIntro>>({});
@@ -26,7 +27,7 @@ export default function CoursesView({user,navigate}:{user:{id:string}|null;navig
   const [reportingId,setReportingId]=useState<string|null>(null);
   const [reportReason,setReportReason]=useState('other');
   const [reportDetails,setReportDetails]=useState('');
-  const [tab,setTab]=useState<'discover'|'mine'>('discover');
+  const [tab,setTab]=useState<'discover'|'mine'|'groups'>('discover');
   const [filter,setFilter]=useState('');
   const [page,setPage]=useState(1);
 
@@ -112,17 +113,18 @@ export default function CoursesView({user,navigate}:{user:{id:string}|null;navig
 
   return <div className="teacher-view courses-view">
     <div className="page-intro"><span className="eyebrow">مجالس العلم</span><h1>دورات ودروس مفتوحة</h1><p>مجالس علم مجانية يقدّمها معلمون معتمدون. التسجيل يحفظ مقعدك؛ اللقاءات مباشرة ولا تُسجَّل.</p></div>
-    {error&&<p className="teacher-notice error" role="alert">{error}</p>}
+    {tab!=='groups'&&error&&<p className="teacher-notice error" role="alert">{error}</p>}
     {notice&&<p className="teacher-notice" role="status">{notice}</p>}
     <div className="circles-toolbar">
       <div role="tablist" aria-label="عرض المجالس">
         <button role="tab" aria-selected={tab==='discover'} className={tab==='discover'?'primary':'soft-btn'} onClick={()=>setTab('discover')}>استكشاف</button>
         <button role="tab" aria-selected={tab==='mine'} className={tab==='mine'?'primary':'soft-btn'} onClick={()=>setTab('mine')}>دوراتي المسجلة</button>
+        {user&&<button role="tab" aria-selected={tab==='groups'} className={tab==='groups'?'primary':'soft-btn'} onClick={()=>setTab('groups')}>مجالسي العلمية الخاصة</button>}
       </div>
-      <input className="soft-btn" placeholder="بحث بالعنوان أو التصنيف" value={filter} onChange={e=>{setFilter(e.target.value);setPage(1)}} aria-label="بحث" style={{minWidth:220}}/>
-      <button className="soft-btn" onClick={()=>void load()}><RefreshCw size={15}/> تحديث</button>
+      {tab!=='groups'&&<><input className="soft-btn" placeholder="بحث بالعنوان أو التصنيف" value={filter} onChange={e=>{setFilter(e.target.value);setPage(1)}} aria-label="بحث" style={{minWidth:220}}/>
+      <button className="soft-btn" onClick={()=>void load()}><RefreshCw size={15}/> تحديث</button></>}
     </div>
-    {loading?<p role="status">جارٍ تحميل مجالس العلم…</p>:tab==='discover'?(
+    {tab==='groups'?<CirclesView user={user} mode="science" admin={admin} embedded/>:loading?<p role="status">جارٍ تحميل مجالس العلم…</p>:tab==='discover'?(
       visible.length===0?<section className="panel"><h2>{filter?'لا نتائج للبحث':'لا توجد مجالس منشورة'}</h2><p className="muted">{filter?'جرّب عنوانًا أو تصنيفًا آخر.':'لم يُنشر أي مجلس علم بعد.'}</p></section>:
       <div><div className="feature-grid">{pageCourses.map(course=>{
         const reg=registered(course.id);

@@ -4,7 +4,9 @@ import {authClient} from '../auth';
 import '../circles.css';
 import CircleProgram from './CircleProgram';
 import TawasiMentorshipPanel from './TawasiMentorshipPanel';
+import {ReceivedInvitations} from './ActivityInvitations';
 import {TawasiHistoryPanel,TawasiInvitesPanel} from './TawasiHubPanels';
+import MemberInviteBar from './MemberInviteBar';
 
 // حلقات التواصي الخاص: المصدر ترحيلات TAW-001/002 في Supabase عبر RLS ووظائف خادم محدودة.
 // لا دليل عام ولا ظهور لغير الأعضاء؛ كل الاستعلامات بشأن حلقات المستخدم فقط.
@@ -48,6 +50,7 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
   const [draft,setDraft]=useState<Draft>(emptyDraft);
   const [confirmClose,setConfirmClose]=useState<string|null>(null);
   const [inviteGroup,setInviteGroup]=useState<string|null>(null);
+  const [memberInviteGroup,setMemberInviteGroup]=useState<string|null>(null);
   const [invites,setInvites]=useState<InviteRow[]>([]);
   const [newInviteUrl,setNewInviteUrl]=useState('');
   const [requestGroup,setRequestGroup]=useState<string|null>(null);
@@ -269,6 +272,11 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
     setInviteGroup(groupId);setInvites([]);setNewInviteUrl('');setBusy(true);
     try{await loadInvites(groupId)}catch(error){setInviteGroup(null);say(messageOf(error),true)}finally{setBusy(false)}
   };
+  const inviteGroupMember=async(groupId:string,username:string)=>{
+    if(!authClient)throw new Error('خدمة الحساب غير متاحة.');
+    const {error}=await authClient.rpc('invite_group_member',{p_group_id:groupId,p_username:username});
+    if(error)throw error;
+  };
   const createInvite=async(groupId:string)=>{
     if(!authClient||busy)return;
     setBusy(true);setNewInviteUrl('');
@@ -363,7 +371,12 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
   return <div className="circles-view">
     {!embedded&&heading}
     {mode==='tawasi'&&<div className="circle-kind-choice" role="tablist" aria-label="أقسام التواصي">{([['mine','مجالسي'],['invites','الدعوات'],['mentor','طلب شيخ معتمد'],['history','السجل']] as const).map(([key,label])=><button key={key} type="button" role="tab" aria-selected={tab===key} className={tab===key?'soft-btn selected':'soft-btn'} onClick={()=>setTab(key)}>{label}</button>)}</div>}
-    {mode==='tawasi'&&tab==='invites'&&<TawasiInvitesPanel userId={user.id} circles={memberships.flatMap(row=>row.study_group?[{id:row.study_group.id,name:row.study_group.name}]:[])} onChanged={()=>void load()}/>}
+    {mode==='tawasi'&&tab==='invites'&&<>
+      <ReceivedInvitations activityType="tawasi_session" title="دعوات جلسات التواصي"
+        intro="دعوات خاصة من مرشدين معتمدين. قبول الدعوة يحجز الموعد ويؤكده."
+        emptyText="لا دعوات جلسات واردة الآن." onChanged={()=>void load()}/>
+      <TawasiInvitesPanel userId={user.id} circles={memberships.flatMap(row=>row.study_group?[{id:row.study_group.id,name:row.study_group.name}]:[])} onChanged={()=>void load()}/>
+    </>}
     {mode==='tawasi'&&tab==='mentor'&&<TawasiMentorshipPanel userId={user.id} always/>}
     {mode==='tawasi'&&tab==='history'&&<TawasiHistoryPanel circles={memberships.flatMap(row=>row.study_group?[{id:row.study_group.id,name:row.study_group.name}]:[])}/>}
     {(mode!=='tawasi'||tab==='mine')&&<>
@@ -455,7 +468,12 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
             <button className="soft-btn" disabled={busy} onClick={()=>void closeGroup(circle.id)}>تأكيد الإغلاق</button><button className="soft-btn" onClick={()=>setConfirmClose(null)}>تراجع</button>
           </>:<button className="soft-btn" disabled={busy} onClick={()=>setConfirmClose(circle.id)}>إغلاق الحلقة</button>}
         </div>}
-        {(row.role==='founder'||row.role==='manager')&&<div className="circle-actions"><button className="soft-btn" disabled={busy} aria-expanded={requestGroup===circle.id} aria-controls={`requests-${circle.id}`} onClick={()=>void openRequests(circle.id)}>طلبات الانضمام</button><button className="soft-btn" disabled={busy} aria-expanded={rosterGroup===circle.id} aria-controls={`roster-${circle.id}`} onClick={()=>void openRoster(circle.id)}>إدارة الأعضاء</button></div>}
+        {(row.role==='founder'||row.role==='manager')&&!closed&&memberInviteGroup===circle.id&&<div id={`member-invite-${circle.id}`} className="circle-invites">
+          <h3>دعوة عضو إلى الحلقة</h3>
+          <p className="muted small">ابحث باسم المستخدم وأرسل الدعوة. لن يُضاف العضو إلا بعد قبوله من تبويب «الدعوات». يجب أن يكون اسم المستخدم ظاهرًا للبحث.</p>
+          <MemberInviteBar actionLabel="إرسال دعوة الحلقة" hint="ابحث باسم المستخدم، واختر عضوًا أو أكثر" onInvite={username=>inviteGroupMember(circle.id,username)}/>
+        </div>}
+        {(row.role==='founder'||row.role==='manager')&&<div className="circle-actions"><button className="soft-btn" disabled={busy||closed} aria-expanded={memberInviteGroup===circle.id} aria-controls={`member-invite-${circle.id}`} onClick={()=>setMemberInviteGroup(current=>current===circle.id?null:circle.id)}><Users size={15}/> دعوة عضو باسم المستخدم</button><button className="soft-btn" disabled={busy} aria-expanded={requestGroup===circle.id} aria-controls={`requests-${circle.id}`} onClick={()=>void openRequests(circle.id)}>طلبات الانضمام</button><button className="soft-btn" disabled={busy} aria-expanded={rosterGroup===circle.id} aria-controls={`roster-${circle.id}`} onClick={()=>void openRoster(circle.id)}>إدارة الأعضاء</button></div>}
         {row.role!=='founder'&&<div className="circle-actions">{confirmMemberAction===`leave:${circle.id}`?<><p className="circles-notice error" role="alert">هل تريد مغادرة الحلقة؟ ستفقد الوصول إلى محتواها.</p><button className="soft-btn" disabled={busy} onClick={()=>void manageMember(circle.id,user.id,'leave')}>تأكيد المغادرة</button><button className="soft-btn" onClick={()=>setConfirmMemberAction(null)}>تراجع</button></>:<button className="soft-btn" onClick={()=>setConfirmMemberAction(`leave:${circle.id}`)}>مغادرة الحلقة</button>}</div>}
         {row.role==='founder'&&inviteGroup===circle.id&&<div id={`invites-${circle.id}`} className="circle-invites">
           <h3>روابط الدعوة الخاصة</h3>

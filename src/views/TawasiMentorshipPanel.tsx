@@ -1,6 +1,8 @@
 import {useCallback,useEffect,useState,type FormEvent} from 'react';
-import {CalendarClock,UserRound,HeartHandshake,Check,Clock3} from 'lucide-react';
+import {CalendarClock,UserRound,HeartHandshake,Check,Clock3,UserPlus} from 'lucide-react';
 import {authClient} from '../auth';
+import MemberInviteBar from './MemberInviteBar';
+import ActivityInvitations,{type InviteRow} from './ActivityInvitations';
 
 type Mentor={user_id:string;display_name:string;biography:string;mentor_type:string;qualifications:string;specialties:string[];languages:string[]};
 type Profile=Mentor&{directory_visible:boolean;status:string;review_note:string};
@@ -34,6 +36,11 @@ export default function TawasiMentorshipPanel({userId,always=false}:{userId:stri
   const [slotDraft,setSlotDraft]=useState({starts_at:'',ends_at:''});
   const [booking,setBooking]=useState<{slot:Slot;mentor:Mentor}|null>(null);
   const [bookingDraft,setBookingDraft]=useState({topic:'',private_details:''});
+  const [sentInvites,setSentInvites]=useState<InviteRow[]>([]);
+  const [invitesUnavailable,setInvitesUnavailable]=useState(false);
+  const [inviteSlot,setInviteSlot]=useState<string|null>(null);
+  const [inviteTopic,setInviteTopic]=useState('');
+  const [invitesRefresh,setInvitesRefresh]=useState(0);
 
   const load=useCallback(async()=>{
     if(!authClient)return;
@@ -55,6 +62,43 @@ export default function TawasiMentorshipPanel({userId,always=false}:{userId:stri
     }catch(caught){setError(messageOf(caught))}finally{setLoading(false)}
   },[]);
   useEffect(()=>{void load()},[load]);
+
+  // دعوات المرشد على مواعيده. تظهر فقط بعد اعتماد ملفه، وتبقى الصفحة
+  // عاملة إن لم تكن ترحيلات دعوات التواصي مطبّقة على الخادم بعد.
+  useEffect(()=>{
+    if(!authClient||profile?.status!=='approved'){setSentInvites([]);return}
+    let active=true;
+    const client=authClient;
+    void (async()=>{
+      try{
+        const {data,error:listError}=await client.rpc('list_tawasi_slot_invitations');
+        if(!active)return;
+        if(listError){
+          const candidate=listError as {code?:string;message?:string};
+          if(candidate.code==='42883'||(candidate.code==='PGRST202'&&/tawasi_session_invitations|list_tawasi_slot_invitations/i.test(candidate.message??'')))setInvitesUnavailable(true);
+          return;
+        }
+        setInvitesUnavailable(false);
+        setSentInvites((data??[]) as InviteRow[]);
+      }catch{/* تُبقى بقية اللوحة عاملة */}
+    })();
+    return()=>{active=false};
+  },[profile?.status,invitesRefresh]);
+
+  const sendSlotInvite=async(slotId:string,username:string)=>{
+    if(!authClient)throw new Error('تسجيل الدخول مطلوب.');
+    const topic=inviteTopic.trim();
+    if(topic.length<2)throw new Error('اكتب موضوع الجلسة قبل إرسال الدعوة.');
+    const {error:inviteError}=await authClient.rpc('invite_tawasi_member',{p_slot_id:slotId,p_username:username.trim(),p_topic:topic});
+    if(inviteError)throw inviteError;
+  };
+  const cancelSlotInvite=async(invitationId:string)=>{
+    if(!authClient)return;
+    const {error:cancelError}=await authClient.rpc('cancel_tawasi_slot_invitation',{p_invitation_id:invitationId});
+    if(cancelError)throw cancelError;
+    setInvitesRefresh(value=>value+1);
+  };
+
 
   const toggleSlots=async(mentor:Mentor)=>{
     if(expanded===mentor.user_id){setExpanded(null);return}setExpanded(mentor.user_id);setBooking(null);
@@ -93,7 +137,26 @@ export default function TawasiMentorshipPanel({userId,always=false}:{userId:stri
     {loading?<p className="tawasi-loading" role="status">جارٍ تحميل المرشدين والجلسات…</p>:schemaUnavailable?null:<>
       {profile&&profile.status!=='rejected'?<div className="tawasi-mentor-status"><strong>ملف المرشد: {statusLabel[profile.status]??profile.status}</strong>{profile.review_note&&<p>{profile.review_note}</p>}
         {profile.status==='approved'&&<form className="tawasi-slot-form" onSubmit={event=>void addSlot(event)}><label>بداية التوفر<input required type="datetime-local" value={slotDraft.starts_at} onChange={event=>setSlotDraft(current=>({...current,starts_at:event.target.value}))}/></label><label>نهاية التوفر<input required type="datetime-local" value={slotDraft.ends_at} onChange={event=>setSlotDraft(current=>({...current,ends_at:event.target.value}))}/></label><button className="soft-btn" disabled={busy}><CalendarClock size={16}/> إضافة موعد متاح</button></form>}
-        {profile.status==='approved'&&<div className="tawasi-own-slots"><h4>مواعيدك</h4>{mySlots.length===0?<p className="muted">لم تضف مواعيد متاحة بعد.</p>:mySlots.map(slot=><div key={slot.slot_id}><span>{fmt(slot.starts_at)} – {fmt(slot.ends_at)} · {slot.status==='booked'?'عليه طلب':'متاح'}</span>{slot.status==='available'&&<button className="soft-btn" disabled={busy} onClick={()=>void cancelSlot(slot.slot_id)}>إلغاء الموعد</button>}</div>)}</div>}
+        {profile.status==='approved'&&<div className="tawasi-own-slots">
+          <h4>مواعيدك</h4>
+          {mySlots.length===0?<p className="muted">لم تضف مواعيد متاحة بعد.</p>:mySlots.map(slot=><div key={slot.slot_id} className="tawasi-own-slot">
+            <span>{fmt(slot.starts_at)} – {fmt(slot.ends_at)} · {slot.status==='booked'?'عليه طلب':'متاح'}</span>
+            <div className="invite-list-actions">
+              {slot.status==='available'&&<button className="soft-btn" type="button" aria-expanded={inviteSlot===slot.slot_id} onClick={()=>{setInviteSlot(current=>current===slot.slot_id?null:slot.slot_id);setInviteTopic('')}}><UserPlus size={15}/> دعوة عضو</button>}
+              {slot.status==='available'&&<button className="soft-btn" type="button" disabled={busy} onClick={()=>void cancelSlot(slot.slot_id)}>إلغاء الموعد</button>}
+            </div>
+            {slot.status==='available'&&inviteSlot===slot.slot_id&&<div className="tawasi-slot-invite">
+              <label>موضوع الجلسة<input required minLength={2} maxLength={120} value={inviteTopic} onChange={event=>setInviteTopic(event.target.value)} placeholder="مثل: توجيه تربوي في تربية الأبناء"/></label>
+              <MemberInviteBar actionLabel="دعوة إلى الجلسة" hint="ابحث باسم المستخدم واختر عضوًا أو أكثر لهذا الموعد"
+                disabled={inviteTopic.trim().length<2} onInvite={username=>sendSlotInvite(slot.slot_id,username)}
+                onDone={()=>{setInvitesRefresh(value=>value+1);setInviteTopic('')}}/>
+            </div>}
+          </div>)}
+        </div>}
+        {profile.status==='approved'&&!invitesUnavailable&&<div className="tawasi-slot-invites-list">
+          <ActivityInvitations title="دعوات جلساتك" rows={sentInvites} onCancel={cancelSlotInvite} showExpiry busy={busy}
+            intro="حالات الدعوات المرسلة على مواعيدك. قبول إحداها يحجز الموعد ويلغي أثر الدعوات المعلقة الأخرى." emptyText="لم تُرسل دعوات على مواعيدك بعد."/>
+        </div>}
       </div>:null}
       {mentors.length===0&&!schemaUnavailable&&<p className="muted">لا يوجد مشايخ معتمدون متاحون الآن.</p>}
       {mentors.length>0&&<div className="tawasi-mentor-list"><h3>المرشدون المعتمدون</h3>{mentors.map(mentor=><article className="tawasi-mentor-card" key={mentor.user_id}>

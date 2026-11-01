@@ -29,6 +29,10 @@
 .platform-audit-list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-sm);background:#fff}
 .platform-audit-list li small{grid-column:1/-1;color:var(--color-muted)}
 .platform-audit-list li span{color:var(--color-muted);font-size:13px}
+.platform-audit-list li>span.granted,.platform-audit-list li>span.revoked,.platform-audit-list li>span.reset{width:max-content;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.platform-audit-list li>span.granted{background:#e5f2e9;color:#216341}
+.platform-audit-list li>span.revoked{background:#fae9e6;color:#96392e}
+.platform-audit-list li>span.reset{background:#f1eee5;color:#59655d}
 @media(max-width:750px){.platform-price-fields{grid-template-columns:1fr}.platform-audit-list li{grid-template-columns:1fr}}
 .course-manager{display:grid;gap:14px}
 .course-manager h2,.course-manager h3,.course-manager p{margin-block:0}

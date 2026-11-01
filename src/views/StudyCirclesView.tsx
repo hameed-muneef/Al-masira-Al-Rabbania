@@ -5,6 +5,8 @@ import StudyTracksView from './StudyTracksView';
 import StudyMeetingsPanel from './StudyMeetingsPanel';
 import StudyNotesPanel from './StudyNotesPanel';
 import StudyQuestionsPanel from './StudyQuestionsPanel';
+import MemberInviteBar from './MemberInviteBar';
+import ActivityInvitations,{type InviteRow} from './ActivityInvitations';
 import '../mudarasa.css';
 
 type Circle={
@@ -51,7 +53,13 @@ export default function StudyCirclesView({user}:{user:{id:string}|null}){
   const [joinCode,setJoinCode]=useState('');
   const [joinNote,setJoinNote]=useState('');
   const [inviteCode,setInviteCode]=useState('');
+  const [circleInvites,setCircleInvites]=useState<InviteRow[]>([]);
+  const [invitesUnavailable,setInvitesUnavailable]=useState(false);
+  const [myInvites,setMyInvites]=useState<{invite_id:string;circle_title:string;inviter_name:string}[]>([]);
+  const [myInvitesError,setMyInvitesError]=useState('');
   const selected=circles.find(circle=>circle.id===selectedId)??null;
+  const ownRole=detail?.members.find(member=>member.member_id===user?.id)?.member_role;
+  const canManageInvites=ownRole==='creator'||ownRole==='supervisor';
 
   useEffect(()=>{
     let active=true;
@@ -138,6 +146,63 @@ export default function StudyCirclesView({user}:{user:{id:string}|null}){
       if(requestError)throw requestError;
       setJoinCode('');setJoinNote('');
     },'أُرسل طلب الانضمام للمراجعة.');
+  };
+
+  useEffect(()=>{
+    const client=authClient;
+    if(!client||!user){setMyInvites([]);setMyInvitesError('');return}
+    let active=true;
+    const loadInvites=async()=>{
+      setMyInvitesError('');
+      try{
+        const {data,error:inviteError}=await client.rpc('list_my_study_invites' as any);
+        if(inviteError)throw inviteError;
+        if(active)setMyInvites((data??[]) as typeof myInvites);
+      }catch(caught){
+        if(active){setMyInvites([]);setMyInvitesError(errorText(caught))}
+      }
+    };
+    void loadInvites();
+    return()=>{active=false};
+  },[user?.id,refresh]);
+
+  // قائمة دعوات المدارسة للمنظّم. تُجلب فقط لمن يملك الدور، وإن لم تكن
+  // ترحيلات الدعوات مطبّقة بعد تبقى الصفحة عاملة بدون إظهار خطأ للمستخدم.
+  useEffect(()=>{
+    if(!authClient||!selectedId||!canManageInvites){setCircleInvites([]);return}
+    let active=true;
+    const client=authClient;
+    void (async()=>{
+      try{
+        const {data,error:listError}=await client.rpc('list_study_circle_invites',{p_circle_id:selectedId});
+        if(!active)return;
+        if(listError){setInvitesUnavailable(true);setCircleInvites([]);return}
+        setInvitesUnavailable(false);
+        setCircleInvites((data??[]) as InviteRow[]);
+      }catch{if(active)setInvitesUnavailable(true)}
+    })();
+    return()=>{active=false};
+  },[selectedId,canManageInvites,refresh]);
+
+  const sendInviteByUsername=async(username:string)=>{
+    if(!authClient||!selected)throw new Error('اختر مدارسة أولًا.');
+    const {error:inviteError}=await authClient.rpc('invite_study_member' as any,{p_circle_id:selected.id,p_username:username.trim()});
+    if(inviteError)throw inviteError;
+  };
+
+  const cancelCircleInvite=async(inviteId:string)=>{
+    if(!authClient)return;
+    const {error:cancelError}=await authClient.rpc('cancel_study_invite' as any,{p_invite_id:inviteId});
+    if(cancelError)throw cancelError;
+    setRefresh(value=>value+1);
+  };
+
+  const answerInvite=async(id:string,accept:boolean)=>{
+    if(!authClient||busy)return;
+    await runAction(async()=>{
+      const {error:answerError}=await authClient!.rpc('respond_study_invite' as any,{p_invite_id:id,p_accept:accept});
+      if(answerError)throw answerError;
+    },accept?'انضممت إلى المدارسة.':'رُفضت الدعوة.');
   };
 
   const createInvite=async()=>{
@@ -228,8 +293,7 @@ export default function StudyCirclesView({user}:{user:{id:string}|null}){
 
   if(section==='tracks')return <div className="mudarasa-view"><div className="mudarasa-topline"><button className="soft-btn" onClick={()=>setSection('circles')}><ArrowRight size={16}/> مدارساتي</button></div><StudyTracksView user={user}/></div>;
 
-  const ownRole=detail?.members.find(member=>member.member_id===user?.id)?.member_role;
-  const canReview=ownRole==='creator'||ownRole==='supervisor';
+  const canReview=canManageInvites;
   const canInvite=canReview;
   const canEditPlan=canInvite;
   const canEditMaterial=ownRole==='creator'||ownRole==='supervisor'||ownRole==='teacher';
@@ -241,7 +305,9 @@ export default function StudyCirclesView({user}:{user:{id:string}|null}){
       <div className="mudarasa-actions"><button className="soft-btn" onClick={()=>setSection('tracks')}><BookOpen size={16}/> مسارات الدراسة القديمة</button><button className="soft-btn" onClick={()=>setRefresh(value=>value+1)}><RefreshCw size={16}/> تحديث</button></div>
     </header>
     {error&&<p className="mudarasa-message error" role="alert">{error}</p>}
+    {myInvitesError&&<p className="mudarasa-message error" role="alert">تعذر تحميل دعوات المدارسة: {myInvitesError}</p>}
     {notice&&<p className="mudarasa-message" role="status">{notice}</p>}
+    {myInvites.length>0&&<section className="panel" aria-label="دعوات إليك"><h2>دعوات وصلتك</h2><ul className="course-list">{myInvites.map(invite=><li key={invite.invite_id}><div><strong>{invite.circle_title}</strong><p className="muted small">من {invite.inviter_name}</p></div><div className="course-actions"><button className="soft-btn" disabled={busy} onClick={()=>void answerInvite(invite.invite_id,true)}>قبول</button><button className="soft-btn" disabled={busy} onClick={()=>void answerInvite(invite.invite_id,false)}>رفض</button></div></li>)}</ul></section>}
     {!user?<section className="panel mudarasa-empty"><h2>سجّل الدخول لفتح المدارسة</h2><p>المدارسات ومحتواها متاحة للأعضاء فقط.</p></section>:<>
       {selected&&<>
         <button className="mudarasa-back" onClick={()=>{setSelectedId('');setDetail(null);setError('');setNotice('')}}><ArrowRight size={16}/> العودة إلى مدارساتي</button>
@@ -249,7 +315,8 @@ export default function StudyCirclesView({user}:{user:{id:string}|null}){
           <div className="mudarasa-detail-title"><span className={`mudarasa-status ${selected.status}`}>{statusNames[selected.status]??selected.status}</span><h2>{selected.title}</h2><p>{kindNames[selected.kind]??selected.kind} · {categoryNames[selected.category]??selected.category} · {modeNames[selected.mode]??selected.mode}</p></div>
           {canInvite&&selected.status==='active'&&<button className="primary" disabled={busy} onClick={()=>void createInvite()}><Plus size={16}/> إنشاء دعوة</button>}
           {isCreator&&<div className="mudarasa-status-actions">{selected.status==='active'?<button className="soft-btn" disabled={busy} onClick={()=>void setStatus('paused')}>إيقاف مؤقت</button>:selected.status==='paused'?<button className="soft-btn" disabled={busy} onClick={()=>void setStatus('active')}>استئناف</button>:null}</div>}
-          {inviteCode&&<div className="mudarasa-invite"><strong>رابط الدعوة</strong><input readOnly value={`${window.location.origin}/invite/${inviteCode}`} aria-label="رابط الدعوة"/><button className="soft-btn" onClick={()=>void navigator.clipboard?.writeText(`${window.location.origin}/invite/${inviteCode}`)}><ClipboardCopy size={15}/> نسخ</button></div>}
+          {canInvite&&selected.status==='active'&&<MemberInviteBar actionLabel="دعوة إلى المدارسة" hint="ابحث باسم المستخدم، واختر عضوًا أو أكثر ثم أرسل الدعوات" onInvite={sendInviteByUsername} onDone={()=>setRefresh(value=>value+1)}/>}
+          {inviteCode&&<div className="mudarasa-invite"><strong>رابط الدعوة</strong><input readOnly value={`${window.location.origin}/invite/${inviteCode}`} aria-label="رابط الدعوة"/><button className="soft-btn" onClick={()=>void navigator.clipboard?.writeText(`${window.location.origin}/invite/${inviteCode}`)}><ClipboardCopy size={15}/> نسخ</button><button className="soft-btn" onClick={()=>{const url=`${window.location.origin}/invite/${inviteCode}`;const text=`أدعوك للانضمام إلى مدارسة في الربانيون: ${url}`;if(navigator.share)void navigator.share({text,url}).catch(()=>undefined);else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank","noopener")}}>مشاركة عبر واتساب</button></div>}
         </section>
         <nav className="mudarasa-tabs" aria-label="أقسام المدارسة">{tabs.map(([id,label])=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>
         {detailLoading?<p role="status">جارٍ تحميل محتوى المدارسة…</p>:detail&&<>
@@ -271,13 +338,14 @@ export default function StudyCirclesView({user}:{user:{id:string}|null}){
           {tab==='members'&&<div className="mudarasa-section">
             <section className="panel"><h3>الأعضاء</h3><ul className="mudarasa-members">{detail.members.map(member=><li key={member.member_id}><span><bdi>{member.member_id.slice(0,8)}</bdi></span><span className="mudarasa-role">{roleNames[member.member_role]??member.member_role}</span></li>)}</ul></section>
             {canReview&&<section className="panel"><h3>طلبات الانضمام <span className="mudarasa-count">{detail.requests.length}</span></h3>{detail.requests.length===0?<p className="muted">لا توجد طلبات معلقة.</p>:<ul className="mudarasa-requests">{detail.requests.map(request=><li key={request.id}><div><strong><bdi>{request.user_id.slice(0,8)}</bdi></strong><p>{request.note||'بلا ملاحظة'}</p></div><div className="mudarasa-actions"><button className="primary" disabled={busy} onClick={()=>void reviewRequest(request.id,true)}><Check size={15}/> قبول</button><button className="soft-btn" disabled={busy} onClick={()=>void reviewRequest(request.id,false)}>رفض</button></div></li>)}</ul>}</section>}
+            {canInvite&&!invitesUnavailable&&<section className="panel"><ActivityInvitations title="دعوات المدارسة" rows={circleInvites} onCancel={cancelCircleInvite} busy={busy} intro="حالات الدعوات المرسلة باسم المستخدم. إلغاء الدعوة لا يحذف سجلها." emptyText="لم تُرسل دعوات باسم المستخدم بعد."/></section>}
           </div>}
         </>}
       </>}
       {!selected&&<>
         <div className="mudarasa-toolbar"><button className="primary" onClick={()=>setCreateOpen(open=>!open)}><Plus size={16}/>{createOpen?'إغلاق النموذج':'إنشاء مدارسة'}</button><span>{circles.length} مدارسات</span></div>
         {createOpen&&<section className="panel"><h2>مدارسة جديدة</h2><form className="mudarasa-form" onSubmit={event=>void createCircle(event)}>
-          <div className="mudarasa-form-grid"><label>اسم المدارسة<input required minLength={3} maxLength={160} value={draft.title} onChange={event=>setDraft({...draft,title:event.target.value})}/></label><label>المادة<select value={draft.kind} onChange={event=>setDraft({...draft,kind:event.target.value})}><option value="book">كتاب</option><option value="series">سلسلة دروس</option><option value="lectures">محاضرات</option><option value="topic">موضوع علمي</option></select></label><label>التصنيف<select value={draft.category} onChange={event=>setDraft({...draft,category:event.target.value})}>{Object.entries(categoryNames).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label>طريقة المدارسة<select value={draft.mode} onChange={event=>setDraft({...draft,mode:event.target.value})}><option value="async">غير متزامنة</option><option value="sync">متزامنة</option><option value="supervised">بإشراف معلم</option></select></label><label>الانضمام<select value={draft.access} onChange={event=>setDraft({...draft,access:event.target.value})}><option value="approval">بطلب وموافقة</option><option value="invite">بدعوة</option></select></label><label>تاريخ البداية<input type="date" value={draft.startsOn} onChange={event=>setDraft({...draft,startsOn:event.target.value})}/></label><label>تاريخ النهاية<input type="date" min={draft.startsOn||undefined} value={draft.endsOn} onChange={event=>setDraft({...draft,endsOn:event.target.value})}/></label><label>هدف الإنجاز<input name="paceTarget" type="number" min="1" max="500" inputMode="numeric" value={draft.paceTarget} onChange={event=>setDraft({...draft,paceTarget:event.target.value})} placeholder="اختياري"/></label><label>وحدة الإنجاز<select value={draft.paceUnit} disabled={!draft.paceTarget} onChange={event=>setDraft({...draft,paceUnit:event.target.value})}><option value="pages">صفحات</option><option value="chapters">فصول</option><option value="lessons">دروس</option><option value="minutes">دقائق</option></select></label><label>التكرار<select value={draft.pacePeriod} disabled={!draft.paceTarget} onChange={event=>setDraft({...draft,pacePeriod:event.target.value})}><option value="daily">يومي</option><option value="weekly">أسبوعي</option></select></label></div>
+          <div className="mudarasa-form-grid"><label>اسم المدارسة<input required minLength={3} maxLength={160} value={draft.title} onChange={event=>setDraft({...draft,title:event.target.value})}/></label><label>المادة<select value={draft.kind} onChange={event=>setDraft({...draft,kind:event.target.value})}><option value="book">كتاب</option><option value="series">سلسلة دروس</option><option value="lectures">محاضرات</option><option value="topic">موضوع علمي</option></select></label><label>التصنيف<select value={draft.category} onChange={event=>setDraft({...draft,category:event.target.value})}>{Object.entries(categoryNames).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label>طريقة المدارسة<select value={draft.mode} onChange={event=>setDraft({...draft,mode:event.target.value})}><option value="async">غير متزامنة</option><option value="sync">متزامنة</option><option value="supervised">بإشراف معلم</option></select></label><label>الانضمام<select value={draft.access} onChange={event=>setDraft({...draft,access:event.target.value})}><option value="approval">بطلب وموافقة</option><option value="invite">بدعوة</option></select></label><label>تاريخ البداية<input type="date" value={draft.startsOn} onChange={event=>setDraft({...draft,startsOn:event.target.value})}/></label><label>تاريخ النهاية<input type="date" min={draft.startsOn||undefined} value={draft.endsOn} onChange={event=>setDraft({...draft,endsOn:event.target.value})}/></label><label>هدف الإنجاز<input name="paceTarget" type="number" min="1" max="500" inputMode="numeric" value={draft.paceTarget} onChange={event=>setDraft({...draft,paceTarget:event.target.value})} placeholder="اختياري"/></label><label>وحدة الإنجاز<select value={draft.paceUnit} onChange={event=>setDraft({...draft,paceUnit:event.target.value})}><option value="pages">صفحات</option><option value="chapters">فصول</option><option value="lessons">دروس</option><option value="minutes">دقائق</option></select></label><label>التكرار<select value={draft.pacePeriod} onChange={event=>setDraft({...draft,pacePeriod:event.target.value})}><option value="daily">يومي</option><option value="weekly">أسبوعي</option></select></label></div>
           <label>وصف المدارسة<textarea maxLength={3000} rows={3} value={draft.description} onChange={event=>setDraft({...draft,description:event.target.value})}/></label><label>الهدف العلمي<textarea maxLength={2000} rows={2} value={draft.goal} onChange={event=>setDraft({...draft,goal:event.target.value})}/></label><button className="primary" disabled={busy}><Plus size={16}/> إنشاء المدارسة</button>
         </form></section>}
         <section className="mudarasa-join"><div><h2>لديك رمز دعوة؟</h2><p>أرسل طلب انضمام، ويصل للمؤسس أو المشرف لاتخاذ القرار.</p></div><form onSubmit={event=>void requestJoin(event)}><label>رمز الدعوة<input required minLength={20} maxLength={20} value={joinCode} onChange={event=>setJoinCode(event.target.value.toUpperCase())} placeholder="20 حرفًا"/></label><label>ملاحظة للمؤسس<input maxLength={500} value={joinNote} onChange={event=>setJoinNote(event.target.value)}/></label><button className="soft-btn" disabled={busy||joinCode.trim().length!==20}>إرسال الطلب</button></form></section>

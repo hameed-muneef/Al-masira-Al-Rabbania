@@ -34,6 +34,7 @@
 .mudarasa-detail-title h2{font-size:24px}
 .mudarasa-detail-title p{color:var(--color-muted)}
 .mudarasa-invite{flex-basis:100%;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;padding-top:12px;border-top:1px solid var(--color-border)}
+.mudarasa-suggest{grid-column:1/-1;list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
 .mudarasa-tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--color-border)}
 .mudarasa-tabs button{flex:none;padding:10px 14px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--color-muted);font:inherit;cursor:pointer}
 .mudarasa-tabs button.active{border-color:var(--color-success);color:var(--color-ink);font-weight:800}

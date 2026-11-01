@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react';
 import {Archive,ArchiveRestore,RefreshCw} from 'lucide-react';
 import {authClient} from '../auth';
+import {getArchivePageAfterResult} from '../archive-pagination';
 
 type ContentItem={
   content_type:string;
@@ -45,7 +46,10 @@ export default function AdminContentArchivePanel(){
         p_archived:archived,p_limit:pageSize,p_offset:page*pageSize
       });
       if(rpcError)throw rpcError;
-      setItems((data??[]) as ContentItem[]);
+      const result=data??[];
+      setItems(result as ContentItem[]);
+      const nextPage=getArchivePageAfterResult(page,result.length);
+      if(nextPage!==page)setPage(nextPage);
     }catch(caught){
       setError(caught instanceof Error?caught.message:'تعذر تحميل محتوى الأرشيف.');
       setItems([]);

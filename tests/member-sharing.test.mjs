@@ -233,3 +233,29 @@ test('member sharing: profiles, search, sending, privacy, limits, invitations, b
     await db.close();
   }
 });
+
+test('mudarasa invite by username: authorization, privacy, accept/decline', async () => {
+  const {db, q, asUser, fails} = await setup();
+  try {
+    await asUser(ids.a, async () => { await q('select public.save_my_share_profile($1,$2,$3)', ['alice_1', 'Alice', true]); });
+    await asUser(ids.b, async () => { await q('select public.save_my_share_profile($1,$2,$3)', ['bob_1', 'Bob', true]); });
+    await asUser(ids.c, async () => { await q('select public.save_my_share_profile($1,$2,$3)', ['carol_hidden', 'Carol', false]); });
+    let circle;
+    await asUser(ids.a, async () => {
+      circle = (await q("select public.create_study_circle('Fiqh','book','fiqh','async','','','approval',null,null,null,'','') as id")).rows[0].id;
+      await q('select public.invite_study_member($1,$2)', [circle, 'bob_1']);
+      await fails(q('select public.invite_study_member($1,$2)', [circle, 'bob_1']), 'P0001');
+      await fails(q('select public.invite_study_member($1,$2)', [circle, 'carol_hidden']), 'P0001');
+      await fails(q('select public.invite_study_member($1,$2)', [circle, 'nobody_x']), 'P0001');
+    });
+    await asUser(ids.b, async () => {
+      await fails(q('select public.invite_study_member($1,$2)', [circle, 'alice_1']), '42501');
+      const inv = (await q('select * from public.list_my_study_invites()')).rows;
+      assert.equal(inv.length, 1);
+      await q('select public.respond_study_invite($1,true)', [inv[0].invite_id]);
+      assert.equal((await q('select * from public.list_my_study_invites()')).rows.length, 0);
+    });
+    assert.equal((await q('select count(*)::int n from public.study_circle_members where circle_id=$1 and user_id=$2', [circle, ids.b])).rows[0].n, 1);
+    assert.equal((await q("select count(*)::int n from public.notifications where recipient_id=$1 and kind='invitation'", [ids.a])).rows[0].n >= 1, true);
+  } finally { await db.close(); }
+});

@@ -4,6 +4,8 @@ import {authClient} from '../auth';
 import CourseMaterials from './CourseMaterials';
 import CourseAssignments from './CourseAssignments';
 import CirclesView from './CirclesView';
+import CourseInviteManager from './CourseInviteManager';
+import {ReceivedInvitations} from './ActivityInvitations';
 import '../teacher.css';
 
 type Course={id:string;teacher_id:string;kind:string;title:string;summary:string;objectives:string;prerequisites:string;level:string;category:string;schedule_description:string;starts_at:string|null;time_zone:string;capacity:number;access:string;registration:string;youtube_url:string;status:string};
@@ -115,6 +117,9 @@ export default function CoursesView({user,navigate,admin=false}:{user:{id:string
     <div className="page-intro"><span className="eyebrow">مجالس العلم</span><h1>دورات ودروس مفتوحة</h1><p>مجالس علم مجانية يقدّمها معلمون معتمدون. التسجيل يحفظ مقعدك؛ اللقاءات مباشرة ولا تُسجَّل.</p></div>
     {tab!=='groups'&&error&&<p className="teacher-notice error" role="alert">{error}</p>}
     {notice&&<p className="teacher-notice" role="status">{notice}</p>}
+    {user&&tab!=='groups'&&<ReceivedInvitations activityType="course" title="دعوات مجالس العلم"
+      intro="دعوات وصلتك من معلمي المجالس. قبولها يسجّلك في المجلس وفق قواعد السعة والتسجيل."
+      emptyText="لا دعوات مجالس واردة الآن." onChanged={()=>void load()}/>}
     <div className="circles-toolbar">
       <div role="tablist" aria-label="عرض المجالس">
         <button role="tab" aria-selected={tab==='discover'} className={tab==='discover'?'primary':'soft-btn'} onClick={()=>setTab('discover')}>استكشاف</button>
@@ -154,6 +159,7 @@ export default function CoursesView({user,navigate,admin=false}:{user:{id:string
               <button className="soft-btn" type="button" onClick={()=>setReportingId(null)}>إلغاء</button>
             </form>}
           </div>
+          {user&&(course.teacher_id===user.id||admin)&&course.registration==='open'&&<CourseInviteManager courseId={course.id} onChanged={()=>void load()}/>}
           {reg&&<div className="course-materials-panel"><CourseMaterials courseId={course.id} editable={false}/><CourseAssignments courseId={course.id} editable={false} isTeacher={false}/></div>}
         </section>;
       })}</div>{pageCount>1&&<nav className="circle-actions" aria-label="صفحات المجالس"><button className="soft-btn" disabled={currentPage===1} onClick={()=>setPage(currentPage-1)}>السابق</button><span aria-live="polite">صفحة {currentPage} من {pageCount}</span><button className="soft-btn" disabled={currentPage===pageCount} onClick={()=>setPage(currentPage+1)}>التالي</button></nav>}</div>):

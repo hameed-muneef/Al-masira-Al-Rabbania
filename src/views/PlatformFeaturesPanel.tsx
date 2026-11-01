@@ -3,13 +3,20 @@ import {authClient} from '../auth';
 import '../teacher.css';
 
 type Feature={key:string;title:string;description:string;enabled:boolean;requires_premium:boolean;price_amount:number|null;currency_code:string|null;billing_interval:string|null};
-type Override={feature_key:string;allowed:boolean};
 type FeatureEvent={id:string;feature_key:string;before_state:Record<string,unknown>|null;after_state:Record<string,unknown>;changed_by_email:string|null;changed_at:string};
 type PermissionEvent={id:string;feature_key:string;feature_title:string;allowed:boolean|null;changed_by_email:string|null;changed_at:string};
+type PermissionStatus={
+  feature_key:string;feature_title:string;override_allowed:boolean|null;effective_allowed:boolean;
+  access_source:'feature_disabled'|'admin_grant'|'admin_revoke'|'free_default'|'subscription'|'premium_required';
+  latest_allowed:boolean|null;latest_changed_by_email:string|null;latest_changed_at:string|null;
+};
 const message=(error:unknown)=>error instanceof Error?error.message:'تعذّر تنفيذ العملية.';
 const intervalName=(value:string|null)=>value==='monthly'?'شهريًا':value==='yearly'?'سنويًا':'';
 const formatPrice=(feature:Feature)=>feature.price_amount===null||!feature.currency_code?'السعر غير محدد':`${new Intl.NumberFormat('ar-EG',{style:'currency',currency:feature.currency_code,maximumFractionDigits:3}).format(feature.price_amount)} ${intervalName(feature.billing_interval)}`;
 const formatDate=(value:string)=>new Intl.DateTimeFormat('ar-EG',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value));
+const permissionSource=(status:PermissionStatus)=>status.access_source==='feature_disabled'?'الميزة معطلة على مستوى المنصة':status.access_source==='admin_grant'?'السبب: منح إداري صريح':status.access_source==='admin_revoke'?'السبب: سحب إداري صريح':status.access_source==='free_default'?'السبب: الميزة مجانية حسب القاعدة العامة':status.access_source==='subscription'?'السبب: اشتراك فعّال لهذه الميزة':'السبب: لا يوجد منح إداري أو اشتراك مدفوع فعّال';
+const permissionOverrideLabel=(allowed:boolean|null)=>allowed===true?'القرار الإداري الحالي: ممنوحة صراحةً':allowed===false?'القرار الإداري الحالي: مسحوبة صراحةً':'لا يوجد قرار إداري صريح؛ تُطبق القاعدة العامة أو الاشتراك';
+const permissionEventLabel=(allowed:boolean|null)=>allowed===true?'منح إداري':allowed===false?'سحب إداري':'إعادة إلى القاعدة العامة';
 
 export default function PlatformFeaturesPanel(){
   const editorRef=useRef<HTMLFormElement>(null);
@@ -17,7 +24,7 @@ export default function PlatformFeaturesPanel(){
   const [form,setForm]=useState<Feature>({key:'',title:'',description:'',enabled:true,requires_premium:false,price_amount:null,currency_code:null,billing_interval:null});
   const [email,setEmail]=useState('');
   const [selectedKey,setSelectedKey]=useState('circle_live');
-  const [overrides,setOverrides]=useState<Override[]>([]);
+  const [permissionStatuses,setPermissionStatuses]=useState<PermissionStatus[]>([]);
   const [featureEvents,setFeatureEvents]=useState<FeatureEvent[]>([]);
   const [permissionEvents,setPermissionEvents]=useState<PermissionEvent[]>([]);
   const [inspected,setInspected]=useState(false);
@@ -69,19 +76,23 @@ export default function PlatformFeaturesPanel(){
       await load();
     }catch(caught){setError(message(caught))}finally{setBusy(false)}
   };
+  const loadMemberPermissions=async(address:string)=>{
+    if(!authClient)throw new Error('تعذر الاتصال بخدمة الحسابات.');
+    const [statusResult,eventsResult]=await Promise.all([
+      authClient.rpc('list_admin_member_feature_status' as any,{p_email:address}),
+      authClient.rpc('list_admin_member_feature_events' as any,{p_email:address,p_limit:30}),
+    ]);
+    if(statusResult.error)throw statusResult.error;
+    if(eventsResult.error)throw eventsResult.error;
+    setPermissionStatuses((statusResult.data??[]) as PermissionStatus[]);
+    setPermissionEvents((eventsResult.data??[]) as PermissionEvent[]);
+    setInspected(true);
+  };
   const inspectMember=async()=>{
     if(!authClient||!email.trim())return;
     setBusy(true);setError('');setNotice('');
     try{
-      const [overridesResult,eventsResult]=await Promise.all([
-        authClient.rpc('list_member_features' as any,{p_email:email.trim()}),
-        authClient.rpc('list_admin_member_feature_events' as any,{p_email:email.trim(),p_limit:30}),
-      ]);
-      if(overridesResult.error)throw overridesResult.error;
-      if(eventsResult.error)throw eventsResult.error;
-      setOverrides((overridesResult.data??[]) as Override[]);
-      setPermissionEvents((eventsResult.data??[]) as PermissionEvent[]);
-      setInspected(true);
+      await loadMemberPermissions(email.trim());
     }catch(caught){setError(message(caught))}finally{setBusy(false)}
   };
   const setMember=async(allowed:boolean|null)=>{
@@ -92,21 +103,14 @@ export default function PlatformFeaturesPanel(){
         p_email:email.trim(),p_feature_key:selectedKey,p_allowed:allowed,
       });
       if(saveError)throw saveError;
-      setNotice(allowed===null?'أُزيل التخصيص؛ يعود العضو للقاعدة العامة.':allowed?'مُنحت الميزة للعضو.':'سُحبت الميزة من العضو.');
-      const [overridesResult,eventsResult]=await Promise.all([
-        authClient.rpc('list_member_features' as any,{p_email:email.trim()}),
-        authClient.rpc('list_admin_member_feature_events' as any,{p_email:email.trim(),p_limit:30}),
-      ]);
-      if(overridesResult.error)throw overridesResult.error;
-      if(eventsResult.error)throw eventsResult.error;
-      setOverrides((overridesResult.data??[]) as Override[]);
-      setPermissionEvents((eventsResult.data??[]) as PermissionEvent[]);
-      setInspected(true);
+      await loadMemberPermissions(email.trim());
+      setNotice(allowed===null?'أُزيل التخصيص؛ تُطبق الآن القاعدة العامة أو الاشتراك.':allowed?'مُنحت الميزة للعضو صراحةً.':'سُحبت الميزة من العضو صراحةً.');
     }catch(caught){setError(message(caught))}finally{setBusy(false)}
   };
+  const selectedStatus=permissionStatuses.find(item=>item.feature_key===selectedKey);
   return <section className="panel teacher-review-panel" aria-labelledby="platform-features-title">
     <h2 id="platform-features-title">مميزات المنصة واشتراكات Premium</h2>
-    <p className="muted">جميع الميزات مجانية مبدئيًا. اختر ميزة موجودة إذا أردت تغييرها إلى مدفوعة وتحديد سعرها. تبقى الحسابات والخصوصية والأمان مجانية دائمًا. هذه إعدادات فقط؛ لا يوجد تحصيل أو اشتراك فعلي حتى اختيار مزود الدفع وإتمام تكامله.</p>
+    <p className="muted">جميع الميزات مجانية مبدئيًا. اختر ميزة موجودة إذا أردت تغييرها إلى مدفوعة وتحديد سعرها. تبقى الحسابات والخصوصية والأمان مجانية دائمًا. إعداد "مدفوعة" (requires_premium) + السعر/العملة/الفترة يحدد ما يُعرض للمستخدم كاشتراك. التفعيل (تفعيل الميزة) يتحكم في ظهورها. الدفع (sandbox) متاح عبر "اشترك الآن" في واجهة المستخدم؛ التفعيل (access) يتم بعد تحقق المزود (webhook)، وليس بمجرد إعادة التوجيه. لا تُخزّن بيانات البطاقة (CVV) أبدًا.</p>
     {error&&<p className="teacher-notice error" role="alert">{error}</p>}
     {notice&&<p className="teacher-notice" role="status">{notice}</p>}
     {loading?<p role="status">جارٍ تحميل المميزات…</p>:<ul className="teacher-review-list">{features.map(feature=><li key={feature.key}><strong>{feature.title}</strong><span>{feature.enabled?'مفعّلة':'معطلة'} · {feature.requires_premium?`مدفوعة · ${formatPrice(feature)}`:'مجانية'}</span><button type="button" className="soft-btn" aria-label={`تعديل ${feature.title}`} onClick={()=>editFeature(feature)}>تعديل</button></li>)}</ul>}
@@ -123,11 +127,17 @@ export default function PlatformFeaturesPanel(){
     <details className="teacher-review-form"><summary>سجل تغييرات المزايا والأسعار ({featureEvents.length})</summary>{featureEvents.length?<ul className="platform-audit-list">{featureEvents.map(event=><li key={event.id}><strong>{event.after_state.title as string} · {event.after_state.requires_premium?'مدفوعة':'مجانية'}</strong><span>{event.after_state.price_amount?`${event.after_state.price_amount} ${event.after_state.currency_code} · ${intervalName(event.after_state.billing_interval as string)}`:'بلا سعر محدد'}</span><small>{event.changed_by_email||'مشرف'} · {formatDate(event.changed_at)}</small></li>)}</ul>:<p className="muted">لا توجد تغييرات مسجلة بعد.</p>}</details>
     <div className="teacher-review-form">
       <h3>مميزات عضو</h3>
-      <label>بريد العضو<input type="email" value={email} onChange={event=>{setEmail(event.target.value);setOverrides([]);setPermissionEvents([]);setInspected(false)}}/></label>
+      <label>بريد العضو<input type="email" value={email} onChange={event=>{setEmail(event.target.value);setPermissionStatuses([]);setPermissionEvents([]);setInspected(false)}}/></label>
       <label>الميزة<select value={selectedKey} onChange={event=>setSelectedKey(event.target.value)}>{features.map(feature=><option key={feature.key} value={feature.key}>{feature.title}</option>)}</select></label>
-      <div className="teacher-review-actions"><button className="soft-btn" disabled={busy||!email.trim()} onClick={()=>void inspectMember()}>عرض التخصيصات</button><button className="primary" disabled={busy||!email.trim()} onClick={()=>void setMember(true)}>منح</button><button className="soft-btn" disabled={busy||!email.trim()} onClick={()=>void setMember(false)}>سحب</button><button className="soft-btn" disabled={busy||!email.trim()} onClick={()=>void setMember(null)}>إعادة إلى القاعدة العامة</button></div>
-      {inspected&&(overrides.length>0?<ul>{overrides.map(row=><li key={row.feature_key}>{row.feature_key}: {row.allowed?'ممنوحة':'مسحوبة'}</li>)}</ul>:<p className="muted" role="status">لا توجد تخصيصات محفوظة لهذا البريد؛ قد يكون الحساب غير موجود.</p>)}
-      {inspected&&<div><h4>سجل الصلاحيات</h4>{permissionEvents.length?<ul className="platform-audit-list">{permissionEvents.map(event=><li key={event.id}><strong>{event.feature_title}</strong><span>{event.allowed===null?'إعادة للقاعدة العامة':event.allowed?'منح':'سحب'}</span><small>{event.changed_by_email||'مشرف'} · {formatDate(event.changed_at)}</small></li>)}</ul>:<p className="muted">لا توجد تغييرات مسجلة لهذا الحساب.</p>}</div>}
+      <div className="teacher-review-actions"><button className="soft-btn" disabled={busy||!email.trim()} onClick={()=>void inspectMember()}>عرض حالة الصلاحيات</button><button className="primary" disabled={busy||!selectedStatus||selectedStatus.override_allowed===true} onClick={()=>void setMember(true)}>منح الميزة</button><button className="soft-btn" disabled={busy||!selectedStatus||selectedStatus.override_allowed===false} onClick={()=>void setMember(false)}>سحب الميزة</button><button className="soft-btn" disabled={busy||!selectedStatus||selectedStatus.override_allowed===null} onClick={()=>void setMember(null)}>إعادة للقاعدة العامة</button></div>
+      {inspected&&selectedStatus&&<section className={`admin-permission-current ${selectedStatus.effective_allowed?'is-available':'is-unavailable'}`} aria-live="polite">
+        <div className="admin-permission-current-heading"><strong>الحالة الفعلية الآن — {selectedStatus.feature_title}</strong><span>{selectedStatus.effective_allowed?'متاحة للعضو':'غير متاحة للعضو'}</span></div>
+        <p>{permissionSource(selectedStatus)}</p>
+        <p>{permissionOverrideLabel(selectedStatus.override_allowed)}</p>
+        {selectedStatus.override_allowed===true&&selectedStatus.access_source==='feature_disabled'&&<p>يوجد منح إداري، لكن الميزة معطلة على مستوى المنصة؛ لذلك لا يستطيع العضو استخدامها الآن.</p>}
+        <div className="admin-permission-last-change"><strong>آخر تغيير مسجل لهذه الميزة</strong>{selectedStatus.latest_changed_at?<span>{permissionEventLabel(selectedStatus.latest_allowed)} · {selectedStatus.latest_changed_by_email||'مشرف'} · {formatDate(selectedStatus.latest_changed_at)}</span>:<span>لا يوجد تغيير مسجل؛ الحالة الحالية ناتجة عن القاعدة العامة أو الاشتراك.</span>}</div>
+      </section>}
+      {inspected&&<div><h4>سجل الصلاحيات</h4>{permissionEvents.length?<ul className="platform-audit-list">{permissionEvents.map(event=><li key={event.id}><strong>{event.feature_title}</strong><span className={event.allowed===true?'granted':event.allowed===false?'revoked':'reset'}>{permissionEventLabel(event.allowed)}</span><small>{event.changed_by_email||'مشرف'} · {formatDate(event.changed_at)}</small></li>)}</ul>:<p className="muted">لا توجد تغييرات مسجلة لهذا الحساب.</p>}</div>}
     </div>
   </section>;
 }

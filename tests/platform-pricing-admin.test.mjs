@@ -57,6 +57,28 @@ test('admins configure per-feature prices and audit grants; feature entitlements
       assert.equal(permissionEvents.length,1);
       assert.equal(permissionEvents[0].allowed,true);
       assert.equal(permissionEvents[0].changed_by_email,'admin@example.test');
+      const currentStatus=(await db.query('select * from public.list_admin_member_feature_status($1)',['member@example.test'])).rows;
+      const studyStatus=currentStatus.find(item=>item.feature_key==='study_circles');
+      assert.equal(studyStatus.override_allowed,true);
+      assert.equal(studyStatus.effective_allowed,true);
+      assert.equal(studyStatus.access_source,'admin_grant');
+      assert.equal(studyStatus.latest_allowed,true);
+      assert.equal(studyStatus.latest_changed_by_email,'admin@example.test');
+      await db.query('select public.set_member_feature($1,$2,$3)',['member@example.test','study_circles',false]);
+      const revokedStatus=(await db.query('select * from public.list_admin_member_feature_status($1)',['member@example.test'])).rows
+        .find(item=>item.feature_key==='study_circles');
+      assert.equal(revokedStatus.override_allowed,false);
+      assert.equal(revokedStatus.effective_allowed,false);
+      assert.equal(revokedStatus.access_source,'admin_revoke');
+      assert.equal(revokedStatus.latest_allowed,false);
+      await db.query('select public.set_member_feature($1,$2,$3)',['member@example.test','study_circles',null]);
+      const resetStatus=(await db.query('select * from public.list_admin_member_feature_status($1)',['member@example.test'])).rows
+        .find(item=>item.feature_key==='study_circles');
+      assert.equal(resetStatus.override_allowed,null);
+      assert.equal(resetStatus.effective_allowed,false);
+      assert.equal(resetStatus.access_source,'premium_required');
+      assert.equal(resetStatus.latest_allowed,null);
+      assert.equal(resetStatus.latest_changed_by_email,'admin@example.test');
       await assert.rejects(db.query('select public.save_platform_feature_pricing($1,$2,$3,$4,$5,$6,$7,$8)',
         ['study_circles','ميزة مكسورة','',true,true,10,null,'monthly']),error=>error.code==='22023');
       await assert.rejects(db.query('select public.save_platform_feature_pricing($1,$2,$3,$4,$5,$6,$7,$8)',
@@ -66,11 +88,12 @@ test('admins configure per-feature prices and audit grants; feature entitlements
     await asUser(member,async()=>{
       await assert.rejects(db.query('select public.list_admin_platform_feature_events($1)',[10]),error=>error.code==='42501');
       await assert.rejects(db.query('select public.list_admin_member_feature_events($1,$2)',['member@example.test',10]),error=>error.code==='42501');
+      await assert.rejects(db.query('select * from public.list_admin_member_feature_status($1)',['member@example.test']),error=>error.code==='42501');
       await assert.rejects(db.query('select public.save_platform_feature_pricing($1,$2,$3,$4,$5,$6,$7,$8)',
         ['study_circles','المدارسة','',true,true,4.5,'USD','monthly']),error=>error.code==='42501');
       await assert.rejects(db.query('select public.record_verified_subscription_event_scoped($1,$2,$3,$4,$5,$6,$7,$8)',
         ['test','forged','sub',member,'active',new Date(Date.now()+86400000).toISOString(),new Date().toISOString(),'study_circles']),error=>error.code==='42501');
-      assert.equal((await db.query("select public.has_feature_access('study_circles') as ok")).rows[0].ok,true);
+      assert.equal((await db.query("select public.has_feature_access('study_circles') as ok")).rows[0].ok,false);
       assert.equal((await db.query("select public.has_feature_access('learning_journey') as ok")).rows[0].ok,false);
     });
 
@@ -79,6 +102,13 @@ test('admins configure per-feature prices and audit grants; feature entitlements
     await asUser(member,async()=>{
       assert.equal((await db.query("select public.has_feature_access('learning_journey') as ok")).rows[0].ok,true);
       assert.equal((await db.query("select public.has_feature_access('private_circles') as ok")).rows[0].ok,false);
+    });
+    await asUser(admin,async()=>{
+      const subscriptionStatus=(await db.query('select * from public.list_admin_member_feature_status($1)',['member@example.test'])).rows
+        .find(item=>item.feature_key==='learning_journey');
+      assert.equal(subscriptionStatus.override_allowed,null);
+      assert.equal(subscriptionStatus.effective_allowed,true);
+      assert.equal(subscriptionStatus.access_source,'subscription');
     });
     await db.exec('set role service_role');
     try{await db.query(`select public.record_verified_subscription_event($1,$2,$3,$4,$5,$6,$7)`,

@@ -9,8 +9,12 @@ type AdminUser={
   total_count:number|string;confirmed_count:number|string;admin_count:number|string;approved_teacher_count:number|string;
 };
 type FeatureOption={key:string;title:string;enabled:boolean;requires_premium:boolean};
-type Override={feature_key:string;allowed:boolean};
 type PermissionEvent={id:string;feature_key:string;feature_title:string;allowed:boolean|null;changed_by_email:string|null;changed_at:string};
+type PermissionStatus={
+  feature_key:string;feature_title:string;override_allowed:boolean|null;effective_allowed:boolean;
+  access_source:'feature_disabled'|'admin_grant'|'admin_revoke'|'free_default'|'subscription'|'premium_required';
+  latest_allowed:boolean|null;latest_changed_by_email:string|null;latest_changed_at:string|null;
+};
 
 const pageSize=25;
 const roleOptions:[RoleFilter,string][]=[['all','كل المستخدمين'],['admin','مشرفو المنصة'],['approved_teacher','المعلمون المعتمدون'],['pending_teacher','طلبات تدريس معلقة'],['member','الأعضاء']];
@@ -31,13 +35,34 @@ function teacherStatus(status:string|null){
   return '';
 }
 
+function permissionSource(status:PermissionStatus){
+  if(status.access_source==='feature_disabled')return 'الميزة معطلة على مستوى المنصة';
+  if(status.access_source==='admin_grant')return 'السبب: منح إداري صريح';
+  if(status.access_source==='admin_revoke')return 'السبب: سحب إداري صريح';
+  if(status.access_source==='free_default')return 'السبب: الميزة مجانية حسب القاعدة العامة';
+  if(status.access_source==='subscription')return 'السبب: اشتراك فعّال لهذه الميزة';
+  return 'السبب: لا يوجد منح إداري أو اشتراك مدفوع فعّال';
+}
+
+function permissionOverrideLabel(allowed:boolean|null){
+  if(allowed===true)return 'القرار الإداري الحالي: ممنوحة صراحةً';
+  if(allowed===false)return 'القرار الإداري الحالي: مسحوبة صراحةً';
+  return 'لا يوجد قرار إداري صريح؛ تُطبق القاعدة العامة أو الاشتراك';
+}
+
+function permissionEventLabel(allowed:boolean|null){
+  if(allowed===true)return 'منح إداري';
+  if(allowed===false)return 'سحب إداري';
+  return 'إعادة إلى القاعدة العامة';
+}
+
 export default function AdminUsersPanel(){
   const permissionsRef=useRef<HTMLElement>(null);
   const [users,setUsers]=useState<AdminUser[]>([]);
   const [features,setFeatures]=useState<FeatureOption[]>([]);
   const [selectedUser,setSelectedUser]=useState<AdminUser|null>(null);
   const [selectedFeature,setSelectedFeature]=useState('');
-  const [overrides,setOverrides]=useState<Override[]>([]);
+  const [permissionStatuses,setPermissionStatuses]=useState<PermissionStatus[]>([]);
   const [permissionEvents,setPermissionEvents]=useState<PermissionEvent[]>([]);
   const [permissionLoading,setPermissionLoading]=useState(false);
   const [permissionBusy,setPermissionBusy]=useState(false);
@@ -109,20 +134,20 @@ export default function AdminUsersPanel(){
     if(!client||!account.email)return;
     setPermissionLoading(true);setPermissionError('');setPermissionNotice('');
     try{
-      const [overridesResult,eventsResult]=await Promise.all([
-        client.rpc('list_member_features',{p_email:account.email}),
+      const [statusResult,eventsResult]=await Promise.all([
+        client.rpc('list_admin_member_feature_status',{p_email:account.email}),
         client.rpc('list_admin_member_feature_events',{p_email:account.email,p_limit:30}),
       ]);
-      if(overridesResult.error)throw overridesResult.error;
+      if(statusResult.error)throw statusResult.error;
       if(eventsResult.error)throw eventsResult.error;
-      setOverrides((overridesResult.data??[]) as Override[]);
+      setPermissionStatuses((statusResult.data??[]) as PermissionStatus[]);
       setPermissionEvents((eventsResult.data??[]) as PermissionEvent[]);
     }catch(caught){setPermissionError(caught instanceof Error?caught.message:'تعذر تحميل صلاحيات العضو.')}
     finally{setPermissionLoading(false)}
   };
 
   const managePermissions=(account:AdminUser)=>{
-    setSelectedUser(account);setPermissionError('');setPermissionNotice('');setOverrides([]);setPermissionEvents([]);
+    setSelectedUser(account);setPermissionError('');setPermissionNotice('');setPermissionStatuses([]);setPermissionEvents([]);
     if(!selectedFeature&&features.length)setSelectedFeature(features[0].key);
     requestAnimationFrame(()=>permissionsRef.current?.scrollIntoView({behavior:'smooth',block:'center'}));
     void loadPermissions(account);
@@ -135,8 +160,8 @@ export default function AdminUsersPanel(){
     try{
       const {error:saveError}=await client.rpc('set_member_feature',{p_email:selectedUser.email,p_feature_key:selectedFeature,p_allowed:allowed});
       if(saveError)throw saveError;
-      setPermissionNotice(allowed===null?'أُعيد العضو إلى القاعدة العامة لهذه الميزة.':allowed?'مُنحت الميزة لهذا العضو.':'سُحبت الميزة من هذا العضو.');
       await loadPermissions(selectedUser);
+      setPermissionNotice(allowed===null?'أُعيد العضو إلى القاعدة العامة لهذه الميزة.':allowed?'مُنحت الميزة لهذا العضو.':'سُحبت الميزة من هذا العضو.');
     }catch(caught){setPermissionError(caught instanceof Error?caught.message:'تعذر تحديث صلاحية العضو.')}
     finally{setPermissionBusy(false)}
   };
@@ -147,6 +172,8 @@ export default function AdminUsersPanel(){
   const summary=users[0];
   const total=Number(summary?.total_count??0);
   const page=Math.floor(offset/pageSize)+1;
+  const selectedStatus=permissionStatuses.find(item=>item.feature_key===selectedFeature);
+  const selectedOverride=selectedStatus?.override_allowed??null;
 
   return <section className="admin-users" aria-labelledby="admin-users-title">
     <header className="admin-users-heading"><div><span className="admin-eyebrow"><Users size={15}/> الحسابات والصلاحيات</span><h2 id="admin-users-title">مستخدمو المنصة</h2><p>عرض معلومات الحساب والأدوار الممنوحة دون الوصول إلى المحتوى الشخصي.</p></div><button className="admin-users-refresh" onClick={()=>setReload(value=>value+1)} disabled={loading} aria-label="تحديث المستخدمين" title="تحديث المستخدمين"><RefreshCw size={17}/></button></header>
@@ -174,9 +201,16 @@ export default function AdminUsersPanel(){
         {permissionNotice&&<p className="admin-users-success" role="status">{permissionNotice}</p>}
         <label className="admin-permission-select">الميزة<select value={selectedFeature} onChange={event=>setSelectedFeature(event.target.value)}>{features.map(feature=><option key={feature.key} value={feature.key}>{feature.title}{!feature.enabled?' · معطلة':feature.requires_premium?' · مدفوعة':' · مجانية'}</option>)}</select></label>
         {permissionLoading?<p role="status">جارٍ تحميل صلاحيات العضو…</p>:<>
-          <p className="admin-permission-state">{overrides.find(item=>item.feature_key===selectedFeature)?overrides.find(item=>item.feature_key===selectedFeature)?.allowed?'لديه منح إداري لهذه الميزة.':'لديه منع إداري لهذه الميزة.':features.find(feature=>feature.key===selectedFeature)?.requires_premium?'لا يوجد تخصيص إداري؛ يتطلب استحقاقًا مدفوعًا.':'الميزة مجانية افتراضيًا لهذا العضو.'}</p>
-          <div className="admin-permission-actions"><button type="button" className="admin-users-search-button" disabled={permissionBusy||!selectedFeature} onClick={()=>void setFeaturePermission(true)}>منح الميزة</button><button type="button" className="admin-permission-revoke" disabled={permissionBusy||!selectedFeature} onClick={()=>void setFeaturePermission(false)}>سحب الميزة</button><button type="button" className="admin-permission-reset" disabled={permissionBusy||!selectedFeature||!overrides.some(item=>item.feature_key===selectedFeature)} onClick={()=>void setFeaturePermission(null)}>إعادة للقاعدة العامة</button></div>
-          <h4>سجل تغييرات هذا العضو</h4>{permissionEvents.length?<ul className="admin-permission-history">{permissionEvents.map(event=><li key={event.id}><strong>{event.feature_title}</strong><span>{event.allowed===null?'إعادة للقاعدة العامة':event.allowed?'منح':'سحب'}</span><small>{event.changed_by_email||'مشرف'} · {dateTime(event.changed_at)}</small></li>)}</ul>:<p className="admin-users-empty">لا توجد تغييرات صلاحيات مسجلة لهذا العضو.</p>}
+          {selectedStatus?<section className={`admin-permission-current ${selectedStatus.effective_allowed?'is-available':'is-unavailable'}`} aria-live="polite">
+            <div className="admin-permission-current-heading"><strong>الحالة الفعلية الآن</strong><span>{selectedStatus.effective_allowed?'متاحة للعضو':'غير متاحة للعضو'}</span></div>
+            <p>{permissionSource(selectedStatus)}</p>
+            <p>{permissionOverrideLabel(selectedStatus.override_allowed)}</p>
+            {selectedStatus.override_allowed===true&&selectedStatus.access_source==='feature_disabled'&&<p>يوجد منح إداري، لكن الميزة معطلة على مستوى المنصة؛ لذلك لا يستطيع العضو استخدامها الآن.</p>}
+            <div className="admin-permission-last-change"><strong>آخر تغيير مسجل لهذه الميزة</strong>{selectedStatus.latest_changed_at?<span>{permissionEventLabel(selectedStatus.latest_allowed)} · {selectedStatus.latest_changed_by_email||'مشرف'} · {dateTime(selectedStatus.latest_changed_at)}</span>:<span>لا يوجد تغيير مسجل؛ الحالة الحالية ناتجة عن القاعدة العامة أو الاشتراك.</span>}</div>
+          </section>:<p className="admin-users-empty">لا تتوفر حالة لهذه الميزة.</p>}
+          <p className="admin-permission-help">«الحالة الفعلية» توضّح ما إذا كان العضو يستطيع استخدام الميزة الآن. «القرار الإداري» يوضح هل يوجد منح أو سحب صريح؛ وإذا لم يوجد، تُطبق القاعدة العامة والاشتراك.</p>
+          <div className="admin-permission-actions"><button type="button" className="admin-users-search-button" disabled={permissionBusy||!selectedStatus||selectedOverride===true} onClick={()=>void setFeaturePermission(true)}>منح الميزة</button><button type="button" className="admin-permission-revoke" disabled={permissionBusy||!selectedStatus||selectedOverride===false} onClick={()=>void setFeaturePermission(false)}>سحب الميزة</button><button type="button" className="admin-permission-reset" disabled={permissionBusy||selectedOverride===null} onClick={()=>void setFeaturePermission(null)}>إعادة للقاعدة العامة</button></div>
+          <h4>سجل تغييرات هذا العضو</h4>{permissionEvents.length?<ul className="admin-permission-history">{permissionEvents.map(event=><li key={event.id}><strong>{event.feature_title}</strong><span className={event.allowed===true?'granted':event.allowed===false?'revoked':'reset'}>{permissionEventLabel(event.allowed)}</span><small>{event.changed_by_email||'مشرف'} · {dateTime(event.changed_at)}</small></li>)}</ul>:<p className="admin-users-empty">لا توجد تغييرات صلاحيات مسجلة لهذا العضو.</p>}
         </>}
       </section>}
     </>}

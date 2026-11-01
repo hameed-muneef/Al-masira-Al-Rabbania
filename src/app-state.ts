@@ -5,7 +5,7 @@ import {type Goal} from './goal-plan';
 import {type PrayerLocation} from './prayer-location';
 
 // أنواع الحالة المشتركة ومساعداتها، لاستخدامها في App والواجهات المستخرجة
-export type View='home'|'day'|'tasks'|'week'|'month'|'goals'|'learn'|'reflect'|'wird'|'circles'|'teacher'|'courses'|'study'|'shares'|'profile'|'settings';
+export type View='home'|'day'|'tasks'|'week'|'month'|'goals'|'learn'|'reflect'|'wird'|'circles'|'teacher'|'courses'|'study'|'shares'|'profile'|'settings'|'payment'|'paymentHistory';
 export type Period='daily'|'weekly'|'monthly';
 // doneKey: مفتاح الفترة التي تأشر فيها المهمة («يومي مع الله» جديد يوميًا، والأسبوعي والشهري مرتبطان بفترتهما)؛ راجع task-periods.ts
 export type Task={id:string;title:string;period:Period;done:boolean;optional:boolean;weekStart?:string;monthKey?:string;scheduledDate?:string;doneKey?:string;source?:{groupId:string;revision:number;position:number}};

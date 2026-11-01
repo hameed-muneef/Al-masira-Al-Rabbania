@@ -4,6 +4,19 @@ import {authClient} from './auth';
 import CountrySelector from './CountrySelector';
 import './auth.css';
 
+function authMessage(err:unknown,fallback:string){
+  const text=err instanceof Error?err.message:'';
+  if(!text)return fallback;
+  if(/invalid login credentials/i.test(text))return 'البريد أو كلمة المرور غير صحيحة.';
+  if(/email not confirmed/i.test(text))return 'لم يتم تأكيد بريدك بعد. افتح رسالة التأكيد في بريدك.';
+  if(/rate limit|security purposes|too many/i.test(text))return 'محاولات كثيرة. انتظر دقيقة ثم حاول مرة أخرى.';
+  if(/same as the old|different from the old/i.test(text))return 'اختر كلمة مرور مختلفة عن الحالية.';
+  if(/password should be|weak password/i.test(text))return 'كلمة المرور ضعيفة. استخدم ستة أحرف على الأقل.';
+  if(/sending (recovery|confirmation)? ?email|error sending/i.test(text))return 'تعذّر إرسال الرسالة الآن. حاول لاحقًا.';
+  if(/expired|invalid.*(token|link)|otp/i.test(text))return 'الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.';
+  return /[\u0600-\u06FF]/.test(text)?text:fallback;
+}
+
 export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;reset?:boolean}){
   const [mode,setMode]=useState<'login'|'register'>(admin?'login':'register');
   const [forgot,setForgot]=useState(false);
@@ -33,7 +46,7 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
         await authClient.auth.signOut();
         setMessage('تم تغيير كلمة المرور. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.');
         setPassword('');setConfirm('');
-      }catch(err){setError(err instanceof Error?err.message:'تعذّر تغيير كلمة المرور. حاول مرة أخرى.')}finally{setBusy(false)}
+      }catch(err){setError(authMessage(err,'تعذّر تغيير كلمة المرور. حاول مرة أخرى.'))}finally{setBusy(false)}
       return;
     }
     if(forgot){
@@ -43,7 +56,7 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
         const {error}=await authClient.auth.resetPasswordForEmail(email.trim(),{redirectTo:`${window.location.origin}/reset-password?returnTo=${returnTo}`});
         if(error)throw error;
         setMessage('إذا كان البريد مرتبطًا بحساب، ستصلك رسالة تحتوي على رابط تغيير كلمة المرور.');
-      }catch(err){setError(err instanceof Error?err.message:'تعذّر إرسال رابط الاستعادة. حاول مرة أخرى.')}finally{setBusy(false)}
+      }catch(err){setError(authMessage(err,'تعذّر إرسال رابط الاستعادة. حاول مرة أخرى.'))}finally{setBusy(false)}
       return;
     }
     if(admin&&mode!=='login'){setError('استخدم حسابًا إداريًا معتمدًا لتسجيل الدخول.');return}
@@ -58,7 +71,7 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
     setBusy(true);
     try{
       if(mode==='register'){
-        const {data,error}=await authClient.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:window.location.origin+(admin?'/admin':'/')}});
+        const {data,error}=await authClient.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:window.location.origin+(admin?'/admin':'/'),data:{first_name:firstName.trim(),last_name:lastName.trim(),country,age:Number(age)}}});
         if(error)throw error;
         // The profile is attached right after the account is confirmed and the
         // user signs in; until then it waits in this browser only.
@@ -68,7 +81,7 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
         const {error}=await authClient.auth.signInWithPassword({email:email.trim(),password});
         if(error)throw error;
       }
-    }catch(err){setError(err instanceof Error?err.message:'تعذّر إكمال العملية. حاول مرة أخرى.')}finally{setBusy(false)}
+    }catch(err){setError(authMessage(err,'تعذّر إكمال العملية. حاول مرة أخرى.'))}finally{setBusy(false)}
   }
   return <main className="auth-page" dir="rtl">
     <div className="auth-shell">

@@ -6,7 +6,7 @@ const cloudflareHeaders=await readFile(new URL('../public/_headers',import.meta.
 const netlifyConfig=await readFile(new URL('../netlify.toml',import.meta.url),'utf8');
 const headers={
   'Content-Security-Policy':"frame-ancestors 'none'",
-  'Permissions-Policy':'camera=(), microphone=(), geolocation=()',
+  'Permissions-Policy':'camera=(), microphone=(), geolocation=(self)',
   'Referrer-Policy':'strict-origin-when-cross-origin',
   'X-Content-Type-Options':'nosniff',
   'X-Frame-Options':'DENY',

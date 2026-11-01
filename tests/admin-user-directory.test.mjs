@@ -69,6 +69,21 @@ test('admin user directory is privileged, searchable, paginated, and excludes pr
       assert.ok(!fields.includes('notification_preferences'));
       await assert.rejects(db.query('select * from public.admin_list_users($1,$2,$3,$4)',['','all',101,0]),error=>error.code==='22023');
       await assert.rejects(db.query('select * from public.admin_list_users($1,$2,$3,$4)',['','unknown',25,0]),error=>error.code==='22023');
+      await assert.rejects(db.query('select public.admin_set_admin($1,false)',[admin]),error=>error.code==='22023');
+      await assert.rejects(db.query('select public.admin_set_admin($1,true)',[pending]),error=>error.code==='22023');
+      await db.query('select public.admin_set_admin($1,true)',[member]);
     });
+    await asUser(member,async()=>{
+      assert.equal((await db.query('select public.is_admin() as ok')).rows[0].ok,true);
+      await db.query('select public.admin_set_admin($1,false)',[teacher]);
+    });
+    await asUser(admin,async()=>{
+      await db.query('select public.admin_set_admin($1,false)',[member]);
+    });
+    await asUser(member,async()=>{
+      assert.equal((await db.query('select public.is_admin() as ok')).rows[0].ok,false);
+      await assert.rejects(db.query('select public.admin_set_admin($1,true)',[member]),error=>error.code==='42501');
+    });
+    assert.equal((await db.query("select count(*)::int as n from private.admin_allowlist where email='member@example.com'")).rows[0].n,0);
   }finally{await db.close()}
 });

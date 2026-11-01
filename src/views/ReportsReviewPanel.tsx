@@ -10,6 +10,14 @@ export default function ReportsReviewPanel(){
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
   const [busy,setBusy]=useState<string|null>(null);
+  const [shareContent,setShareContent]=useState<Record<string,string>>({});
+  const viewShare=async(id:string)=>{
+    if(!authClient)return;
+    const {data,error:rpcError}=await authClient.rpc('admin_review_reported_share',{p_report_id:id});
+    if(rpcError){setError(rpcError.message);return}
+    const row=(data as {share_type:string;sender_username:string;recipient_username:string;ref_title:string;description:string}[])?.[0];
+    setShareContent(prev=>({...prev,[id]:row?`من @${row.sender_username} إلى @${row.recipient_username} · ${row.share_type} · ${row.ref_title}${row.description?' · '+row.description:''}`:'غير متاح'}));
+  };
   const load=async()=>{
     if(!authClient)return;setLoading(true);setError('');
     try{
@@ -40,7 +48,7 @@ export default function ReportsReviewPanel(){
       <ul className="managed-resources">{reports.map(r=>(
         <li key={r.report_id}>
           <div className="managed-resource-title"><strong>{reasonLabel[r.reason]??r.reason}</strong><small>{r.target_type} · {r.target_id} · {new Date(r.created_at).toLocaleString('ar-EG')}</small>{r.details&&<small>{r.details}</small>}</div>
-          <div className="managed-resource-actions">
+          {r.target_type==='share'&&<div><button className="soft-btn" onClick={()=>void viewShare(r.report_id)}>عرض محتوى المشاركة (يُسجَّل في سجل التدقيق)</button>{shareContent[r.report_id]&&<small>{shareContent[r.report_id]}</small>}</div>}<div className="managed-resource-actions">
             <button className="soft-btn" disabled={busy===r.report_id} onClick={()=>void review(r.report_id,'reviewed','')}>مراجعة</button>
             <button className="soft-btn" disabled={busy===r.report_id} onClick={()=>void review(r.report_id,'dismissed','')}>رفض</button>
             <button className="soft-btn" disabled={busy===r.report_id} onClick={()=>void review(r.report_id,'actioned','')}>إجراء</button>

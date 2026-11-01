@@ -19,7 +19,7 @@ const isMissingMentorshipSchema=(error:unknown)=>{
   return candidate.code==='PGRST205'||candidate.code==='42P01'||(candidate.code==='PGRST202'&&/tawasi_mentor|tawasi_mentorship/i.test(text));
 };
 
-export default function TawasiMentorshipPanel({userId}:{userId:string}){
+export default function TawasiMentorshipPanel({userId,always=false}:{userId:string;always?:boolean}){
   const [profile,setProfile]=useState<Profile|null>(null);
   const [mentors,setMentors]=useState<Mentor[]>([]);
   const [requests,setRequests]=useState<Request[]>([]);
@@ -31,7 +31,6 @@ export default function TawasiMentorshipPanel({userId}:{userId:string}){
   const [error,setError]=useState('');
   const [schemaUnavailable,setSchemaUnavailable]=useState(false);
   const [notice,setNotice]=useState('');
-  const [draft,setDraft]=useState({display_name:'',biography:'',mentor_type:'mentor',qualifications:'',specialties:'',directory_visible:false});
   const [slotDraft,setSlotDraft]=useState({starts_at:'',ends_at:''});
   const [booking,setBooking]=useState<{slot:Slot;mentor:Mentor}|null>(null);
   const [bookingDraft,setBookingDraft]=useState({topic:'',private_details:''});
@@ -53,19 +52,10 @@ export default function TawasiMentorshipPanel({userId}:{userId:string}){
       if(own?.status==='approved'){
         const {data,error:slotError}=await authClient.rpc('list_my_tawasi_mentor_slots');if(slotError)throw slotError;setMySlots((data??[]) as OwnSlot[]);
       }else setMySlots([]);
-      if(own)setDraft({display_name:own.display_name,biography:own.biography,mentor_type:own.mentor_type,qualifications:own.qualifications,specialties:(own.specialties??[]).join('، '),directory_visible:own.directory_visible});
     }catch(caught){setError(messageOf(caught))}finally{setLoading(false)}
   },[]);
   useEffect(()=>{void load()},[load]);
 
-  const submitProfile=async(event:FormEvent)=>{
-    event.preventDefault();if(!authClient||busy)return;setBusy(true);setError('');setNotice('');
-    try{
-      const specialties=draft.specialties.split(/[،,]/).map(value=>value.trim()).filter(Boolean);
-      const {error:saveError}=await authClient.rpc('submit_tawasi_mentor_profile',{p_display_name:draft.display_name.trim(),p_biography:draft.biography.trim(),p_mentor_type:draft.mentor_type,p_qualifications:draft.qualifications.trim(),p_specialties:specialties,p_languages:['ar'],p_directory_visible:draft.directory_visible});
-      if(saveError)throw saveError;setNotice('أُرسل ملفك للمراجعة. لن يظهر في الدليل قبل اعتماده وموافقتك على الظهور.');await load();
-    }catch(caught){setError(messageOf(caught))}finally{setBusy(false)}
-  };
   const toggleSlots=async(mentor:Mentor)=>{
     if(expanded===mentor.user_id){setExpanded(null);return}setExpanded(mentor.user_id);setBooking(null);
     if(slots[mentor.user_id])return;
@@ -94,31 +84,24 @@ export default function TawasiMentorshipPanel({userId}:{userId:string}){
     catch(caught){setError(messageOf(caught))}finally{setBusy(false)}
   };
 
+  if(!always&&!loading&&!error&&(schemaUnavailable||(mentors.length===0&&requests.length===0&&!profile)))return null;
   return <section className="panel tawasi-mentorship" aria-labelledby="tawasi-mentorship-title">
-    <div className="panel-head"><HeartHandshake size={20}/><h2 id="tawasi-mentorship-title">التواصي الفردي</h2></div>
-    <p className="muted tawasi-mentorship-intro">توجيه خاص برفق ورحمة، مع مرشدين اعتمدتهم الإدارة. طلب الجلسة وتفاصيله لا تظهر للعامة، والخدمة مجانية في مرحلتها الحالية.</p>
-    {schemaUnavailable&&<div className="tawasi-setup-notice" role="status"><strong>خدمة التواصي الفردي غير مفعّلة بعد</strong><p>لم تُجهّز قاعدة البيانات المتصلة لهذه الخدمة. يمكنك استخدام مجالس التواصي أدناه، وسيظهر هذا القسم عند اكتمال التهيئة.</p><button className="soft-btn" type="button" onClick={()=>void load()}>إعادة الفحص</button></div>}
+    <div className="panel-head"><HeartHandshake size={20}/><h2 id="tawasi-mentorship-title">طلب جلسة مع مرشد معتمد</h2></div>
+    <p className="muted tawasi-mentorship-intro">يمكنك طلب جلسة خاصة مع أحد المرشدين المعتمدين. تفاصيل الطلب لا تظهر للعامة.</p>
     {error&&<p className="circles-notice error" role="alert">{error} <button className="soft-btn" type="button" onClick={()=>void load()}>إعادة المحاولة</button></p>}
     {notice&&<p className="circles-notice" role="status">{notice}</p>}
     {loading?<p className="tawasi-loading" role="status">جارٍ تحميل المرشدين والجلسات…</p>:schemaUnavailable?null:<>
       {profile&&profile.status!=='rejected'?<div className="tawasi-mentor-status"><strong>ملف المرشد: {statusLabel[profile.status]??profile.status}</strong>{profile.review_note&&<p>{profile.review_note}</p>}
         {profile.status==='approved'&&<form className="tawasi-slot-form" onSubmit={event=>void addSlot(event)}><label>بداية التوفر<input required type="datetime-local" value={slotDraft.starts_at} onChange={event=>setSlotDraft(current=>({...current,starts_at:event.target.value}))}/></label><label>نهاية التوفر<input required type="datetime-local" value={slotDraft.ends_at} onChange={event=>setSlotDraft(current=>({...current,ends_at:event.target.value}))}/></label><button className="soft-btn" disabled={busy}><CalendarClock size={16}/> إضافة موعد متاح</button></form>}
         {profile.status==='approved'&&<div className="tawasi-own-slots"><h4>مواعيدك</h4>{mySlots.length===0?<p className="muted">لم تضف مواعيد متاحة بعد.</p>:mySlots.map(slot=><div key={slot.slot_id}><span>{fmt(slot.starts_at)} – {fmt(slot.ends_at)} · {slot.status==='booked'?'عليه طلب':'متاح'}</span>{slot.status==='available'&&<button className="soft-btn" disabled={busy} onClick={()=>void cancelSlot(slot.slot_id)}>إلغاء الموعد</button>}</div>)}</div>}
-      </div>:<details className="tawasi-apply"><summary>التقديم لتكون مرشدًا معتمدًا</summary><form onSubmit={event=>void submitProfile(event)}>
-        <label>الاسم الظاهر<input required minLength={2} maxLength={120} value={draft.display_name} onChange={event=>setDraft(current=>({...current,display_name:event.target.value}))}/></label>
-        <label>نوع مقدم الخدمة<select value={draft.mentor_type} onChange={event=>setDraft(current=>({...current,mentor_type:event.target.value}))}>{Object.entries(typeLabel).map(([key,value])=><option key={key} value={key}>{value}</option>)}</select></label>
-        <label>المؤهلات الشرعية أو التربوية<textarea required minLength={2} maxLength={3000} rows={3} value={draft.qualifications} onChange={event=>setDraft(current=>({...current,qualifications:event.target.value}))}/></label>
-        <label>مجالات التخصص، افصل بينها بفاصلة<input maxLength={1000} value={draft.specialties} onChange={event=>setDraft(current=>({...current,specialties:event.target.value}))}/></label>
-        <label>نبذة تعريفية<textarea maxLength={2000} rows={3} value={draft.biography} onChange={event=>setDraft(current=>({...current,biography:event.target.value}))}/></label>
-        <label className="tawasi-consent"><input type="checkbox" checked={draft.directory_visible} onChange={event=>setDraft(current=>({...current,directory_visible:event.target.checked}))}/> أوافق على عرض هذا الملف في دليل المرشدين بعد اعتماده</label>
-        <p className="muted small">تقديم الطلب لا يمنح صفة عالم أو مفتٍ ولا يتيح تقديم الجلسات حتى اعتماد الإدارة.</p><button className="primary" disabled={busy}>إرسال ملف الاعتماد</button>
-      </form></details>}
-      <div className="tawasi-mentor-list"><h3>المرشدون المعتمدون</h3>{mentors.length===0?<p className="muted">لا توجد ملفات مرشدين معتمدة ومتاحة للعرض حاليًا.</p>:mentors.map(mentor=><article className="tawasi-mentor-card" key={mentor.user_id}>
+      </div>:null}
+      {mentors.length===0&&!schemaUnavailable&&<p className="muted">لا يوجد مشايخ معتمدون متاحون الآن.</p>}
+      {mentors.length>0&&<div className="tawasi-mentor-list"><h3>المرشدون المعتمدون</h3>{mentors.map(mentor=><article className="tawasi-mentor-card" key={mentor.user_id}>
         <div><h4><UserRound size={17}/>{mentor.display_name}</h4><span className="circles-role">{typeLabel[mentor.mentor_type]??mentor.mentor_type}</span><p>{mentor.biography||'مرشد معتمد في التواصي الفردي.'}</p><p><strong>المؤهلات:</strong> {mentor.qualifications}</p>{mentor.specialties.length>0&&<p><strong>مجالاته:</strong> {mentor.specialties.join('، ')}</p>}</div>
         <button className="soft-btn" type="button" aria-expanded={expanded===mentor.user_id} onClick={()=>void toggleSlots(mentor)}><Clock3 size={16}/>{expanded===mentor.user_id?'إخفاء المواعيد':'عرض المواعيد'}</button>
         {expanded===mentor.user_id&&<div className="tawasi-slot-list">{(slots[mentor.user_id]??[]).length===0?<p className="muted">لا توجد مواعيد متاحة خلال التسعين يومًا القادمة.</p>:(slots[mentor.user_id]??[]).map(slot=><div key={slot.slot_id}><span>{fmt(slot.starts_at)} – {fmt(slot.ends_at)}</span><button className="primary" type="button" disabled={mentor.user_id===userId||busy} onClick={()=>{setBooking({slot,mentor});setBookingDraft({topic:'',private_details:''})}}>طلب الجلسة</button></div>)}</div>}
-      </article>)}</div>
-      <div className="tawasi-request-list"><h3>جلساتي وطلباتي</h3>{requests.length===0?<p className="muted">لا توجد جلسات أو طلبات بعد.</p>:requests.map(request=>{const mentor=mentors.find(item=>item.user_id===request.mentor_id);const isMentor=request.mentor_id===userId;return <article key={request.request_id}><div><strong>{isMentor?`طلب من عضو · ${request.topic}`:`جلسة مع ${mentor?.display_name??'مرشد'}`}</strong><span className={`tawasi-request-status status-${request.status}`}>{statusLabel[request.status]??request.status}</span><small>{fmt(request.starts_at)} – {fmt(request.ends_at)}</small><p className="tawasi-private-details">{request.private_details}</p>{request.mentor_note&&<p>{request.mentor_note}</p>}</div><div className="tawasi-request-actions">{isMentor&&request.status==='pending'&&<><button className="soft-btn" disabled={busy} onClick={()=>void review(request.request_id,'confirm')}><Check size={15}/> تأكيد</button><button className="soft-btn" disabled={busy} onClick={()=>void review(request.request_id,'reject')}>اعتذار</button></>}{['pending','confirmed'].includes(request.status)&&<button className="soft-btn" disabled={busy} onClick={()=>void cancel(request.request_id)}>إلغاء الطلب</button>}</div></article>})}</div>
+      </article>)}</div>}
+      {requests.length>0&&<div className="tawasi-request-list"><h3>جلساتي وطلباتي</h3>{requests.map(request=>{const mentor=mentors.find(item=>item.user_id===request.mentor_id);const isMentor=request.mentor_id===userId;return <article key={request.request_id}><div><strong>{isMentor?`طلب من عضو · ${request.topic}`:`جلسة مع ${mentor?.display_name??'مرشد'}`}</strong><span className={`tawasi-request-status status-${request.status}`}>{statusLabel[request.status]??request.status}</span><small>{fmt(request.starts_at)} – {fmt(request.ends_at)}</small><p className="tawasi-private-details">{request.private_details}</p>{request.mentor_note&&<p>{request.mentor_note}</p>}</div><div className="tawasi-request-actions">{isMentor&&request.status==='pending'&&<><button className="soft-btn" disabled={busy} onClick={()=>void review(request.request_id,'confirm')}><Check size={15}/> تأكيد</button><button className="soft-btn" disabled={busy} onClick={()=>void review(request.request_id,'reject')}>اعتذار</button></>}{['pending','confirmed'].includes(request.status)&&<button className="soft-btn" disabled={busy} onClick={()=>void cancel(request.request_id)}>إلغاء الطلب</button>}</div></article>})}</div>}
     </>}
     {booking&&<form className="tawasi-booking-form" onSubmit={event=>void submitBooking(event)}><h3>طلب جلسة مع {booking.mentor.display_name}</h3><p>{fmt(booking.slot.starts_at)}</p><label>مجال طلب التوجيه<input required minLength={2} maxLength={120} value={bookingDraft.topic} onChange={event=>setBookingDraft(current=>({...current,topic:event.target.value}))}/></label><label>تفاصيل خاصة بالطلب<textarea maxLength={2000} rows={3} value={bookingDraft.private_details} onChange={event=>setBookingDraft(current=>({...current,private_details:event.target.value}))}/></label><div><button className="primary" disabled={busy}>إرسال الطلب</button><button className="soft-btn" type="button" onClick={()=>setBooking(null)}>إلغاء</button></div></form>}
   </section>;

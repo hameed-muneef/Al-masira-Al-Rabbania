@@ -50,7 +50,24 @@ export default function AdminUsersPanel(){
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
   const [reload,setReload]=useState(0);
+  const [roleBusy,setRoleBusy]=useState('');
+  const [roleNotice,setRoleNotice]=useState('');
+  const [roleFailure,setRoleFailure]=useState('');
 
+  const setAdminRole=async(account:AdminUser,makeAdmin:boolean)=>{
+    const client=authClient;
+    if(!client||roleBusy)return;
+    const name=account.email||account.user_id;
+    if(!window.confirm(makeAdmin?`منح صلاحية مشرف المنصة للحساب ${name}؟`:`إزالة صلاحية الإشراف عن الحساب ${name}؟`))return;
+    setRoleBusy(account.user_id);setRoleNotice('');setRoleFailure('');
+    try{
+      const {error:roleError}=await client.rpc('admin_set_admin',{p_user_id:account.user_id,p_make_admin:makeAdmin});
+      if(roleError)throw roleError;
+      setRoleNotice(makeAdmin?'مُنح الحساب صلاحية الإشراف.':'أُزيلت صلاحية الإشراف عن الحساب.');
+      setReload(value=>value+1);
+    }catch(caught){setRoleFailure(caught instanceof Error?caught.message:'تعذر تحديث صلاحية الإشراف.')}
+    finally{setRoleBusy('')}
+  };
   useEffect(()=>{
     let active=true;
     const load=async()=>{
@@ -145,10 +162,10 @@ export default function AdminUsersPanel(){
       <button className="admin-users-search-button" type="submit"><Search size={16}/> بحث</button>
     </form>
     <p className="admin-users-privacy">تُعرض بيانات الحساب الأساسية وحالات الاعتماد فقط. لا تُعرض تفضيلات المستخدم أو بياناته الخاصة.</p>
-    {error&&<p className="admin-users-error" role="alert">{error}</p>}
+    {error&&<p className="admin-users-error" role="alert">{error}</p>}{roleNotice&&<p className="admin-users-success" role="status">{roleNotice}</p>}{roleFailure&&<p className="admin-users-error" role="alert">{roleFailure}</p>}
     {loading?<p className="admin-users-empty" role="status">جارٍ تحميل المستخدمين…</p>:!error&&users.length===0?<p className="admin-users-empty">لا توجد حسابات مطابقة.</p>:!error&&<>
       <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>الحساب</th><th>البلد</th><th>حالة البريد</th><th>الصلاحيات</th><th>تاريخ التسجيل</th><th>آخر دخول</th><th>إجراءات</th></tr></thead><tbody>
-        {users.map(account=><tr key={account.user_id}><td><strong>{[account.first_name,account.last_name].filter(Boolean).join(' ')||'اسم غير مسجل'}</strong><bdi className="admin-user-email">{account.email||'بلا بريد'}</bdi><small className="admin-user-id"><bdi>{account.user_id}</bdi></small></td><td>{account.country||'—'}</td><td><span className={account.email_confirmed?'admin-user-state confirmed':'admin-user-state'}>{account.email_confirmed?'مؤكد':'غير مؤكد'}</span></td><td><div className="admin-user-roles">{account.is_admin&&<span className="admin-user-role admin">مشرف المنصة</span>}{account.is_approved_teacher&&<span className="admin-user-role teacher">معلم معتمد</span>}{!account.is_approved_teacher&&teacherStatus(account.teacher_status)&&<span className="admin-user-role pending">{teacherStatus(account.teacher_status)}</span>}{!account.is_admin&&!account.is_approved_teacher&&!teacherStatus(account.teacher_status)&&<span className="admin-user-role member">عضو</span>}</div></td><td>{formatDate(account.created_at,true)}</td><td>{formatDate(account.last_sign_in_at,true)}</td><td><button type="button" className="admin-user-manage" disabled={!account.email_confirmed||!account.email} onClick={()=>managePermissions(account)}><ShieldCheck size={15}/> إدارة المزايا</button></td></tr>)}
+        {users.map(account=><tr key={account.user_id}><td><strong>{[account.first_name,account.last_name].filter(Boolean).join(' ')||'اسم غير مسجل'}</strong><bdi className="admin-user-email">{account.email||'بلا بريد'}</bdi><small className="admin-user-id"><bdi>{account.user_id}</bdi></small></td><td>{account.country||'—'}</td><td><span className={account.email_confirmed?'admin-user-state confirmed':'admin-user-state'}>{account.email_confirmed?'مؤكد':'غير مؤكد'}</span></td><td><div className="admin-user-roles">{account.is_admin&&<span className="admin-user-role admin">مشرف المنصة</span>}{account.is_approved_teacher&&<span className="admin-user-role teacher">معلم معتمد</span>}{!account.is_approved_teacher&&teacherStatus(account.teacher_status)&&<span className="admin-user-role pending">{teacherStatus(account.teacher_status)}</span>}{!account.is_admin&&!account.is_approved_teacher&&!teacherStatus(account.teacher_status)&&<span className="admin-user-role member">عضو</span>}</div></td><td>{formatDate(account.created_at,true)}</td><td>{formatDate(account.last_sign_in_at,true)}</td><td><button type="button" className="admin-user-manage" disabled={!account.email_confirmed||!account.email} onClick={()=>managePermissions(account)}><ShieldCheck size={15}/> إدارة المزايا</button><button type="button" className={account.is_admin?'admin-permission-revoke':'admin-user-manage'} disabled={roleBusy===account.user_id||(!account.is_admin&&!account.email_confirmed)} onClick={()=>void setAdminRole(account,!account.is_admin)}>{account.is_admin?'إزالة الإشراف':'جعله مشرفًا'}</button></td></tr>)}
       </tbody></table></div>
       <footer className="admin-users-pagination"><span>صفحة {page} من {Math.max(1,Math.ceil(total/pageSize))}</span><div><button onClick={()=>setOffset(Math.max(0,offset-pageSize))} disabled={offset===0||loading} aria-label="الصفحة السابقة"><ChevronRight size={17}/></button><button onClick={()=>setOffset(offset+pageSize)} disabled={offset+pageSize>=total||loading} aria-label="الصفحة التالية"><ChevronLeft size={17}/></button></div></footer>
       {selectedUser&&<section ref={permissionsRef} className="admin-user-permissions" aria-labelledby="admin-user-permissions-title">

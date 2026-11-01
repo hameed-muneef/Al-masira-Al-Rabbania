@@ -265,5 +265,13 @@
 /* ترتيب حقل الوقت: العنوان ثم الحقل ثم الوقت العربي، قراءة من اليمين لليسار */
 .day-plan-content .planned-activity-controls>label{flex-direction:column;align-items:stretch;gap:3px}
 .day-plan-content .planned-activity-controls>label .time-label{font-size:11px;color:#6e7c71;font-weight:600}
+.prayer-city-picker{display:grid;gap:12px;margin:0 0 16px}
+.prayer-city-picker form{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.prayer-city-picker form label{flex:1 1 240px;display:grid;gap:6px}
+.prayer-city-results{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.prayer-city-results button{width:100%;display:flex;align-items:center;gap:8px;text-align:start;padding:10px 12px;border:1px solid #d5ded8;border-radius:12px;background:#fff;cursor:pointer}
+.prayer-city-results small{margin-inline-start:auto;color:#6b7a72;direction:ltr}
+.prayer-city-selected{display:grid;gap:10px;padding:12px;border-radius:14px;background:#edf3ef}
+.prayer-city-selected p{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
 .day-plan-content .planned-activity-controls>label input[type=time]{text-align:center;font-variant-numeric:tabular-nums}
 .day-plan-content .planned-activity-controls>label .time-text{font-size:12px;font-weight:700;color:#244638;text-align:center}

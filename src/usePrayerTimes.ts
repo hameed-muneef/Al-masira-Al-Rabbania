@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {prayerLocationKey,prayerTimingsQuery,type PrayerLocation} from './prayer-location';
 
 export function prayerDate(now = new Date()) {
   return `${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
@@ -26,7 +27,7 @@ function loadPrayerTimesCache(context:{date:string;zone:string}):PrayerTimesCach
   }catch{return null}
 }
 
-export default function usePrayerTimes(enabled: boolean) {
+export default function usePrayerTimes(enabled: boolean, saved?: PrayerLocation) {
   const [context,setContext] = useState(()=>({date:prayerDate(),zone:Intl.DateTimeFormat().resolvedOptions().timeZone}));
   const [attempt,setAttempt] = useState(0);
   const [prayers,setPrayers] = useState<Record<string,string>>({});
@@ -41,42 +42,51 @@ export default function usePrayerTimes(enabled: boolean) {
     window.addEventListener('focus',check);
     return ()=>{clearInterval(timer);window.removeEventListener('focus',check)};
   },[]);
+  const savedKey=saved?prayerLocationKey(saved):'';
   useEffect(()=>{
     if(!enabled) return;
     let active=true;
     const controller=new AbortController();
     let timeout: ReturnType<typeof setTimeout> | undefined;
     if(!attempt){
-      const cached=loadPrayerTimesCache(context);
+      const cached=loadPrayerTimesCache({date:context.date,zone:saved?savedKey:context.zone});
       if(cached){
         setPrayers(cached.times);
-        setStatus(`مواقيت اليوم محفوظة محليًا · ${context.date} · توقيت الجهاز: ${context.zone}`);
+        setStatus(saved?`مواقيت ${saved.name} محفوظة محليًا · ${context.date}`:`مواقيت اليوم محفوظة محليًا · ${context.date} · توقيت الجهاز: ${context.zone}`);
         setLoading(false);
         return ()=>{active=false};
       }
     }
     setPrayers({});
     setLoading(true);
-    setStatus('جارٍ تحديد موقعك من الجهاز أو المتصفح…');
     const fail=(message:string)=>{if(active){setStatus(message);setLoading(false)}};
-    if(!navigator.geolocation || !window.isSecureContext){
-      fail('تحديد الموقع غير متاح. افتح الموقع عبر HTTPS أو استخدم الإدخال اليدوي.');
-    } else navigator.geolocation.getCurrentPosition(async position=>{
-      if(!active) return;
-      setStatus('جارٍ جلب مواقيت اليوم حسب موقعك…');
+    const fetchTimes=async(coords:{latitude:number;longitude:number},zone:string,options:{method?:number;school?:number},cacheZone:string,label:string)=>{
+      setStatus(saved?`جارٍ جلب مواقيت ${saved.name}…`:'جارٍ جلب مواقيت اليوم حسب موقعك…');
       timeout=setTimeout(()=>controller.abort(),15000);
       try {
-        const query=new URLSearchParams({latitude:String(position.coords.latitude),longitude:String(position.coords.longitude),timezonestring:context.zone});
+        const query=prayerTimingsQuery(coords,zone,options);
         const response=await fetch(`https://api.aladhan.com/v1/timings/${context.date}?${query}`,{signal:controller.signal});
         if(!response.ok) throw new Error('Request failed');
         const body=await response.json();
         if(body.code!==200 || body.data?.date?.gregorian?.date!==context.date) throw new Error('Invalid date');
         const times=parsePrayerTimes(body.data?.timings);
-        if(active){setPrayers(times);try{localStorage.setItem(CACHE_KEY,JSON.stringify({date:context.date,zone:context.zone,times}))}catch{}setStatus(`مواقيت اليوم حسب موقعك · ${context.date} · توقيت الجهاز: ${context.zone}`);setLoading(false)}
+        if(active){setPrayers(times);try{localStorage.setItem(CACHE_KEY,JSON.stringify({date:context.date,zone:cacheZone,times}))}catch{}setStatus(label);setLoading(false)}
       } catch {fail('تعذر جلب المواقيت. تحقق من الاتصال ثم أعد المحاولة، أو أدخلها يدويًا.')}
       finally {clearTimeout(timeout)}
-    },error=>fail(error.code===1?'لم يُسمح بالوصول للموقع. فعّل إذن الموقع من المتصفح ثم أعد المحاولة، أو أدخل المواقيت يدويًا.':'تعذر تحديد موقعك. فعّل خدمة الموقع ثم أعد المحاولة، أو أدخل المواقيت يدويًا.'),{timeout:10000,maximumAge:0,enableHighAccuracy:false});
+    };
+    if(saved){
+      void fetchTimes(saved,saved.timezone,{method:saved.method,school:saved.school},savedKey,`مواقيت ${saved.name}${saved.country?`، ${saved.country}`:''} · ${context.date}`);
+    } else {
+      setStatus('جارٍ تحديد موقعك من الجهاز أو المتصفح…');
+      const advice='ابحث عن مدينتك أدناه أو أدخل المواقيت يدويًا.';
+      if(!navigator.geolocation || !window.isSecureContext){
+        fail(`تحديد الموقع غير متاح. ${advice}`);
+      } else navigator.geolocation.getCurrentPosition(position=>{
+        if(!active) return;
+        void fetchTimes(position.coords,context.zone,{},context.zone,`مواقيت اليوم حسب موقعك · ${context.date} · توقيت الجهاز: ${context.zone}`);
+      },error=>fail(error.code===1?`لم يُسمح بالوصول للموقع. ${advice}`:`تعذر تحديد موقعك. ${advice}`),{timeout:10000,maximumAge:0,enableHighAccuracy:false});
+    }
     return ()=>{active=false;controller.abort();clearTimeout(timeout)};
-  },[enabled,context,attempt]);
+  },[enabled,context,attempt,savedKey]);
   return {prayers,status,loading,refresh:()=>setAttempt(value=>value+1)};
 }

@@ -4,6 +4,7 @@ import {authClient} from '../auth';
 import '../circles.css';
 import CircleProgram from './CircleProgram';
 import TawasiMentorshipPanel from './TawasiMentorshipPanel';
+import {TawasiHistoryPanel,TawasiInvitesPanel} from './TawasiHubPanels';
 
 // حلقات التواصي الخاص: المصدر ترحيلات TAW-001/002 في Supabase عبر RLS ووظائف خادم محدودة.
 // لا دليل عام ولا ظهور لغير الأعضاء؛ كل الاستعلامات بشأن حلقات المستخدم فقط.
@@ -28,6 +29,8 @@ const isMissingGroupsSchema=(value:unknown)=>{
   const error=value as {code?:string;message?:string};
   return error.code==='42P01'||error.code==='PGRST205'||(error.code==='PGRST200'&&/study_groups|group_members/i.test(error.message??''));
 };
+// A new session starts from what the circle already says, so nothing is typed twice.
+const sessionDefaults=(circle:{goal:string;starts_on:string|null})=>({title:'',startsAt:circle.starts_on?`T20:00`:'',endsAt:circle.starts_on?`T21:00`:'',meetingUrl:'',notes:'',agenda:circle.goal,discussionPoints:''});
 const draftOf=(circle:Circle):Draft=>({name:circle.name,kind:circle.kind,memberLimit:String(circle.member_limit),startsOn:circle.starts_on??'',endsOn:circle.ends_on??'',goal:circle.goal,description:circle.description,rules:circle.participation_rules});
 const countLabel=(value:number)=>value.toLocaleString('ar-EG');
 const dateLabel=(value:string)=>new Intl.DateTimeFormat('ar-EG',{day:'numeric',month:'long',year:'numeric',calendar:'gregory'}).format(new Date(`${value}T12:00:00`));
@@ -56,6 +59,9 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
   const [meetingAccess,setMeetingAccess]=useState<boolean|null>(null);
   const [meetingAccessError,setMeetingAccessError]=useState('');
   const [revealedMeeting,setRevealedMeeting]=useState<{id:string;url:string}|null>(null);
+  const [recurring,setRecurring]=useState(false);
+  const [tab,setTab]=useState<'mine'|'invites'|'mentor'|'history'>('mine');
+  const [firstSession,setFirstSession]=useState({startsAt:'',endsAt:'',meetingUrl:''});
   const [sessionForm,setSessionForm]=useState({title:'',startsAt:'',endsAt:'',meetingUrl:'',notes:'',agenda:'',discussionPoints:''});
   const [announcementGroup,setAnnouncementGroup]=useState<string|null>(null);
   const [announcements,setAnnouncements]=useState<any[]>([]);
@@ -99,32 +105,54 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
   },[user?.id]);
   useEffect(()=>{void refreshMeetingAccess()},[refreshMeetingAccess]);
 
-  const openCreate=()=>{setDraft(emptyDraft);setEditingId(null);setFormOpen(true);say('');setConfirmClose(null)};
+  const openCreate=()=>{setDraft(emptyDraft);setRecurring(false);setFirstSession({startsAt:'',endsAt:'',meetingUrl:''});setEditingId(null);setFormOpen(true);say('');setConfirmClose(null)};
   const openEdit=(circle:Circle)=>{setDraft(draftOf(circle));setEditingId(circle.id);setFormOpen(true);say('');setConfirmClose(null)};
+  const singleMode=!editingId&&mode!=='science'&&!recurring;
   const validate=()=>{
     const name=draft.name.trim();
     if(!name)return 'اكتب اسم الحلقة.';
     if(name.length>120)return 'اسم الحلقة أطول من ١٢٠ حرفًا.';
-    if(!draft.kind)return 'اختر نوع الحلقة.';
+    if(!singleMode&&!draft.kind)return 'اختر نوع الحلقة.';
+    if(singleMode&&(!firstSession.startsAt||!firstSession.endsAt))return 'حدد بداية المجلس ونهايته.';
     const limit=Number(draft.memberLimit);
     if(!Number.isInteger(limit)||limit<2||limit>100)return 'سعة الحلقة يجب أن تكون عددًا بين ٢ و١٠٠.';
     if([draft.goal,draft.description,draft.rules].some(text=>text.length>2000))return 'أحد الحقول أطول من ٢٠٠٠ حرف.';
     if(draft.startsOn&&draft.endsOn&&draft.endsOn<draft.startsOn)return 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو مساويًا له.';
+    if(!editingId&&(firstSession.startsAt||firstSession.endsAt||firstSession.meetingUrl.trim())){
+      if(!firstSession.startsAt||!firstSession.endsAt)return 'حدد بداية الجلسة الأولى ونهايتها.';
+      if(new Date(firstSession.endsAt)<=new Date(firstSession.startsAt))return 'نهاية الجلسة يجب أن تكون بعد بدايتها.';
+      if(firstSession.meetingUrl.trim()){
+        try{const url=new URL(firstSession.meetingUrl.trim());if(url.protocol!=='https:'||url.hostname!=='meet.google.com')throw new Error()}
+        catch{return 'استخدم رابط Google Meet صالحًا يبدأ بـ https://meet.google.com/'}
+      }
+    }
     return '';
   };
-  const payload=()=>({p_name:draft.name.trim(),p_kind:draft.kind,p_description:draft.description.trim(),p_goal:draft.goal.trim(),p_participation_rules:draft.rules.trim(),p_member_limit:Number(draft.memberLimit),p_starts_on:draft.startsOn||null,p_ends_on:draft.endsOn||null});
+  const payload=()=>({p_name:draft.name.trim(),p_kind:singleMode?'friends':draft.kind,p_description:draft.description.trim(),p_goal:draft.goal.trim(),p_participation_rules:draft.rules.trim(),p_member_limit:Number(draft.memberLimit),p_starts_on:draft.startsOn||null,p_ends_on:draft.endsOn||null});
   const save=async()=>{
     const problem=validate();
     if(problem){say(problem,true);return}
     if(!authClient||!user||busy)return;
+    const created=draft;
+    const first=firstSession;
     setBusy(true);
     try{
       const {data,error}=editingId?await authClient.rpc('update_group',{p_group_id:editingId,...payload()}):await authClient.rpc('create_group',payload());
       if(error)throw error;
       setFormOpen(false);setEditingId(null);setDraft(emptyDraft);
-      say(editingId?'حُدّثت بيانات الحلقة.':'أُنشئت الحلقة الخاصة. افتح «الجلسات» داخل بطاقتها، ثم أضف موعدًا ورابط Meet.');
+      let note=editingId?'حُدّثت بيانات الحلقة.':'أُنشئت الحلقة الخاصة. أضف أول جلسة من «الجلسات» داخل بطاقتها.';
+      let failed=false;
+      if(!editingId&&typeof data==='string'&&first.startsAt&&first.endsAt){
+        try{
+          const {data:sessionId,error:sessionError}=await authClient.rpc('create_circle_session',{p_circle_id:data,p_title:'مجلس ذكر وتأمل',p_starts_at:new Date(first.startsAt).toISOString(),p_ends_at:new Date(first.endsAt).toISOString(),p_meeting_url:first.meetingUrl.trim(),p_notes:''});
+          if(sessionError)throw sessionError;
+          if(sessionId&&created.goal.trim()){const {error:agendaError}=await authClient.rpc('update_circle_session_agenda',{p_session_id:sessionId,p_agenda:created.goal.trim(),p_discussion_points:''});if(agendaError)throw agendaError}
+          note=singleMode?'أُنشئ المجلس وحُدد موعده.':'أُنشئت الحلقة وجلستها الأولى.';
+        }catch(sessionError){failed=true;note='أُنشئت الحلقة، لكن تعذّرت إضافة الجلسة: '+messageOf(sessionError)+' يمكنك إضافتها من «الجلسات».'}
+      }
+      say(note,failed);
       await load();
-      if(!editingId&&typeof data==='string'){setSessionGroup(data);await loadCircleSessions(data)}
+      if(!editingId&&typeof data==='string'){setSessionForm(sessionDefaults({goal:created.goal.trim(),starts_on:created.startsOn||null}));setSessionGroup(data);await loadCircleSessions(data)}
     }catch(error){say(messageOf(error),true)}
     finally{setBusy(false)}
   };
@@ -159,6 +187,8 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
   };
   const toggleCircleSessions=async(circleId:string)=>{
     if(sessionGroup===circleId){setSessionGroup(null);setCircleSessions([]);setRevealedMeeting(null);return}
+    const target=memberships.find(row=>row.study_group?.id===circleId)?.study_group;
+    if(target)setSessionForm(sessionDefaults(target));
     setSessionGroup(circleId);setRevealedMeeting(null);
     await refreshMeetingAccess();
     await loadCircleSessions(circleId);
@@ -179,7 +209,7 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
         const {error:agendaError}=await authClient.rpc('update_circle_session_agenda',{p_session_id:data,p_agenda:sessionForm.agenda.trim(),p_discussion_points:sessionForm.discussionPoints.trim()});
         if(agendaError)throw agendaError;
       }
-      say('أُنشئ مجلس الذكر والتأمل.');setSessionForm({title:'',startsAt:'',endsAt:'',meetingUrl:'',notes:'',agenda:'',discussionPoints:''});await loadCircleSessions(circleId);
+      say('أُنشئ مجلس الذكر والتأمل.');setSessionForm(sessionDefaults(memberships.find(row=>row.study_group?.id===circleId)?.study_group??{goal:'',starts_on:null}));await loadCircleSessions(circleId);
     }catch(error){say(messageOf(error),true)}
     finally{setBusy(false)}
   };
@@ -332,7 +362,11 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
   });
   return <div className="circles-view">
     {!embedded&&heading}
-    {mode==='tawasi'&&<TawasiMentorshipPanel userId={user.id}/>}
+    {mode==='tawasi'&&<div className="circle-kind-choice" role="tablist" aria-label="أقسام التواصي">{([['mine','مجالسي'],['invites','الدعوات'],['mentor','طلب شيخ معتمد'],['history','السجل']] as const).map(([key,label])=><button key={key} type="button" role="tab" aria-selected={tab===key} className={tab===key?'soft-btn selected':'soft-btn'} onClick={()=>setTab(key)}>{label}</button>)}</div>}
+    {mode==='tawasi'&&tab==='invites'&&<TawasiInvitesPanel userId={user.id} circles={memberships.flatMap(row=>row.study_group?[{id:row.study_group.id,name:row.study_group.name}]:[])} onChanged={()=>void load()}/>}
+    {mode==='tawasi'&&tab==='mentor'&&<TawasiMentorshipPanel userId={user.id} always/>}
+    {mode==='tawasi'&&tab==='history'&&<TawasiHistoryPanel circles={memberships.flatMap(row=>row.study_group?[{id:row.study_group.id,name:row.study_group.name}]:[])}/>}
+    {(mode!=='tawasi'||tab==='mine')&&<>
     {mode==='science'&&<section className="panel"><div className="panel-head"><Lock size={20}/><h2>خصوصية المجالس العلمية الخاصة</h2></div>
       <p className="muted small">هذه المجالس خاصة بلا دليل أو بحث عام. رابط الدعوة يعرض تعريفًا محدودًا فقط؛ والانضمام يتطلب طلبًا وموافقة مسؤول المجلس، ولا يمنح الرابط العضوية تلقائيًا.</p>
     </section>}
@@ -345,18 +379,20 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
     {formOpen&&<section id="circle-form" className="panel circle-form" aria-labelledby="circle-form-title">
       <div className="panel-head"><Users size={20}/><h2 id="circle-form-title">{editingId?'تعديل بيانات المجلس':mode==='science'?'إنشاء مجلس علمي خاص':'إنشاء مجلس تواصٍ خاص'}</h2></div>
       <form onSubmit={e=>{e.preventDefault();void save()}}>
+        {!editingId&&mode!=='science'&&<div className="circle-kind-choice" role="group" aria-label="نوع المجلس"><button type="button" className={!recurring?'soft-btn selected':'soft-btn'} aria-pressed={!recurring} onClick={()=>setRecurring(false)}>لقاء واحد</button><button type="button" className={recurring?'soft-btn selected':'soft-btn'} aria-pressed={recurring} onClick={()=>setRecurring(true)}>مجلس متكرر (حلقة بأعضاء ثابتين)</button></div>}
         <div className="form-grid">
-          <label>اسم الحلقة<input required maxLength={120} aria-label="اسم الحلقة" value={draft.name} onChange={e=>set({name:e.target.value})}/></label>
-          <label>نوع الحلقة<select required aria-label="نوع الحلقة" value={draft.kind} onChange={e=>set({kind:e.target.value})}><option value="" disabled>اختَر النوع</option>{kindOptions.filter(([value])=>mode==='science'?['book','course','program'].includes(value):!['book','course','program'].includes(value)).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+          <label>{singleMode?'عنوان المجلس':'اسم الحلقة'}<input required maxLength={120} aria-label="اسم الحلقة" value={draft.name} onChange={e=>set({name:e.target.value})}/></label>
+          {!singleMode&&<><label>نوع الحلقة<select required aria-label="نوع الحلقة" value={draft.kind} onChange={e=>set({kind:e.target.value})}><option value="" disabled>اختَر النوع</option>{kindOptions.filter(([value])=>mode==='science'?['book','course','program'].includes(value):!['book','course','program'].includes(value)).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
           <label>سعة الأعضاء<input type="number" required min={2} max={100} step={1} aria-label="سعة الأعضاء" value={draft.memberLimit} onChange={e=>set({memberLimit:e.target.value})}/></label>
           <label>بداية الفترة<input type="date" aria-label="بداية الفترة" value={draft.startsOn} onChange={e=>set({startsOn:e.target.value})}/></label>
-          <label>نهاية الفترة<input type="date" aria-label="نهاية الفترة" value={draft.endsOn} onChange={e=>set({endsOn:e.target.value})}/></label>
+          <label>نهاية الفترة<input type="date" aria-label="نهاية الفترة" value={draft.endsOn} onChange={e=>set({endsOn:e.target.value})}/></label></>}
         </div>
-        <label>هدف الحلقة<textarea rows={2} maxLength={2000} aria-label="هدف الحلقة" value={draft.goal} onChange={e=>set({goal:e.target.value})}/></label>
-        <label>وصف الحلقة<textarea rows={2} maxLength={2000} aria-label="وصف الحلقة" value={draft.description} onChange={e=>set({description:e.target.value})}/></label>
-        <label>قواعد المشاركة<textarea rows={3} maxLength={2000} aria-label="قواعد المشاركة" value={draft.rules} onChange={e=>set({rules:e.target.value})}/></label>
+        <label>{singleMode?'هدف المجلس أو موضوعه':'هدف الحلقة'}<textarea rows={2} maxLength={2000} aria-label="هدف الحلقة" value={draft.goal} onChange={e=>set({goal:e.target.value})}/></label>
+        {(editingId||draft.description)&&<label>وصف الحلقة<textarea rows={2} maxLength={2000} aria-label="وصف الحلقة" value={draft.description} onChange={e=>set({description:e.target.value})}/></label>}
+        {!editingId&&<fieldset className="circle-first-session"><legend>{singleMode?'موعد المجلس':'أول جلسة (اختياري)'}</legend><p className="muted small">{singleMode?'':'يُستخدم هدف الحلقة هدفًا للجلسة تلقائيًا. '} افتح <a href="https://meet.new" target="_blank" rel="noopener noreferrer">Google Meet ↗</a> وانسخ رابطه هنا إن أردت.</p><div className="form-grid"><label>البداية<input type="datetime-local" required={singleMode} value={firstSession.startsAt} onChange={e=>setFirstSession(c=>({...c,startsAt:e.target.value}))}/></label><label>النهاية<input type="datetime-local" required={singleMode} value={firstSession.endsAt} onChange={e=>setFirstSession(c=>({...c,endsAt:e.target.value}))}/></label><label>رابط Meet<input type="url" maxLength={500} dir="ltr" value={firstSession.meetingUrl} onChange={e=>setFirstSession(c=>({...c,meetingUrl:e.target.value}))} placeholder="https://meet.google.com/…"/></label></div></fieldset>}
+        {!singleMode&&<label>قواعد المشاركة<textarea rows={3} maxLength={2000} aria-label="قواعد المشاركة" value={draft.rules} onChange={e=>set({rules:e.target.value})}/></label>}
         <p className="muted small">{mode==='science'?'تظهر المجالس العلمية الخاصة هنا ضمن «مجالس العلم»، وتبقى مخصصة للأعضاء المدعوين.':'برامج المتابعة اليومية (الصلاة والقرآن والأذكار) تُضاف في مهام الخطط؛ تُدار الحلقة من مؤسسها.'}</p>
-        <button className="primary" type="submit" disabled={busy}>{busy?'جارٍ الحفظ…':editingId?'حفظ التعديلات':mode==='science'?'إنشاء المجلس العلمي':'إنشاء مجلس التواصي'}</button>
+        <button className="primary" type="submit" disabled={busy}>{busy?'جارٍ الحفظ…':editingId?'حفظ التعديلات':mode==='science'?'إنشاء المجلس العلمي':singleMode?'إنشاء المجلس':'إنشاء مجلس التواصي'}</button>
       </form>
     </section>}
     {memberships.length===0&&<section className="panel"><div className="panel-head"><Users size={20}/><h2>{mode==='science'?'لا مجالس علمية خاصة بعد':'لا مجالس تواصٍ بعد'}</h2></div><p className="muted">{mode==='science'?'لم تُنشئ مجلسًا علميًا خاصًا أو تنضم إلى واحد حتى الآن. أنشئ مجلسًا أو تابع مجالس العلم المنشورة.':'لم تُنشئ مجلس تواصٍ أو تنضم إلى واحد حتى الآن. أنشئ مجلسًا للرفقة والتذكير والمساندة.'}</p></section>}
@@ -446,5 +482,6 @@ export default function CirclesView({user,mode='tawasi',admin=false,embedded=fal
         </div>}
       </section>;
     })}
+    </>}
   </div>;
 }

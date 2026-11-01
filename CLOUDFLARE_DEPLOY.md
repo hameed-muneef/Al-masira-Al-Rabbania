@@ -21,3 +21,7 @@ prove that a host applied them.
 ## If the dashboard created a Worker
 
 Workers Builds shows separate **Build command** and **Deploy command** fields instead of a build output directory. Set the build command to `npm run build:cloudflare` and keep the deploy command as `npx wrangler deploy`. The repository's `wrangler.jsonc` names the live Worker `al-rabaniyoon`, points static assets at `dist`, and enables SPA routing for `/admin`. The Worker name must match the Worker whose URL you open; otherwise Wrangler can publish to a different Worker. The Cloudflare build makes book readers use their Supabase public URLs directly, because an unmatched `/books/...` navigation on a Worker can otherwise fall back to the app homepage. Save the build settings, push the configuration, and retry the deployment. The build log must include `Cloudflare Pages build ready: 16 PDF redirects to Supabase; 1 temporarily unavailable PDF omitted.` before Wrangler deploys assets. The PDFs must be uploaded to `journey-books` for the reader to display them.
+
+## Custom domain: alrabbaniyun.com
+
+The app builds auth redirect links from window.location.origin, so no code change is needed. In Cloudflare, attach lrabbaniyun.com (and www) as Custom Domains on the Worker. In Supabase **Authentication > URL Configuration**, set Site URL to https://alrabbaniyun.com and add https://alrabbaniyun.com/** (and the www equivalent) to Redirect URLs. Keep the Resend SMTP sender on a verified lrabbaniyun.com address. Then test sign-up confirmation and password reset from the live domain.

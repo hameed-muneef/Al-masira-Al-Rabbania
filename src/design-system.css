@@ -251,7 +251,7 @@ input:not([type=checkbox]):hover,select:hover,textarea:hover{border-color:#9db8a
   .topbar{height:auto;flex-wrap:wrap}
   .top-actions{min-width:0;flex-wrap:wrap}
   .top-date{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-  .mobile-nav{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+  .mobile-nav{display:grid;grid-template-columns:repeat(8,minmax(0,1fr))}
   .mobile-nav button{min-width:0;padding-inline:2px}
   input:not([type=checkbox]):not([type=radio]),select,textarea{max-width:100%;font-size:16px}
 }

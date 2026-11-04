@@ -180,6 +180,17 @@ body:has(.learning-content) body::before{opacity:.18}
   border-top:1px solid var(--line-card);
   box-shadow:0 -6px 22px rgba(28,42,36,.10);
 }
+[data-theme="light"] #root .app .mobile-nav,
+:root:not([data-theme="dark"]) #root .app .mobile-nav{
+  background:#F8F6EF;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  border-top-color:#D4DDD3;
+  box-shadow:0 -8px 24px rgba(24,55,43,.16);
+}
+[data-theme="light"] #root .app .mobile-nav button,
+:root:not([data-theme="dark"]) #root .app .mobile-nav button{color:#5E7166}
+[data-theme="light"] #root .app .mobile-nav button.active,
+:root:not([data-theme="dark"]) #root .app .mobile-nav button.active{color:#1F5140;font-weight:800}
 [data-theme="dark"] #root .app .mobile-nav{box-shadow:0 -6px 22px rgba(0,0,0,.45)}
 #root .app footer{border-top:1px solid var(--line-card);color:var(--color-muted)}
 #root .app details summary{

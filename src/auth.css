@@ -52,6 +52,28 @@
 .auth-seo nav{display:flex;justify-content:center;align-items:center;gap:7px 16px;flex-wrap:wrap}
 .auth-seo nav a{color:var(--auth-ink,#244638);font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
 .auth-seo nav a:hover,.auth-seo nav a:focus-visible{text-decoration:underline;color:var(--auth-accent,#8b6c35)}
+[data-theme="dark"] .auth-page{
+  --auth-forest:#8FB9B2;--auth-forest-deep:#F0EDE2;--auth-forest-soft:#39463F;
+  --auth-cream:#2E2822;--auth-paper:#474036;--auth-border:#5A4F43;
+  --auth-muted:#C4B8A3;--auth-gold:#D9B777;
+  background:#26211B;color:#EDEDED;
+}
+[data-theme="dark"] .auth-shell{background:#352F28;border-color:#5A4F43;box-shadow:0 18px 48px rgba(0,0,0,.35)}
+[data-theme="dark"] .auth-form-side{background:linear-gradient(160deg,#3D362E,#352F28)}
+[data-theme="dark"] .auth-logo strong,[data-theme="dark"] .auth-form-wrap h1{color:#F0EDE2}
+[data-theme="dark"] .auth-logo small,[data-theme="dark"] .auth-lead,[data-theme="dark"] .auth-hint{color:#C4B8A3}
+[data-theme="dark"] .auth-form>label,[data-theme="dark"] .auth-field-row>label{color:#E7DDCB}
+[data-theme="dark"] .auth-input{background:#474036;border-color:#6A5C4D;color:#C4B8A3}
+[data-theme="dark"] .auth-input input,[data-theme="dark"] .auth-input select{color:#F0EDE2}
+[data-theme="dark"] .auth-input input::placeholder{color:#B8AA94}
+[data-theme="dark"] .auth-input button{color:#D4C3A6}
+[data-theme="dark"] .auth-tabs{background:#26211B;border-color:#5A4F43}
+[data-theme="dark"] .auth-tabs button{color:#C4B8A3}
+[data-theme="dark"] .auth-tabs button.selected{background:#474036;color:#F0EDE2}
+[data-theme="dark"] .auth-profile-fields{background:#3A332B;border-color:#5A4F43}
+[data-theme="dark"] .auth-profile-fields legend{color:#D9B777}
+[data-theme="dark"] .auth-seo{border-top-color:#5A4F43;color:#C4B8A3}
+[data-theme="dark"] .auth-seo h2,[data-theme="dark"] .auth-seo nav a{color:#EDEDED}
 .auth-setup svg{flex:none}.auth-setup p{margin:0;font-size:12px;line-height:1.7}
 .auth-text-action{display:block;width:fit-content;margin:12px auto 0;padding:6px;border:0;background:transparent;color:var(--auth-forest);font:700 13px Tajawal,Arial,sans-serif;text-decoration:none;cursor:pointer}
 .auth-text-action:hover{text-decoration:underline}

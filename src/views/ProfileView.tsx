@@ -150,9 +150,7 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
       <div className="panel-head"><Lock size={20}/><h2 id="privacy-title">خصوصيتك</h2></div>
       <ul className="circle-meta">
         <li>اسمك وبلدك وعمرك لا يظهران لغيرك، ولا يُشاركان مع أي جهة.</li>
-        <li>حلقات التواصي ومجالس العلم خاصة؛ لا يوجد دليل عام لأعضائها.</li>
         <li>محاسبة نفسك («حاسب نفسك») لا تُعرض على أحد، ولا تدخل في أي إجمالي.</li>
-        <li>لا تُسجَّل لقاءات Meet أو أصواتها داخل المنصة.</li>
       </ul>
       <p className="muted small"><Mail size={14}/> للاستفسار عن بياناتك: <bdi dir="ltr">{user.email}</bdi></p>
     </section>

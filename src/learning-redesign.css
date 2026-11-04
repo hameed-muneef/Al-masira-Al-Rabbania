@@ -9,7 +9,7 @@
   --learn-green-soft:#244638;
   --learn-gold:#786137;
   --learn-text:#263c32;
-  --learn-muted:#718078;
+  --learn-muted:#435248;
   --learn-border:#D4DDD3;
   --learn-tint:#dce5dc;
   --learn-reading:#f2efe5;
@@ -83,15 +83,15 @@
 .path-station-icon{position:relative;z-index:1;display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:50%;border:2px solid #d9e4dc;background:#F8F6EF;color:var(--learn-gold);font-size:13px;font-weight:700}
 .path-station.open .path-station-icon{border-color:var(--learn-gold);background:#fdf9f0;color:var(--learn-gold);box-shadow:0 0 0 3px rgba(128,104,62,.14)}
 .path-station.done .path-station-icon{border-color:var(--learn-green);background:var(--learn-green);color:#fff}
-.path-station.locked .path-station-icon{background:#f2f5f1;color:#87968c;border-color:#e0e9e1}
+.path-station.locked .path-station-icon{background:#f2f5f1;color:#6E7C73;border-color:#e0e9e1}
 .path-station-name{min-width:0;font-size:15px;font-weight:700;line-height:1.6;overflow-wrap:anywhere}
-.path-station-focus{display:block;margin-top:2px;color:#5e665f;font-size:13px;font-weight:500;line-height:1.55}
+.path-station-focus{display:block;margin-top:2px;color:#4A544D;font-size:13px;font-weight:500;line-height:1.55}
 .path-station-summary{display:block;color:#3e5548;font-size:13px;font-weight:500;line-height:1.6}
 .path-station-name small{display:block;margin-top:2px;font-size:12px;font-weight:400;line-height:1.7;color:var(--learn-muted)}
 .path-station.done .path-station-name{color:var(--learn-green-soft)}
-.path-station.locked .path-station-name,.path-station:disabled .path-station-name{color:#7b8980;font-weight:600}
-.path-station.locked .path-station-focus,.path-station.locked .path-station-summary{color:#89958c}
-.path-station.locked .path-station-name small{color:#919d94}
+.path-station.locked .path-station-name,.path-station:disabled .path-station-name{color:#5A6A61;font-weight:600}
+.path-station.locked .path-station-focus,.path-station.locked .path-station-summary{color:#5A6A61}
+.path-station.locked .path-station-name small{color:#5A6A61}
 .learning-journey .learning-hero{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(145px,200px);grid-template-rows:repeat(4,auto);align-items:center;gap:2px 14px;margin:0 0 10px;padding:12px 16px;border:1px solid #ddceb3;border-inline-start:3px solid #a58b5e;border-radius:10px;background:var(--learn-hero);color:var(--learn-text);box-shadow:0 3px 10px rgba(80,65,39,.04)}
 .learning-hero :is(.eyebrow,h2,p){grid-column:1}
 .learning-hero .eyebrow{font-size:10px}

@@ -87,7 +87,7 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
     <div className="auth-shell">
       <section className="auth-form-side" aria-labelledby="auth-title">
         <div className="auth-logo"><span><img src="/brand/book-mark.svg" alt=""/></span><div><strong>الرَّبَّانِيُّون</strong><small>{admin?'بوابة إدارة المنصة':'على هدي الكتاب والسنة'}</small></div></div>
-        <div className="auth-form-wrap">
+        <section className="auth-seo" aria-labelledby="auth-seo-title"><h2 id="auth-seo-title">الربانيون — منصة للتعلم والعمل بالقرآن والسنة</h2><p>الربانيون منصة إسلامية للتعلم والعمل بالقرآن والسنة، وبناء الإيمان، وتعلم العقيدة، وتزكية النفس، والسير في منهج متدرج يجمع بين العلم والعمل.</p><ul><li><a href="/about/">من نحن</a></li><li><a href="/library/">مكتبة الربانيون</a></li><li><a href="/quran/">القرآن الكريم</a></li><li><a href="/sunnah/">السنة النبوية</a></li><li><a href="/tazkiyah/">تزكية النفس</a></li><li><a href="/worship/">العبادات</a></li></ul></section><div className="auth-form-wrap">
           {admin&&<nav className="auth-role-switch" aria-label="اختيار الواجهة"><a href="/">واجهة المستخدم</a><a href="/admin" aria-current="page">دخول المشرف</a></nav>}
           <span className="auth-eyebrow">{reset?'استعادة الحساب':admin?'مدخل المشرفين':'مسيرتك تبدأ هنا'}</span>
           <h1 id="auth-title">{reset?'تعيين كلمة مرور جديدة':forgot?'نسيت كلمة المرور؟':admin?'دخول المشرف':mode==='register'?'أنشئ حسابك':'مرحبًا بعودتك'}</h1>

@@ -1,17 +1,17 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
-import {Bell,CalendarDays,CheckCheck,Inbox,LoaderCircle,RefreshCw,Share2,ShieldCheck,UserPlus} from 'lucide-react';
+import {Bell,CheckCheck,Inbox,LoaderCircle,RefreshCw,ShieldCheck,Trash2} from 'lucide-react';
 import {authClient} from '../auth';
 import type {View} from '../app-state';
 import '../notifications.css';
 
-type NotificationCategory='invitation'|'activity'|'resource'|'system';
+type NotificationCategory='reminder'|'system';
 type NotificationRow={
   notification_id:string;
   notification_kind:string;
   notification_title:string;
   notification_body:string;
   notification_link:string;
-  notification_category?:NotificationCategory;
+  notification_category?:string;
   read_at:string|null;
   created_at:string;
 };
@@ -19,9 +19,7 @@ type NotificationRow={
 const PAGE_SIZE=20;
 const categories:[NotificationCategory|'all',string][] = [
   ['all','الكل'],
-  ['invitation','الدعوات'],
-  ['activity','الأنشطة والمواعيد'],
-  ['resource','المشاركات'],
+  ['reminder','الصلاة والتذكيرات'],
   ['system','النظام'],
 ];
 
@@ -32,18 +30,18 @@ const viewLabels:Record<string,string>={
   goals:'المؤمن القوي',learn:'السير إلى الله',reflect:'محاسبة النفس',wird:'زكِّ نفسك',circles:'التواصي',
   teacher:'بوابة المعلم',courses:'مجالس العلم',study:'المدارسة',shares:'المشاركات',profile:'حسابي',settings:'الإعدادات',
 };
+// Sections removed from the product keep their past notifications visible, but
+// no longer offer a navigation button to a page that does not exist.
+const retiredViewLinks=new Set(['circles','courses','study','shares','teacher']);
+const targetLabel=(link:string)=>retiredViewLinks.has(link)?undefined:viewLabels[link];
 
 function categoryOf(kind:string):NotificationCategory{
-  if(kind==='join_request'||kind==='join_decision'||kind==='invitation')return 'invitation';
-  if(kind==='course'||kind==='session'||kind==='mudarasa'||kind==='announcement')return 'activity';
-  if(kind==='share')return 'resource';
+  if(['prayer','reminder','worship','goal','task'].includes(kind))return 'reminder';
   return 'system';
 }
 
-function CategoryIcon({category}:{category:NotificationCategory}){
-  if(category==='invitation')return <UserPlus size={16} aria-hidden="true"/>;
-  if(category==='activity')return <CalendarDays size={16} aria-hidden="true"/>;
-  if(category==='resource')return <Share2 size={16} aria-hidden="true"/>;
+function CategoryIcon({category}:{category:string}){
+  if(category==='reminder')return <Bell size={16} aria-hidden="true"/>;
   return <ShieldCheck size={16} aria-hidden="true"/>;
 }
 
@@ -132,6 +130,10 @@ export default function NotificationCenter({user,profile,onNavigate}:Props){
   },[user?.id,category,unreadOnly,items.length,loading,legacy]);
 
   useEffect(()=>{void loadFirst()},[loadFirst]);
+  useEffect(()=>{
+    if(!authClient||!user)return;
+    void authClient.rpc('purge_my_old_notifications',{p_days:90}).then(()=>undefined,()=>undefined);
+  },[user?.id]);
 
   // Refresh only the light unread counter; the full list is fetched when the
   // user opens the bell or the counter changes.
@@ -211,9 +213,23 @@ export default function NotificationCenter({user,profile,onNavigate}:Props){
     finally{setBusy(false)}
   };
 
+  const clearAll=async()=>{
+    if(!authClient||busy)return;
+    if(!window.confirm('سيتم حذف جميع الإشعارات (مقروءة وغير مقروءة). لا يمكن التراجع. متابعة؟'))return;
+    setBusy(true);setError('');
+    try{
+      const {error:rpcError}=await authClient.rpc('clear_all_my_notifications');
+      if(rpcError)throw rpcError;
+      setItems([]);
+      setUnread(0);
+      setHasMore(false);
+    }catch{setError('تعذر حذف الإشعارات.')}
+    finally{setBusy(false)}
+  };
+
   const openNotification=async(row:NotificationRow)=>{
     if(!row.read_at)await markRead(row.notification_id);
-    if(row.notification_link&&viewLabels[row.notification_link]){
+    if(row.notification_link&&targetLabel(row.notification_link)){
       setOpen(false);
       onNavigate(row.notification_link as View);
     }
@@ -230,6 +246,7 @@ export default function NotificationCenter({user,profile,onNavigate}:Props){
       <header className="notif-head">
         <div><h3>الإشعارات</h3><p className="muted small">{unread>0?`${unread} غير مقروءة`:'كل الإشعارات مقروءة'}</p></div>
         <button type="button" className="soft-btn notif-mark-all" disabled={busy||unread===0} onClick={()=>void markAll()}><CheckCheck size={15}/> تعليم الكل كمقروء</button>
+        <button type="button" className="soft-btn notif-clear-all" disabled={busy||items.length===0} onClick={()=>void clearAll()}><Trash2 size={15}/> حذف الكل</button>
       </header>
       <div className="notif-filters" role="tablist" aria-label="تصنيفات الإشعارات">
         {categories.map(([id,label])=><button key={id} type="button" role="tab" aria-selected={category===id} className={category===id?'active':''} onClick={()=>pickCategory(id)}>{label}</button>)}
@@ -241,7 +258,7 @@ export default function NotificationCenter({user,profile,onNavigate}:Props){
         :<ul className="notif-list">
           {visibleItems.map(row=>{
             const categoryValue=row.notification_category??categoryOf(row.notification_kind);
-            const target=viewLabels[row.notification_link];
+            const target=targetLabel(row.notification_link);
             return <li key={row.notification_id} className={row.read_at?'notif-item read':'notif-item unread'}>
               <span className={`notif-icon notif-icon-${categoryValue}`}><CategoryIcon category={categoryValue}/></span>
               <div className="notif-body">

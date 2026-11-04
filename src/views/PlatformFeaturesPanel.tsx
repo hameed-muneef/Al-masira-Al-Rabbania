@@ -11,6 +11,8 @@ type PermissionStatus={
   latest_allowed:boolean|null;latest_changed_by_email:string|null;latest_changed_at:string|null;
 };
 const message=(error:unknown)=>error instanceof Error?error.message:'تعذّر تنفيذ العملية.';
+// Sections removed from the product; they must not appear as sellable features.
+const retiredFeatures=new Set(['private_circles','courses','study_circles','circle_live','member_shares','teacher_portal']);
 const intervalName=(value:string|null)=>value==='monthly'?'شهريًا':value==='yearly'?'سنويًا':'';
 const formatPrice=(feature:Feature)=>feature.price_amount===null||!feature.currency_code?'السعر غير محدد':`${new Intl.NumberFormat('ar-EG',{style:'currency',currency:feature.currency_code,maximumFractionDigits:3}).format(feature.price_amount)} ${intervalName(feature.billing_interval)}`;
 const formatDate=(value:string)=>new Intl.DateTimeFormat('ar-EG',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value));
@@ -23,7 +25,7 @@ export default function PlatformFeaturesPanel(){
   const [features,setFeatures]=useState<Feature[]>([]);
   const [form,setForm]=useState<Feature>({key:'',title:'',description:'',enabled:true,requires_premium:false,price_amount:null,currency_code:null,billing_interval:null});
   const [email,setEmail]=useState('');
-  const [selectedKey,setSelectedKey]=useState('circle_live');
+  const [selectedKey,setSelectedKey]=useState('learning_journey');
   const [permissionStatuses,setPermissionStatuses]=useState<PermissionStatus[]>([]);
   const [featureEvents,setFeatureEvents]=useState<FeatureEvent[]>([]);
   const [permissionEvents,setPermissionEvents]=useState<PermissionEvent[]>([]);
@@ -42,7 +44,7 @@ export default function PlatformFeaturesPanel(){
       ]);
       if(featureResult.error)throw featureResult.error;
       if(eventResult.error)throw eventResult.error;
-      setFeatures((featureResult.data??[]) as Feature[]);
+      setFeatures(((featureResult.data??[]) as Feature[]).filter(feature=>!retiredFeatures.has(feature.key)));
       setFeatureEvents((eventResult.data??[]) as FeatureEvent[]);
     }catch(caught){setError(message(caught))}
     finally{setLoading(false)}

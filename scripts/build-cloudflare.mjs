@@ -9,3 +9,4 @@ function run(command,args,env=process.env){
 run('npm',['run','deploy:check']);
 run('npm',['run','build'],{...process.env,VITE_BOOKS_FROM_SUPABASE:'true'});
 run(process.execPath,['scripts/prepare-cloudflare-pages.mjs']);
+run(process.execPath,['scripts/verify-cloudflare-output.mjs']);

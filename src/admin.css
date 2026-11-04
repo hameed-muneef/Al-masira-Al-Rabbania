@@ -88,3 +88,58 @@
 .admin-content-archive-pagination button{border-color:#D4DDD3;background:#F8F6EF;color:#244638}
 .admin-content-archive-pagination button:disabled{opacity:.5;cursor:default}
 @media(max-width:700px){.admin-content-archive{padding:14px}.admin-content-archive-heading h2{font-size:19px}.admin-content-archive-list>li{align-items:flex-start;flex-direction:column}.admin-content-archive-list .admin-user-manage{width:100%}.admin-content-archive-pagination{flex-wrap:wrap}}
+
+/* ---------- ???? ????? ?????? ?????? (??? ???? ???) ---------- */
+.quran-admin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.quran-admin-head h2{margin:6px 0 4px}
+.quran-admin-head p{margin:0;max-width:760px;font-size:13px;line-height:1.9;color:#718078}
+.quran-admin-table-wrap{overflow-x:auto;margin-bottom:18px}
+.quran-admin-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:820px}
+.quran-admin-table th,.quran-admin-table td{padding:9px 8px;text-align:start;border-bottom:1px solid #e7ece7;vertical-align:top}
+.quran-admin-table th{font-size:11px;font-weight:800;color:#725b2c;background:#f4f6ef;white-space:nowrap}
+.quran-admin-table code{font-size:11px;background:#eef2e8;border-radius:5px;padding:1px 5px;color:#244638}
+.quran-admin-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:800;background:#eef2e8;color:#384c40;white-space:nowrap}
+.quran-admin-badge.blocked,.quran-admin-badge.not_imported{background:#f8ece8;color:#a64137}
+.quran-admin-badge.pending,.quran-admin-badge.partial{background:#f8f1e0;color:#805a38}
+.quran-admin-badge.approved,.quran-admin-badge.complete{background:#e8f3e8;color:#315e49}
+.quran-admin-checks{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:6px}
+.quran-admin-checks li{display:flex;align-items:flex-start;gap:8px;padding:9px 11px;border:1px solid #e7ece7;border-radius:9px;background:#fbfaf5;font-size:12.5px}
+.quran-admin-checks li.passed svg{color:#315e49;flex:none;margin-top:1px}
+.quran-admin-checks li.failed{border-color:#e7cfc6;background:#fdf6f3}
+.quran-admin-checks li.failed svg{color:#a64137;flex:none;margin-top:1px}
+.quran-admin-note{display:flex;align-items:flex-start;gap:9px;padding:13px 15px;border:1px solid #e5eadf;border-radius:10px;background:#f0f3ec;color:#5a6f60}
+.quran-admin-note svg{flex:none;margin-top:2px;color:#805a38}
+.quran-admin-note p{margin:0;font-size:12.5px;line-height:1.9}
+.quran-admin-note code{font-size:11px}
+
+/* Dark mode: keep admin form controls readable */
+[data-theme="dark"] .admin-page input,
+[data-theme="dark"] .admin-page select,
+[data-theme="dark"] .admin-page textarea {
+  background: var(--dark-surface-raised, #3a332b);
+  color: var(--dark-body, #EDEDED);
+  border-color: var(--dark-border, #5a4f43);
+}
+[data-theme="dark"] .admin-page .managed-resources li {
+  background: var(--dark-surface-raised, #3a332b);
+  border-color: var(--dark-border, #5a4f43);
+  color: var(--dark-body, #EDEDED);
+}
+[data-theme="dark"] .admin-page .managed-resource-title small {
+  color: var(--dark-muted, #bcae96);
+}
+[data-theme="dark"] .admin-page .admin-users-table-wrap,
+[data-theme="dark"] .admin-page .admin-content-archive-list > li {
+  background: var(--dark-surface-raised, #3a332b);
+  border-color: var(--dark-border, #5a4f43);
+}
+
+/* Responsive admin layout */
+@media (max-width: 760px) {
+  .admin-content { padding: 16px 14px 56px; }
+  .admin-header { padding: 12px 14px; flex-wrap: wrap; }
+  .admin-intro h1 { font-size: 22px; }
+  .admin-content-archive-toolbar { flex-direction: column; align-items: stretch; }
+  .admin-content-archive-toolbar > label { min-width: 0; }
+  .quran-admin-table { min-width: 680px; }
+}

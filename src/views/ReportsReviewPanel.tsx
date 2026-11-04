@@ -1,5 +1,7 @@
 import {useEffect,useState} from 'react';
 import {authClient} from '../auth';
+import '../resource-manager.css';
+import '../teacher.css';
 
 type Report={report_id:string;reporter_id:string;target_type:string;target_id:string;reason:string;details:string;report_status:string;created_at:string};
 const reasonLabel:Record<string,string>={spam:'رسائل مزعجة',harassment:'مضايقة',inappropriate:'محتوى غير لائق',misinformation:'معلومات مضللة',privacy:'خصوصية',other:'أخرى'};

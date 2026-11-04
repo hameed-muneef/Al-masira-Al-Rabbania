@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react';
 import {authClient} from '../auth';
 import type {User} from '@supabase/supabase-js';
+import '../circles.css';
 
 type Application={user_id:string;display_name:string;biography:string;mentor_type:string;qualifications:string;specialties:string[];languages:string[];directory_visible:boolean;status:string;review_note:string;submitted_at:string};
 const names:Record<string,string>={scholar:'عالم أو طالب علم مؤهل',educator:'مربٍ',mentor:'مرشد تربوي',counselor:'مقدم توجيه عام'};

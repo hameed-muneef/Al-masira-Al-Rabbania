@@ -11,9 +11,14 @@
     "prebuild": "node scripts/generate-book-manifest.mjs",
     "test": "node --test \"tests/*.test.mjs\"",
     "manifest": "node scripts/generate-book-manifest.mjs",
+    "quran:generate": "node scripts/generate-quran-asset.mjs",
+    "quran:check": "node scripts/check-quran-content.mjs",
+    "quran:import": "node scripts/import-quran-content.mjs",
+    "hadith:generate": "node scripts/generate-hadith-asset.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "db:plan": "node scripts/apply-cloud-schema.mjs --dry-run",
-    "db:migrate": "node scripts/apply-cloud-schema.mjs"
+    "db:migrate": "node scripts/apply-cloud-schema.mjs",
+    "prayer:check": "node scripts/check-prayer-accuracy.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
@@ -26,6 +31,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "adhan": "^4.4.6",
     "pg": "^8.23.1",
     "typescript": "~5.7.3",
     "vite": "^6.0.5",

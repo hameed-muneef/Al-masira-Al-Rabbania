@@ -20,9 +20,8 @@
 .notif-item.unread{background:rgba(31,92,74,.055);border-color:rgba(31,92,74,.14)}
 .notif-item.read{opacity:.78}
 .notif-icon{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:10px;background:rgba(31,92,74,.1);color:#1f5c4a}
-.notif-icon-invitation{background:rgba(160,93,19,.12);color:#8a5a13}
-.notif-icon-resource{background:rgba(43,84,148,.12);color:#2b5494}
 .notif-icon-system{background:rgba(90,88,80,.12);color:#5a5850}
+.notif-icon-reminder{background:rgba(31,122,92,.12);color:#1f7a5c}
 .notif-body{min-width:0;flex:1}
 .notif-title-row{display:flex;align-items:center;gap:6px}
 .notif-title-row strong{font-size:13.5px;line-height:1.5}

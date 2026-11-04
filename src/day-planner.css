@@ -110,6 +110,9 @@
 .day-planner .slot-activity .task-main{flex:1 1 65%;align-items:flex-start;gap:13px;cursor:pointer}
 .day-planner .slot-activity .activity-title{color:#365447;font-size:18px;font-weight:600;line-height:1.8}
 .day-planner .slot-activity input[type=checkbox]{width:22px;height:22px;margin-top:7px;accent-color:var(--day-green);cursor:pointer}
+.day-planner .task-time-selects{display:inline-flex;align-items:center;gap:4px;direction:ltr}
+.day-planner .task-time-selects select{min-width:58px;padding:7px 8px;border:1px solid #dce4d8;border-radius:8px;background:#fcfdfb;color:#315c48;font-variant-numeric:tabular-nums}
+.day-planner .task-time-selects select:focus-visible{outline:3px solid #b7cfae;outline-offset:2px}
 .day-planner .slot-activity>.icon-btn{font-size:12px;color:#617369;min-height:36px;min-width:36px}
 .day-planner .slot-activity>.icon-btn:hover{background:#e9eee5;color:var(--day-ink)}
 .day-planner .slot-activity>.danger:hover{background:#f8e9e3;color:#9c3d2e}

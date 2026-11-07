@@ -143,8 +143,11 @@ body:has(.learning-content) body::before{opacity:.18}
 #root .app input:not([type=checkbox]):hover,#root .app select:hover,#root .app textarea:hover{border-color:var(--color-border-strong)}
 [data-theme="light"] #root .app input:not([type=checkbox]),
 [data-theme="light"] #root .app select,
-[data-theme="light"] #root .app textarea{background:#FFFFFF;color:#172921;border-color:#9BBEC5}
-[data-theme="light"] #root .app input::placeholder,[data-theme="light"] #root .app textarea::placeholder{color:#5A6B70;opacity:1}
+[data-theme="light"] #root .app textarea{background:#FFFFFF;color:#172921;border-color:#527F8B;border-width:1.5px;box-shadow:0 1px 3px rgba(27,44,45,.08)}
+[data-theme="light"] #root .app input:not([type=checkbox]):hover,
+[data-theme="light"] #root .app select:hover,
+[data-theme="light"] #root .app textarea:hover{border-color:#3D6B7A}
+[data-theme="light"] #root .app input::placeholder,[data-theme="light"] #root .app textarea::placeholder{color:#3B4A50;opacity:1}
 #root .app input:not([type=checkbox]):focus,#root .app select:focus,#root .app textarea:focus{
   outline:none;border-color:color-mix(in srgb,var(--section-accent,var(--color-primary)) 55%,transparent);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--section-accent,var(--color-primary)) 16%,transparent);

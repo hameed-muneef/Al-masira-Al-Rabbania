@@ -19,7 +19,7 @@ body{
 /* الشبشة الهندسية: على طبقة مستقلة خلف المحتوى، تختفي خلف الصفحات النصية */
 body::before{
   content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background-image:var(--pattern-geometry);background-size:72px 72px;opacity:.5;
+  background-image:var(--pattern-geometry);background-size:72px 72px;opacity:.12;
   mask-image:radial-gradient(1200px 800px at 50% 0%, black, transparent 92%);
   -webkit-mask-image:radial-gradient(1200px 800px at 50% 0%, black, transparent 92%);
 }
@@ -141,6 +141,10 @@ body:has(.learning-content) body::before{opacity:.18}
   transition:border-color .16s,box-shadow .16s;
 }
 #root .app input:not([type=checkbox]):hover,#root .app select:hover,#root .app textarea:hover{border-color:var(--color-border-strong)}
+[data-theme="light"] #root .app input:not([type=checkbox]),
+[data-theme="light"] #root .app select,
+[data-theme="light"] #root .app textarea{background:#FFFFFF;color:#172921;border-color:#9BBEC5}
+[data-theme="light"] #root .app input::placeholder,[data-theme="light"] #root .app textarea::placeholder{color:#5A6B70;opacity:1}
 #root .app input:not([type=checkbox]):focus,#root .app select:focus,#root .app textarea:focus{
   outline:none;border-color:color-mix(in srgb,var(--section-accent,var(--color-primary)) 55%,transparent);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--section-accent,var(--color-primary)) 16%,transparent);

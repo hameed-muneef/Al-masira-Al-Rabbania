@@ -12,7 +12,7 @@ test('seven sections with the specified accents', () => {
   assert.equal(theme.SECTION_THEMES.length, 7);
   const accents = Object.fromEntries(theme.SECTION_THEMES.map(item => [item.id, [item.accent, item.soft]]));
   assert.deepEqual(accents.quran, ['#174C3C', '#9BBEC5']);
-  assert.deepEqual(accents.journey, ['#527F8B', '#164F59']);
+  assert.deepEqual(accents.journey, ['#527F8B', '#D3E2E0']);
   assert.deepEqual(accents.daily, ['#32412F', '#B99A5D']);
   assert.deepEqual(accents.tazkiya, ['#294039', '#A8B9A0']);
   assert.deepEqual(accents.accountability, ['#876D83', '#729EAA']);

@@ -17,6 +17,8 @@ type NotificationRow={
 };
 
 const PAGE_SIZE=20;
+const NOTIFICATION_TTL_MS=30*60*1000; // 30 minutes: unread notifications auto-become read (badge clears)
+const isExpired=(row:NotificationRow,nowMs:number)=>!row.read_at&&(nowMs-Date.parse(row.created_at)>NOTIFICATION_TTL_MS);
 const categories:[NotificationCategory|'all',string][] = [
   ['all','الكل'],
   ['reminder','الصلاة والتذكيرات'],
@@ -68,6 +70,7 @@ export default function NotificationCenter({user,profile,onNavigate}:Props){
   const [hasMore,setHasMore]=useState(false);
   const [legacy,setLegacy]=useState(false);
   const rootRef=useRef<HTMLDivElement>(null);
+  const [nowMs,setNowMs]=useState(()=>Date.now());
   const preferencesOff=profile?.notification_preferences?.enabled===false;
 
   const legacyFallback=useCallback(async()=>{
@@ -133,16 +136,36 @@ export default function NotificationCenter({user,profile,onNavigate}:Props){
   useEffect(()=>{
     if(!authClient||!user)return;
     void authClient.rpc('purge_my_old_notifications',{p_days:90}).then(()=>undefined,()=>undefined);
+    void authClient.rpc('expire_my_notifications',{p_minutes:30}).then(()=>undefined,()=>undefined);
   },[user?.id]);
 
+  // Tick every 30s so stale items become read even while the panel stays open.
+  useEffect(()=>{
+    const timer=window.setInterval(()=>setNowMs(Date.now()),30000);
+    return()=>window.clearInterval(timer);
+  },[]);
+
+  // Auto-expire: unread >30min → mark read locally + server (badge clears after 30 min)
+  useEffect(()=>{
+    if(!authClient||!user||preferencesOff)return;
+    const stale=items.filter(row=>isExpired(row,nowMs));
+    if(!stale.length)return;
+    setItems(current=>current.map(row=>isExpired(row,nowMs)?{...row,read_at:new Date(nowMs).toISOString()}:row));
+    setUnread(value=>Math.max(0,value-stale.length));
+    // Server-side expiry (best-effort; ignore if RPC not yet deployed)
+    void authClient.rpc('expire_my_notifications',{p_minutes:30}).then(()=>undefined,()=>undefined);
+  },[items,nowMs,user?.id,preferencesOff]);
+
   // Refresh only the light unread counter; the full list is fetched when the
-  // user opens the bell or the counter changes.
+  // user opens the bell or the counter changes. Expire stale (>30min) first so
+  // the badge clears automatically even when the panel stays closed.
   useEffect(()=>{
     if(!authClient||!user||preferencesOff)return;
     const client=authClient;
     const poll=async()=>{
       if(document.visibilityState!=='visible')return;
       try{
+        await client.rpc('expire_my_notifications',{p_minutes:30});
         const {data}=await client.rpc('unread_notification_count');
         const next=Number(data??0);
         if(next!==unread){setUnread(next);if(open)void loadFirst()}
@@ -166,12 +189,12 @@ export default function NotificationCenter({user,profile,onNavigate}:Props){
   },[open]);
 
   const visibleItems=useMemo(()=>{
-    if(!legacy)return items;
+    if(!legacy)return items.map(row=>isExpired(row,nowMs)?{...row,read_at:row.read_at??new Date(nowMs).toISOString()}:row);
     return items.filter(row=>
       (category==='all'||(row.notification_category??categoryOf(row.notification_kind))===category)
       &&(!unreadOnly||!row.read_at)
     );
-  },[items,legacy,category,unreadOnly]);
+  },[items,legacy,category,unreadOnly,nowMs]);
 
   // Server-side pages are replaced on filter change; legacy rows stay loaded so
   // visibleItems can keep filtering them without another round trip.

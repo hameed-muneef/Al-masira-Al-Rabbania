@@ -25,13 +25,18 @@ export function getBrowserPermission(): NotificationPermission | null {
 export function showBrowserNotification(title: string, opts: {body?: string; icon?: string; tag?: string; requireInteraction?: boolean}): void {
   if (!isBrowserNotificationSupported()) return;
   if (Notification.permission !== 'granted') return;
-  new Notification(title, {
+  const notification = new Notification(title, {
     body: opts.body,
     icon: opts.icon,
     tag: opts.tag,
     requireInteraction: opts.requireInteraction ?? false,
     silent: false,
   });
+  // Auto-clear browser notification after 30 minutes (user request: stay 30 min then clear).
+  // Timer is best-effort; if the tab closes, the OS dismisses it.
+  const TTL_MS = 30 * 60 * 1000;
+  window.setTimeout(() => { try { notification.close(); } catch {} }, TTL_MS);
+  notification.addEventListener?.('close', () => { /* timer will no-op if already closed */ });
 }
 
 /** يسجّل إشعارًا ذاتيًا في مركز الإشعارات فقط (بلا صوت أو إشعار نظام). يعيد false عند الفشل. */

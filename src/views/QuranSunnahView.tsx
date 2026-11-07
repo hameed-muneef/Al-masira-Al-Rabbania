@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {
   BookOpen, Brain, RotateCcw, Library, ScrollText, CalendarClock, TrendingUp,
   ShieldCheck, WifiOff, Flower2
@@ -47,17 +47,22 @@ export default function QuranSunnahView({state, onState, tasks, onTasks, notify,
   const [asset, setAsset] = useState<QuranAsset | null>(null);
   const [error, setError] = useState('');
   const [online, setOnline] = useState(() => navigator.onLine);
+  const firstRender = useRef(true);
 
   const handleSectionChange = (id: QuranSection) => {
     setSection(id);
-    // تمرير إلى محتوى القسم بعد تحديث DOM
-    setTimeout(() => {
+  };
+
+  useLayoutEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    const frame = requestAnimationFrame(() => {
       if (sectionHeaderRef.current) {
         const top = sectionHeaderRef.current.offsetTop - 80;
         document.documentElement.scroll(0, top);
       }
-    }, 1000);
-  };
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [section]);
 
   useEffect(() => {
     let active = true;
@@ -85,8 +90,6 @@ export default function QuranSunnahView({state, onState, tasks, onTasks, notify,
       </div>
     </div>
 
-    <QuranJourney asset={asset} state={state} onOpen={handleSectionChange}/>
-
     <nav className="quran-section-grid" aria-label="أقسام القرآن والسنة">
       {SECTIONS.map(item => {
         const Icon = item.icon;
@@ -107,7 +110,7 @@ export default function QuranSunnahView({state, onState, tasks, onTasks, notify,
       : !asset ? <section className="panel"><EmptyNote>جارٍ تحميل النص العثماني والبيانات الوصفية…</EmptyNote></section>
       : <>
         {section === 'mushaf' && <QuranReader asset={asset} state={state} onState={onState} notify={notify}/>}
-        {section === 'hifz' && <QuranMemorization asset={asset} state={state} onState={onState} notify={notify}/>}
+        {section === 'hifz' && <><QuranJourney asset={asset} state={state} onOpen={handleSectionChange}/><QuranMemorization asset={asset} state={state} onState={onState} notify={notify}/></>}
         {section === 'revision' && <QuranRevision asset={asset} state={state} onState={onState} notify={notify}/>}
         {section === 'bukhari' && <HadithLibrary collectionKey="bukhari" mode="library" state={state} onState={onState} notify={notify}/>}
         {section === 'muslim' && <HadithLibrary collectionKey="muslim" mode="library" state={state} onState={onState} notify={notify}/>}

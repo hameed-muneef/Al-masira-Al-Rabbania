@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {
   BookOpen, Brain, RotateCcw, Library, ScrollText, CalendarClock, TrendingUp,
   ShieldCheck, WifiOff, Flower2
@@ -43,9 +43,21 @@ const SECTIONS: {id: QuranSection; title: string; description: string; icon: typ
 
 export default function QuranSunnahView({state, onState, tasks, onTasks, notify, onOpenTasks, initialSection}: Props) {
   const [section, setSection] = useState<QuranSection>(initialSection ?? 'mushaf');
+  const sectionHeaderRef = useRef<HTMLDivElement>(null);
   const [asset, setAsset] = useState<QuranAsset | null>(null);
   const [error, setError] = useState('');
   const [online, setOnline] = useState(() => navigator.onLine);
+
+  const handleSectionChange = (id: QuranSection) => {
+    setSection(id);
+    // تمرير إلى محتوى القسم بعد تحديث DOM
+    setTimeout(() => {
+      if (sectionHeaderRef.current) {
+        const top = sectionHeaderRef.current.offsetTop - 80;
+        document.documentElement.scroll(0, top);
+      }
+    }, 1000);
+  };
 
   useEffect(() => {
     let active = true;
@@ -73,12 +85,12 @@ export default function QuranSunnahView({state, onState, tasks, onTasks, notify,
       </div>
     </div>
 
-    <QuranJourney asset={asset} state={state} onOpen={setSection}/>
+    <QuranJourney asset={asset} state={state} onOpen={handleSectionChange}/>
 
     <nav className="quran-section-grid" aria-label="أقسام القرآن والسنة">
       {SECTIONS.map(item => {
         const Icon = item.icon;
-        return <button key={item.id} className={section === item.id ? 'active' : ''} onClick={() => setSection(item.id)}>
+        return <button key={item.id} className={section === item.id ? 'active' : ''} onClick={() => handleSectionChange(item.id)}>
           <span className="quran-section-icon"><Icon size={22}/></span>
           <strong>{item.title}</strong>
           <small>{item.description}</small>
@@ -86,7 +98,7 @@ export default function QuranSunnahView({state, onState, tasks, onTasks, notify,
       })}
     </nav>
 
-    <div className="quran-section-header">
+    <div className="quran-section-header" ref={sectionHeaderRef}>
       <h2>{current.title}</h2>
       {current.description && <p>{current.description}</p>}
     </div>

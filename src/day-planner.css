@@ -16,16 +16,16 @@
 .day-review-actions button:disabled{opacity:.55;cursor:not-allowed}
 .day-review-actions span,.day-review>small{color:#667a69;font-size:12px;line-height:1.8}
 @media(max-width:750px){.day-review{padding:18px}.day-review-fields{grid-template-columns:1fr}}
-.day-message-dialog{position:fixed;inset:0;width:min(750px,calc(100vw - 30px));max-height:min(84vh,900px);border:1px solid #d5ddcf;border-radius:18px;padding:0;color:#234637;background:#fffdf8;box-shadow:0 25px 70px #10271f55;overflow:hidden}
+.day-message-dialog{position:fixed;inset:0;width:min(750px,calc(100vw - 30px));max-height:min(84vh,900px);border:1px solid #d5ddcf;border-radius:18px;padding:0;color:#234637;background:#fffdf8;--day-message-surface:#fffdf8;box-shadow:0 25px 70px #10271f55;overflow:hidden}
 .day-message-dialog::backdrop{background:#10281fc2}
-.day-message-scroll{max-height:min(84vh,900px);overflow:auto;padding:30px clamp(20px,5vw,42px)}
+.day-message-scroll{max-height:min(84vh,900px);overflow:auto;padding:30px clamp(20px,5vw,42px) 96px}
 .day-message-content{line-height:2;color:#344d3c;font-size:16px}
 .day-message-content h2{font-size:27px;color:#1b4e38;line-height:1.5;margin:0 0 20px}
 .day-message-content h3{font-size:20px;color:#1b4e38;line-height:1.6;margin:30px 0 10px}
 .day-message-content p{margin:0 0 18px;white-space:pre-line}
 .day-message-content strong{color:#1b4e38}
 .day-message-content em{color:#67552d}
-.day-message-actions{position:sticky;bottom:-30px;background:linear-gradient(transparent,#fffdf8 20%);padding:22px 0 4px;display:flex;justify-content:flex-end}
+.day-message-actions{position:sticky;bottom:0;background:linear-gradient(transparent,var(--day-message-surface) 30%);padding:26px 0 4px;display:flex;justify-content:flex-end}
 .tracking-message{border:1px solid #e2e7d9;border-radius:12px;background:#fffdf8;margin:14px 0;padding:15px 20px}
 .tracking-message summary{cursor:pointer;color:#244638;font-weight:700}
 .tracking-message .day-message-content{padding-top:20px;font-size:14px}
@@ -112,7 +112,11 @@
 .day-planner .slot-activity input[type=checkbox]{width:22px;height:22px;margin-top:7px;accent-color:var(--day-green);cursor:pointer}
 .day-planner .task-time-selects{display:inline-flex;align-items:center;gap:4px;direction:ltr}
 .day-planner .task-time-selects select{min-width:58px;padding:7px 8px;border:1px solid #dce4d8;border-radius:8px;background:#fcfdfb;color:#315c48;font-variant-numeric:tabular-nums}
+.day-planner .task-time-selects .task-time-period{min-width:64px}
 .day-planner .task-time-selects select:focus-visible{outline:3px solid #b7cfae;outline-offset:2px}
+.day-plan-content .half-hour-row{background:#FBFDF9;border-color:#DCE8DE}
+.day-plan-content .planned-activity-card{background:#EEF6F0;border-color:#C9DDCD;border-inline-start-color:#78A88A}
+.day-plan-content .planned-activity-card:hover{background:#E6F1E9;border-color:#9DBFA7}
 .day-planner .slot-activity>.icon-btn{font-size:12px;color:#617369;min-height:36px;min-width:36px}
 .day-planner .slot-activity>.icon-btn:hover{background:#e9eee5;color:var(--day-ink)}
 .day-planner .slot-activity>.danger:hover{background:#f8e9e3;color:#9c3d2e}
@@ -278,3 +282,4 @@
 .prayer-city-selected p{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0}
 .day-plan-content .planned-activity-controls>label input[type=time]{text-align:center;font-variant-numeric:tabular-nums}
 .day-plan-content .planned-activity-controls>label .time-text{font-size:12px;font-weight:700;color:#244638;text-align:center}
+

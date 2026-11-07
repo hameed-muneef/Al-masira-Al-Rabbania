@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {
-  Bookmark, BookmarkCheck, Copy, Share2, Search, StickyNote, Plus, Trash2, Sun, Moon,
-  Minus, Maximize2, ChevronRight, ChevronLeft, Save, ListChecks, Play, Pause, Square, Loader2,
+  Bookmark, BookmarkCheck, Copy, Share2, Search, StickyNote, Plus, Trash2,
+  ChevronRight, ChevronLeft, Save, ListChecks, Play, Pause, Square, Loader2,
   Repeat, RotateCcw
 } from 'lucide-react';
 import type {QuranAsset} from '../../quran/types';
@@ -16,6 +16,14 @@ import {EmptyNote, QuranVerseText, ReferenceBadge, copyText, shareText} from './
 import {loadReciters, audioUrl, defaultMoshaf, type Reciter} from '../../quran/audio';
 import {fetchAyahAudioUrl, fetchSurahAyahAudioUrls} from '../../quran/ayah-audio';
 import {passageAyahs, progressLabel, clampRepeat, type MemorizationProgress} from '../../quran/memorization-audio';
+
+const AUTO_SCROLL_SPEEDS = [
+  {value: 120, label: 'بطيء'},
+  {value: 240, label: 'متوسط'},
+  {value: 450, label: 'سريع'},
+  {value: 800, label: 'سريع جدًا'},
+  {value: 1400, label: 'الأسرع'},
+];
 
 type Props = {
   asset: QuranAsset;
@@ -43,6 +51,10 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
   const [reflection, setReflection] = useState(emptyReflection);
   const [jumpKind, setJumpKind] = useState<'juz' | 'hizb' | 'page'>('juz');
   const [jumpValue, setJumpValue] = useState(1);
+  const [autoScroll, setAutoScroll] = useState(false);
+  const [autoScrollSpeed, setAutoScrollSpeed] = useState(240);
+  const [scrollMenu, setScrollMenu] = useState<{x:number;y:number}|null>(null);
+  const autoScrollSpeedRef = useRef(autoScrollSpeed);
 
   // Audio recitation
   const [reciters, setReciters] = useState<Reciter[]>([]);
@@ -163,6 +175,29 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
 
   // Cleanup on unmount
   useEffect(() => { return () => { stopAudio(); stopAyahAudio(); }; }, []);
+
+  useEffect(()=>{autoScrollSpeedRef.current=autoScrollSpeed},[autoScrollSpeed]);
+  useEffect(()=>{
+    if(!autoScroll) return;
+    let frame=0;
+    let last=performance.now();
+    const root=document.documentElement;
+    root.style.scrollBehavior='auto';
+    const tick=(now:number)=>{
+      const delta=Math.max(0,(now-last)/1000);
+      last=now;
+      root.scrollTop += autoScrollSpeedRef.current*delta;
+      const maxScroll=document.documentElement.scrollHeight-window.innerHeight;
+      if(window.scrollY>=maxScroll-4){setAutoScroll(false);return}
+      frame=requestAnimationFrame(tick);
+    };
+    const pauseOnManualScroll=()=>setAutoScroll(false);
+    window.addEventListener('wheel',pauseOnManualScroll,{passive:true});
+    window.addEventListener('touchstart',pauseOnManualScroll,{passive:true});
+    frame=requestAnimationFrame(tick);
+    return ()=>{cancelAnimationFrame(frame);window.removeEventListener('wheel',pauseOnManualScroll);window.removeEventListener('touchstart',pauseOnManualScroll);root.style.scrollBehavior='smooth'};
+  },[autoScroll]);
+  useEffect(()=>{setAutoScroll(false)},[surahNumber]);
 
   // ---- Memorization mode state ----
   const [memoMode, setMemoMode] = useState(false);
@@ -371,14 +406,14 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
   const filteredSurahs = asset.surahs.filter(item => !surahFilter.trim() || item.name.includes(surahFilter.trim()) || String(item.n) === surahFilter.trim());
   const basmala = basmalaText(asset);
 
-  return <div className={`quran-reader ${state.settings.theme === 'dark' ? 'theme-dark' : ''}`}>
+  return <div className="quran-reader">
     <div className="quran-reader-toolbar panel">
-      <label>السورة
+      <label className="quran-toolbar-group quran-surah-group">السورة
         <select value={surahNumber} onChange={event => setSurahNumber(Number(event.target.value))}>
           {asset.surahs.map(item => <option key={item.n} value={item.n}>{item.n}. {item.name}</option>)}
         </select>
       </label>
-      <div className="quran-jump">
+      <div className="quran-jump quran-toolbar-group">
         <label>الانتقال
           <select value={jumpKind} onChange={event => { setJumpKind(event.target.value as typeof jumpKind); setJumpValue(1); }}>
             <option value="juz">جزء</option>
@@ -392,15 +427,26 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
               .map(value => <option key={value} value={value}>{toArabicNumber(value)}</option>)}
           </select>
         </label>
-        <button className="soft-btn" onClick={jump}>انتقال</button>
+        <button className="soft-btn quran-jump-go" onClick={jump}>انتقال</button>
       </div>
-      <div className="quran-display-controls">
-        <button className="icon-btn" aria-label="تصغير الخط" onClick={() => patch({settings: {...state.settings, fontSize: Math.max(18, state.settings.fontSize - 2)}})}><Minus size={16}/></button>
-        <span className="quran-font-size">{toArabicNumber(state.settings.fontSize)}</span>
-        <button className="icon-btn" aria-label="تكبير الخط" onClick={() => patch({settings: {...state.settings, fontSize: Math.min(64, state.settings.fontSize + 2)}})}><Maximize2 size={16}/></button>
-        <button className="soft-btn" onClick={() => patch({settings: {...state.settings, theme: state.settings.theme === 'dark' ? 'light' : 'dark'}})}>
-          {state.settings.theme === 'dark' ? <Sun size={16}/> : <Moon size={16}/>} {state.settings.theme === 'dark' ? 'نهاري' : 'ليلي'}
-        </button>
+      <div className="quran-font-controls quran-toolbar-group" aria-label="حجم الخط">
+        <span className="quran-toolbar-title">حجم الخط</span>
+        <div className="quran-font-actions">
+          <button type="button" className="quran-font-step" aria-label="تصغير الخط" title="تصغير الخط" onClick={() => patch({settings: {...state.settings, fontSize: Math.max(18, state.settings.fontSize - 2)}})}>A−</button>
+          <span className="quran-font-size" aria-label="حجم الخط الحالي">{toArabicNumber(state.settings.fontSize)}</span>
+          <button type="button" className="quran-font-step" aria-label="تكبير الخط" title="تكبير الخط" onClick={() => patch({settings: {...state.settings, fontSize: Math.min(64, state.settings.fontSize + 2)}})}>A+</button>
+        </div>
+      </div>
+      <div className="quran-scroll-controls quran-toolbar-group">
+        <span className="quran-toolbar-title">سرعة التمرير</span>
+        <div className="quran-scroll-actions">
+          <button type="button" className={autoScroll?'soft-btn selected':'soft-btn'} aria-pressed={autoScroll} onClick={() => setAutoScroll(value=>!value)}>
+            {autoScroll ? <Pause size={16}/> : <Play size={16}/>} {autoScroll ? 'إيقاف' : 'تمرير تلقائي'}
+          </button>
+          <select value={autoScrollSpeed} onChange={event=>setAutoScrollSpeed(Number(event.target.value))} aria-label="سرعة التمرير التلقائي">
+            {AUTO_SCROLL_SPEEDS.map(speed=><option key={speed.value} value={speed.value}>{speed.label}</option>)}
+          </select>
+        </div>
       </div>
       <div className="quran-audio-controls">
         <label>القارئ
@@ -500,6 +546,16 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
       </div>
     </div>
 
+    {scrollMenu && <div className="quran-scroll-menu-backdrop" onClick={()=>setScrollMenu(null)}>
+      <div className="quran-scroll-menu" role="menu" aria-label="خيارات التمرير التلقائي" style={{left:scrollMenu.x,top:scrollMenu.y}} onClick={event=>event.stopPropagation()}>
+        <div className="quran-scroll-menu-title">تمرير تلقائي</div>
+        {AUTO_SCROLL_SPEEDS.map(speed=><button key={speed.value} type="button" role="menuitem" className={autoScroll&&autoScrollSpeed===speed.value?'active':''} onClick={()=>{setAutoScrollSpeed(speed.value);setAutoScroll(true);setScrollMenu(null)}}>
+          {autoScroll&&autoScrollSpeed===speed.value?<Pause size={15}/>:<Play size={15}/>} {speed.label}
+        </button>)}
+        {autoScroll && <button type="button" role="menuitem" className="quran-scroll-menu-stop" onClick={()=>{setAutoScroll(false);setScrollMenu(null)}}><Square size={15}/> إيقاف التمرير</button>}
+      </div>
+    </div>}
+
     <div className="quran-reader-grid">
       <aside className="panel quran-surah-list">
         <div className="quran-list-head"><h3>السور</h3><span>{toArabicNumber(114)} سورة</span></div>
@@ -513,7 +569,13 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
         </div>
       </aside>
 
-      <section className="quran-mushaf panel" style={{fontSize: `${state.settings.fontSize}px`}}>
+      <section className="quran-mushaf panel" style={{fontSize: `${state.settings.fontSize}px`}} onContextMenu={event=>{
+        event.preventDefault();
+        setScrollMenu({
+          x: Math.max(8, Math.min(event.clientX, window.innerWidth - 196)),
+          y: Math.max(8, Math.min(event.clientY, window.innerHeight - 254)),
+        });
+      }}>
         <header className="quran-surah-header">
           <div>
             <span className="eyebrow">المصحف الشريف · {asset.narration}</span>

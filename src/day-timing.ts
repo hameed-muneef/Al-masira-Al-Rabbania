@@ -36,3 +36,14 @@ export function resolveActivityTime(timing:ActivityTiming,anchors:Record<string,
   const total=h*60+m+timing.offset;
   return {time,dayNote:total<0?'اليوم السابق':total>=1440?'اليوم التالي':''};
 }
+/** تحويل معرّف الفترة المخزنة قديمًا (مثل after-fajr-300 أو time-05-30) إلى وقت HH:MM وفق مواقيت اليوم */
+export function slotClockTime(slotId:string|undefined,prayers:Record<string,string>):string {
+  if(!slotId)return '';
+  const legacy=/^time-(\d{2})-(\d{2})$/.exec(slotId);
+  if(legacy)return `${legacy[1]}:${legacy[2]}`;
+  if(slotId==='before-fajr-30'||slotId.startsWith('before-fajr'))return offsetTime(prayers['الفجر'],-30);
+  const match=/^after-(fajr|dhuhr|asr|maghrib|isha)-(\d+)$/.exec(slotId);
+  if(!match)return '';
+  const anchors:Record<string,string>={fajr:'الفجر',dhuhr:'الظهر',asr:'العصر',maghrib:'المغرب',isha:'العشاء'};
+  return offsetTime(prayers[anchors[match[1]]],30+Number(match[2]));
+}

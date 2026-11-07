@@ -25,7 +25,7 @@ body::before{
 }
 [data-theme="dark"] body::before{
   background-image:var(--pattern-geometry);
-  opacity:.7;
+  opacity:.22;
   mask-image:radial-gradient(1200px 800px at 50% 0%, rgba(255,255,255,.4), transparent 90%);
   -webkit-mask-image:radial-gradient(1200px 800px at 50% 0%, rgba(255,255,255,.4), transparent 90%);
 }
@@ -192,7 +192,113 @@ body:has(.learning-content) body::before{opacity:.18}
 [data-theme="light"] #root .app .mobile-nav button.active,
 :root:not([data-theme="dark"]) #root .app .mobile-nav button.active{color:#1F5140;font-weight:800}
 [data-theme="dark"] #root .app .mobile-nav{box-shadow:0 -6px 22px rgba(0,0,0,.45)}
+@media(min-width:1201px){
+  #root .app .topbar{position:relative}
+  #root .app .topbar>.top-reminder{
+    position:absolute;left:50%;transform:translateX(-50%);width:min(52vw,640px);max-width:640px;margin:0;z-index:0
+  }
+  #root .app .topbar>.crumb,#root .app .topbar>.top-actions{position:relative;z-index:1}
+}
+
+/* The reader may stay in its own light theme while the application is dark.
+   Give its controls the same warm paper language as the mushaf instead of
+   inheriting navy app controls. */
+#root .app .quran-reader:not(.theme-dark) .quran-reader-toolbar,
+#root .app .quran-reader:not(.theme-dark) .quran-surah-list,
+#root .app .quran-reader:not(.theme-dark) .quran-surah-scroll,
+#root .app .quran-reader:not(.theme-dark) .quran-reader-grid > .panel{
+  background:linear-gradient(165deg,#F8F5EC,#EEE8DA);
+  color:#27332E;
+  border-color:#CFC5B2;
+  box-shadow:0 8px 24px rgba(19,39,52,.16);
+}
+#root .app .quran-reader:not(.theme-dark) .quran-reader-toolbar select,
+#root .app .quran-reader:not(.theme-dark) .quran-reader-toolbar input,
+ #root .app .quran-reader:not(.theme-dark) .quran-surah-filter,
+#root .app .quran-reader:not(.theme-dark) .quran-surah-filter input,
+#root .app .quran-reader:not(.theme-dark) .quran-search input,
+#root .app .quran-reader:not(.theme-dark) .quran-hadith-search input{
+  background:#E8E0D1;
+  color:#27332E;
+  border-color:#BFB29D;
+}
+#root .app .quran-reader:not(.theme-dark) .quran-surah-filter input::placeholder,
+#root .app .quran-reader:not(.theme-dark) .quran-search input::placeholder{color:#766F64;opacity:1}
+#root .app .quran-reader:not(.theme-dark) .quran-surah-scroll button:hover{background:#E6DECF}
+#root .app .quran-reader:not(.theme-dark) .quran-surah-scroll button.active{background:#DDE5DF;box-shadow:inset -3px 0 #527F8B}
+#root .app .quran-reader:not(.theme-dark) .quran-surah-scroll strong,
+#root .app .quran-reader:not(.theme-dark) .quran-surah-scroll button{color:#27332E}
+#root .app .quran-reader:not(.theme-dark) .quran-reader-toolbar .soft-btn,
+#root .app .quran-reader:not(.theme-dark) .quran-reader-toolbar .icon-btn,
+#root .app .quran-reader:not(.theme-dark) .quran-memo-controls .soft-btn{
+  background:#E1D9C9;
+  border:1px solid #B9AD98;
+  color:#29463B;
+  box-shadow:0 2px 5px rgba(30,50,42,.12);
+}
+#root .app .quran-reader:not(.theme-dark) .quran-reader-toolbar .soft-btn:hover,
+#root .app .quran-reader:not(.theme-dark) .quran-reader-toolbar .icon-btn:hover,
+#root .app .quran-reader:not(.theme-dark) .quran-memo-controls .soft-btn:hover{
+  background:#D5CCBA;
+  color:#1D382F;
+}
+#root .app .quran-reader:not(.theme-dark) .quran-reader-toolbar label,
+#root .app .quran-reader:not(.theme-dark) .quran-reader-toolbar .muted{color:#6B756C}
+
+/* Softer green card family for the dark application theme. */
+[data-theme="dark"] #root .app .feature-card,
+[data-theme="dark"] #root .app .wide-card,
+[data-theme="dark"] #root .app .wird-card,
+[data-theme="dark"] #root .app .journey-library-card,
+[data-theme="dark"] #root .app .home-next-card{
+  background:linear-gradient(145deg,#29483B 0%,#213A32 100%);
+  border-color:#527C6A;
+  color:#EDEDED;
+}
+[data-theme="dark"] #root .app main:not(:has(.quran-reader)) .panel{
+  background:linear-gradient(145deg,#29483B 0%,#213A32 100%);
+  border-color:#527C6A;
+}
+[data-theme="dark"] #root .app .feature-card:hover,
+[data-theme="dark"] #root .app .wide-card:hover,
+[data-theme="dark"] #root .app .wird-card:hover,
+[data-theme="dark"] #root .app .journey-library-card:hover,
+[data-theme="dark"] #root .app .home-next-card:hover{
+  background:linear-gradient(145deg,#315744 0%,#27463A 100%);
+  border-color:#79A98F;
+}
+[data-theme="dark"] #root .app .feature-card p,
+[data-theme="dark"] #root .app .wide-card p,
+[data-theme="dark"] #root .app .wird-card p,
+[data-theme="dark"] #root .app .journey-library-card p{color:#C8D8CE}
+
+/* Match Quran/Sunnah cards to the soft green dark-mode card family. */
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-intro,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-section-grid button,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-hadith-list li,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-hadith-book-grid button,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-today-list li,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-journey-stats>div{
+  background:linear-gradient(145deg,#29483B 0%,#213A32 100%);
+  border-color:#527C6A;
+  color:#EDEDED;
+}
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-section-grid button:hover,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-section-grid button.active,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-hadith-book-grid button:hover{
+  background:linear-gradient(145deg,#315744 0%,#27463A 100%);
+  border-color:#79A98F;
+}
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-section-grid strong,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-section-grid small,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-hadith-list li strong,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-hadith-list li p,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-hadith-book-grid button strong,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-hadith-book-grid button span,
+[data-theme="dark"] #root .app main[data-section="quran"] .quran-journey-stats>div{color:#EDEDED}
 #root .app footer{border-top:1px solid var(--line-card);color:var(--color-muted)}
+#root .app .crumb-home{border:0;background:transparent;color:var(--color-muted);font:inherit;font-weight:700;padding:4px 6px;border-radius:7px;cursor:pointer}
+#root .app .crumb-home:hover,#root .app .crumb-home:focus-visible{color:var(--color-ink);background:color-mix(in srgb,var(--section-accent,var(--color-primary)) 12%,transparent);outline:2px solid var(--color-focus);outline-offset:2px}
 #root .app details summary{
   border-radius:10px;transition:background-color .16s;
 }
@@ -587,7 +693,7 @@ body:has(.learning-content) body::before{opacity:.18}
   --art-hero:url('/backgrounds/zakhareph-hero.jpg');
   --art-opacity:.07;
 }
-[data-theme="dark"]{--art-opacity:.14}
+[data-theme="dark"]{--art-opacity:.08}
 /* طبقة خلفية عامة: artwork + قناع تلاشي */
 body::after{
   content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
@@ -597,7 +703,13 @@ body::after{
   mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.6) 55%,transparent 100%);
   -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.6) 55%,transparent 100%);
 }
-[data-theme="dark"] body::after{filter:saturate(.7) brightness(.5)}
+[data-theme="dark"] body::after{
+  background-image:linear-gradient(180deg,rgba(3,14,28,.70),rgba(5,20,36,.82)),url('/backgrounds/2026.jpg');
+  background-position:center top;
+  background-size:cover;
+  opacity:.72;
+  filter:none;
+}
 /* hero: artwork + تدرج forest (نص readable) */
 #root .app .hero{
   background:
@@ -722,3 +834,8 @@ html #root .app .sidebar nav button.active svg{color:#F3D48E}
 html #root .app .sidebar .side-bottom p{color:#A9B7C9;font-size:14px;border-top-color:rgba(214,183,123,.2)}
 html #root .app .sidebar .side-bottom p span{color:#8C9BB0;font-size:12px}
 @media (prefers-reduced-motion:reduce){html #root .app .sidebar nav button{transition:none;transform:none}}
+@media(min-width:1201px){
+  #root .app .topbar{position:relative}
+  #root .app .topbar>.top-reminder{position:absolute;left:50%;transform:translateX(-50%);width:min(52vw,640px);max-width:640px;margin:0;z-index:0}
+  #root .app .topbar>.crumb,#root .app .topbar>.top-actions{position:relative;z-index:1}
+}

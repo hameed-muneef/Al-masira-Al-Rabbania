@@ -160,92 +160,176 @@
 /* ---------- القارئ ---------- */
 
 .quran-reader-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px 18px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: end;
+  gap: 16px 20px;
   margin-bottom: 0;
-  padding: 16px 18px;
+  padding: 20px;
+  background: linear-gradient(145deg, #F8F5EC 0%, #EFE9DC 100%);
+  border-color: #CFC5B2;
 }
-
-.quran-reader-toolbar label,
+.quran-reader-toolbar > label,
+.quran-reader-toolbar > .quran-toolbar-group,
+.quran-jump label {
+  display: grid;
+  gap: 6px;
+  align-content: end;
+  font-size: 12px;
+  font-weight: 800;
+  color: #526058;
+}
+.quran-reader-toolbar > label,
+.quran-reader-toolbar > .quran-toolbar-group{grid-column: span 3}
 .quran-form-row label,
 .quran-hadith-search label {
   display: grid;
-  gap: 5px;
+  gap: 6px;
   font-size: 12px;
-  font-weight: 700;
-  color: var(--color-muted);
+  font-weight: 800;
+  color: #526058;
 }
-
+.quran-toolbar-group .quran-toolbar-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #526058;
+}
 .quran-reader-toolbar select,
 .quran-form-row input,
 .quran-form-row select,
 .quran-hadith-search input {
   min-width: 0;
+  height: 42px;
+  padding: 8px 11px;
+  border: 1px solid #CFC5B2;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #27332E;
+  font: inherit;
+  box-shadow: 0 1px 3px rgba(42,61,53,.06);
 }
-
+.quran-reader-toolbar select:focus-visible,
+.quran-form-row input:focus-visible,
+.quran-form-row select:focus-visible,
+.quran-hadith-search input:focus-visible{
+  outline: 3px solid #B7CFAE;
+  outline-offset: 2px;
+  border-color: #527F8B;
+}
 .quran-jump {
+  grid-column: span 4;
   display: flex;
-  align-items: flex-end;
+  align-items: end;
   gap: 8px;
 }
-
-.quran-display-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-inline-start: auto;
+.quran-jump .soft-btn.quran-jump-go {
+  height: 42px;
+  border: 1px solid #CFC5B2;
+  border-radius: 10px;
+  background: #E7DEC9;
+  color: #29463B;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(42,61,53,.06);
 }
+.quran-jump .soft-btn.quran-jump-go:hover{background:#DCCEB6}
+.quran-font-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  height: 42px;
+}
+.quran-font-step {
+  min-width: 42px;
+  border: 1px solid #CFC5B2;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #27332E;
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 1px 3px rgba(42,61,53,.06);
+}
+.quran-font-step:hover{background:#EFE9DC}
+.quran-font-actions .quran-font-size{display:flex;align-items:center;justify-content:center}
+.quran-scroll-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  height: 42px;
+}
+.quran-scroll-actions .soft-btn {
+  height: 42px;
+  border: 1px solid #CFC5B2;
+  border-radius: 10px;
+  background: #E7DEC9;
+  color: #29463B;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(42,61,53,.06);
+}
+.quran-scroll-actions .soft-btn:hover{background:#DCCEB6}
+.quran-scroll-actions .soft-btn.selected{background:var(--color-selected);color:var(--color-ink)}
+.quran-scroll-actions select{min-width:118px}
+.quran-scroll-menu-backdrop{position:fixed;inset:0;z-index:1000}
+.quran-scroll-menu{position:fixed;z-index:1001;width:188px;padding:8px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface);box-shadow:0 18px 42px rgba(16,34,28,.22)}
+.quran-scroll-menu-title{padding:8px 10px 6px;font-size:12px;font-weight:800;color:var(--color-muted)}
+.quran-scroll-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;color:var(--color-ink);font:inherit;font-weight:700;text-align:start;cursor:pointer}
+.quran-scroll-menu button:hover,.quran-scroll-menu button.active{background:var(--color-selected)}
+.quran-scroll-menu-stop{border-top:1px solid var(--color-border);border-radius:0 0 10px 10px;color:var(--color-error,#a64137)}
+
 
 .quran-audio-controls {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-top: 8px;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: var(--color-surface-warm);
+  margin-top: 0;
+  padding: 13px 15px;
+  border: 1px solid #D8CDB8;
+  border-radius: 14px;
+  background: #F5F0E5;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
 }
-
 .quran-audio-controls label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 800;
+  color: #526058;
 }
-
 .quran-audio-controls select {
-  padding: 6px 8px;
+  padding: 8px 10px;
   font-size: 13px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-surface);
-  color: var(--color-ink);
-  min-width: 120px;
+  border: 1px solid #CFC5B2;
+  border-radius: 9px;
+  background: #fffdf8;
+  color: #27332E;
+  min-width: 170px;
 }
-
 .quran-audio-controls button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 9px 13px;
+  border: 1px solid #CFC5B2;
+  border-radius: 9px;
+  background: #E7DEC9;
+  color: #29463B;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 800;
 }
-
+.quran-audio-controls button:hover:not(:disabled){background:#DCCEB6}
 .quran-memo-controls {
+  grid-column: 1 / -1;
   display: grid;
   gap: 10px;
-  margin-top: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-surface-warm);
+  margin-top: 0;
+  padding: 14px 15px;
+  border: 1px solid #D8CDB8;
+  border-radius: 14px;
+  background: #F8F5EC;
 }
 
 .quran-memo-controls .soft-btn.active {
@@ -344,6 +428,7 @@
   font-weight: 800;
   color: var(--color-primary);
 }
+
 
 .quran-reader-grid {
   display: grid;
@@ -1807,6 +1892,9 @@
 /* ---------- الاستجابة ---------- */
 
 @media (max-width: 1240px) {
+  .quran-reader-toolbar > label,
+  .quran-reader-toolbar > .quran-toolbar-group{grid-column: span 6}
+  .quran-jump{grid-column: span 6}
   .quran-reader-grid {
     grid-template-columns: 200px minmax(0, 1fr);
   }
@@ -1817,6 +1905,9 @@
 }
 
 @media (max-width: 1000px) {
+  .quran-reader-toolbar > label,
+  .quran-reader-toolbar > .quran-toolbar-group{grid-column: span 6}
+  .quran-jump{grid-column: span 6}
   .quran-section-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1835,9 +1926,6 @@
   .quran-surah-list {
     position: static;
     max-height: 260px;
-  }
-  .quran-display-controls {
-    margin-inline-start: 0;
   }
   .quran-hadith-search {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1868,11 +1956,16 @@
     grid-template-columns: 1fr;
   }
   .quran-reader-toolbar {
-    padding: 13px;
+    padding: 15px;
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
-  .quran-jump {
-    flex-wrap: wrap;
-  }
+  .quran-reader-toolbar > label,
+  .quran-reader-toolbar > .quran-toolbar-group,
+  .quran-jump{grid-column: 1 / -1}
+  .quran-jump{flex-wrap: wrap}
+  .quran-audio-controls{justify-content: stretch}
+  .quran-audio-controls label{flex: 1 1 100%}
   .quran-mushaf {
     padding: 15px 11px;
   }

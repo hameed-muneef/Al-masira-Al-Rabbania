@@ -6,3 +6,29 @@
   X-Frame-Options: DENY
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-XSS-Protection: 1; mode=block
+
+# HTML pages: always revalidate (prevent stale SPA shell)
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# Root and SPA fallback
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Hashed assets (JS/CSS with content hash): cache forever
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Static files without hash: short cache
+/*.js
+  Cache-Control: public, max-age=3600, must-revalidate
+/*.css
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# Service worker: never cache
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+/workbox-*.js
+  Cache-Control: no-cache, no-store, must-revalidate

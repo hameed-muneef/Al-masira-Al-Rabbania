@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>القرآن والسنة | Al-Rabbaniyyun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F1E4;--surface:#FFFDF7;--surface-2:#F0E9D6;--border:#D9CFB4;--border-strong:#8F8259;
+  --text:#1F2633;--text-muted:#555F6E;--gold:#7A5A12;--gold-accent:#C9A24A;
+  --primary:#1F3A5F;--on-primary:#FFFFFF;--success:#17703F;--danger:#B3382C;--focus:#1F3A5F;
+  --avatar-bg:#E8DFC8;--avatar-text:#1F3A5F;
+  --shadow:0 4px 16px rgba(60,45,10,.06);--shadow-scroll:0 8px 24px rgba(60,45,10,.12);
+  --radius:12px;--radius-pill:999px;
+  --header-h:64px;--gap:8px;--gap-sm:4px;
+  --font:'Cairo',sans-serif;--font-quran:'Amiri',serif;
+  color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#0B1424;--surface:#15233A;--surface-2:#1E3150;--border:#2A4066;--border-strong:#6F8FBF;
+  --text:#F4EFE3;--text-muted:#B8C4D6;--gold:#E3C170;--gold-accent:#F0D58C;
+  --primary:#9CC2FF;--on-primary:#0B1424;--success:#6FD9A0;--danger:#F59A92;--focus:#F0D58C;
+  --avatar-bg:#1E3150;--avatar-text:#E3C170;
+  --shadow:0 4px 16px rgba(0,0,0,.25);--shadow-scroll:0 8px 24px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;-webkit-font-smoothing:antialiased}
+body{overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:0;background:none}
+svg{max-width:100%;display:block}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* Header */
+.site-header{
+  position:sticky;top:0;z-index:100;
+  height:var(--header-h);
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow);
+  transition:border-color .2s,box-shadow .2s;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+[data-theme="dark"] .site-header{background:#15233A}
+[data-theme="light"] .site-header{background:#FFFDF7}
+.site-header.scrolled{box-shadow:var(--shadow-scroll)}
+.site-header-inner{
+  max-width:1440px;margin:0 auto;height:100%;
+  padding-inline:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  overflow:hidden;
+}
+
+/* Breadcrumb */
+.breadcrumb{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto}
+.breadcrumb a,.breadcrumb span{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.breadcrumb .crumb-parent{color:var(--text-muted);transition:color .2s}
+.breadcrumb .crumb-parent:hover{color:var(--text)}
+.breadcrumb .crumb-sep{color:var(--text-muted);flex:none;display:grid;place-items:center;width:16px;height:16px}
+.breadcrumb .crumb-sep svg{width:14px;height:14px}
+.breadcrumb .crumb-current{color:var(--text);font-weight:700}
+
+/* End group */
+.header-end{display:flex;align-items:center;gap:var(--gap);flex:none}
+
+/* Date block */
+.date-block{display:flex;flex-direction:column;align-items:flex-end;gap:0;line-height:1.2;min-width:0}
+.date-hijri{font-size:12px;color:var(--text-muted);font-weight:500}
+.date-greg{font-size:13px;color:var(--text);font-weight:600}
+@media (max-width:639px){.date-block{display:none}}
+
+/* Clock */
+.clock{display:inline-flex;align-items:center;gap:6px;font-size:16px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;min-width:92px;justify-content:flex-end;direction:ltr;unicode-bidi:isolate}
+.clock .clock-time{font-variant-numeric:tabular-nums}
+.clock .clock-ampm{font-size:12px;color:var(--text-muted);font-weight:600;margin-inline-start:2px}
+@media (max-width:639px){.clock .clock-seconds{display:none}.clock{min-width:68px;font-size:15px}}
+
+/* Icon button */
+.icon-btn{width:40px;height:40px;border-radius:var(--radius);background:transparent;border:1px solid transparent;
+  display:grid;place-items:center;color:var(--text-muted);transition:background .2s,border-color .2s,color .2s,transform .2s;position:relative}
+.icon-btn:hover{background:var(--surface-2);border-color:var(--border);color:var(--text);transform:translateY(-1px)}
+.icon-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.icon-btn:active{transform:translateY(0)}
+.icon-btn svg{width:20px;height:20px}
+
+/* Notification badge */
+.notif-badge{position:absolute;top:6px;inset-inline-end:6px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:2px solid var(--surface)}
+
+/* Theme toggle */
+.theme-toggle{width:40px;height:40px;border-radius:var(--radius);background:#F0E9D6;border:1px solid var(--border);
+  display:grid;place-items:center;color:var(--text);transition:border-color .2s,transform .2s}
+[data-theme="dark"] .theme-toggle{background:#1E3150}
+[data-theme="light"] .theme-toggle{background:#F0E9D6}
+.theme-toggle:hover{background:var(--surface);border-color:var(--border-strong);transform:translateY(-1px)}
+.theme-toggle:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.theme-toggle svg{width:20px;height:20px}
+
+/* Admin button */
+.admin-btn{display:inline-flex;align-items:center;gap:6px;height:40px;padding-inline:12px;border-radius:var(--radius);
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:700;
+  transition:background .2s,border-color .2s,transform .2s}
+.admin-btn:hover{background:var(--surface);border-color:var(--border-strong);transform:translateY(-1px)}
+.admin-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.admin-btn svg{width:16px;height:16px;color:var(--gold)}
+
+/* User pill */
+.user-pill{display:flex;align-items:center;gap:8px;height:40px;padding-inline:6px 12px;border-radius:var(--radius-pill);
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text);transition:background .2s,border-color .2s,transform .2s;cursor:pointer}
+.user-pill:hover{background:var(--surface);border-color:var(--border-strong);transform:translateY(-1px)}
+.user-pill:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--avatar-bg);color:var(--avatar-text);
+  display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+.user-name{font-size:13px;font-weight:700;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-chevron{color:var(--text-muted);display:grid;place-items:center}
+.user-chevron svg{width:14px;height:14px}
+
+/* Divider */
+.v-divider{width:1px;height:24px;background:var(--border);flex:none}
+
+/* Overflow menu (mobile) */
+.overflow-menu{display:none}
+@media (max-width:639px){
+  .overflow-menu{display:grid;place-items:center;width:40px;height:40px;border-radius:var(--radius);background:var(--surface-2);border:1px solid var(--border);color:var(--text)}
+  .admin-btn,.theme-toggle,.date-block,.clock{display:none}
+  .header-end{gap:6px}
+}
+
+/* Responsive tweaks */
+@media (max-width:768px){
+  .user-name{max-width:80px}
+  .admin-btn span{display:none}
+}
+@media (max-width:639px){
+  .site-header-inner{padding-inline:12px}
+  .user-name{max-width:60px}
+}
+
+/* Demo body */
+.demo-body{max-width:1440px;margin:0 auto;padding:24px 16px 64px}
+.demo-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.demo-card h2{font-size:20px;font-weight:700;margin-bottom:8px}
+.demo-card p{color:var(--text-muted);font-size:14px;line-height:1.8}
+.demo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+.demo-tile{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.demo-tile strong{display:block;font-size:24px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.demo-tile span{font-size:12px;color:var(--text-muted)}
+@media (max-width:768px){.demo-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.demo-grid{grid-template-columns:1fr}}
+
+/* Reduced motion */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;transform:none!important}}
+</style>
+</head>
+<body>
+<header class="site-header" id="siteHeader">
+  <div class="site-header-inner">
+    <!-- Breadcrumb (start side) -->
+    <nav class="breadcrumb" aria-label="مسار التنقل">
+      <a href="#" class="crumb-parent">الربانيون</a>
+      <span class="crumb-sep" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></span>
+      <span class="crumb-current" aria-current="page">القرآن والسنة</span>
+    </nav>
+
+    <!-- End side controls -->
+    <div class="header-end">
+      <!-- Date block -->
+      <div class="date-block" aria-label="التاريخ">
+        <span class="date-hijri" id="hijriDate">٢٨ جمادى الأولى ١٤٤٨ هـ</span>
+        <span class="date-greg" id="gregDate">الأحد، ٨ نوفمبر</span>
+      </div>
+
+      <span class="v-divider" aria-hidden="true"></span>
+
+      <!-- Clock -->
+      <span class="clock" id="clock" aria-live="off" aria-label="الوقت الحالي">
+        <span class="clock-time" id="clockTime">٠٦:٤٧:٠٩</span>
+        <span class="clock-ampm" id="clockAmpm">م</span>
+      </span>
+
+      <span class="v-divider" aria-hidden="true"></span>
+
+      <!-- Admin button -->
+      <a href="/admin" class="admin-btn" aria-label="لوحة الإدارة">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>لوحة الإدارة</span>
+      </a>
+
+      <!-- Theme toggle -->
+      <button class="theme-toggle" id="themeToggle" aria-label="تبديل المظهر" title="تبديل المظهر" aria-pressed="false">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+
+      <!-- Notifications -->
+      <button class="icon-btn" aria-label="الإشعارات" style="position:relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span class="notif-badge" aria-label="إشعارات غير مقروءة"></span>
+      </button>
+
+      <!-- User pill -->
+      <button class="user-pill" aria-label="حسابي: حميد منيف" aria-haspopup="true">
+        <span class="user-avatar" aria-hidden="true">ح</span>
+        <span class="user-name">حميد منيف</span>
+        <span class="user-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+      </button>
+
+      <!-- Overflow menu (mobile) -->
+      <button class="overflow-menu" aria-label="المزيد" aria-haspopup="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="demo-body">
+  <div class="demo-card">
+    <h2>محتوى تجريبي</h2>
+    <p>هذا المحتوى لعرض سلوك الرأس (sticky) وتأثير التمرير (shadow on scroll). انتقل للأسفل لرؤية header يبقى ثابتًا في الأعلى.</p>
+    <div class="demo-grid">
+      <div class="demo-tile"><strong>٢٤</strong><span>جلسة قراءة</span></div>
+      <div class="demo-tile"><strong>١٥٦</strong><span>آية محفوظة</span></div>
+      <div class="demo-tile"><strong>٧</strong><span>أجزاء مكتملة</span></div>
+      <div class="demo-tile"><strong>٥/٧</strong><span>الانتظام</span></div>
+      <div class="demo-tile"><strong>٨٥٪</strong><span>نسبة النجاح</span></div>
+      <div class="demo-tile"><strong>١٢</strong><span>مراجعة اليوم</span></div>
+    </div>
+  </div>
+  <div class="demo-card"><h2>قسم آخر</h2><p>محتوى إضافي لاختبار التمرير والظلال.</p></div>
+  <div class="demo-card"><h2>قسم ثالث</h2><p>المزيد من المحتوى.</p></div>
+  <div class="demo-card"><h2>قسم رابع</h2><p>المزيد من المحتوى.</p></div>
+  <div class="demo-card"><h2>قسم خامس</h2><p>المزيد من المحتوى.</p></div>
+</main>
+
+<script>
+(function(){
+  const KEY='rabbani-theme-v1';
+  const btn=document.getElementById('themeToggle');
+  const icon=document.getElementById('themeIcon');
+  const sunPath='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>';
+  const moonPath='<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+  const monitorPath='<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>';
+  const ORDER=['system','light','dark'];
+  function apply(mode){
+    const dark = mode==='dark' || (mode==='system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+    document.documentElement.style.colorScheme=dark?'dark':'light';
+    icon.innerHTML = mode==='dark'?moonPath : mode==='light'?sunPath : monitorPath;
+    btn.setAttribute('aria-pressed', mode==='dark'?'true':'false');
+    btn.setAttribute('aria-label', mode==='dark'?'المظهر: ليلي — اضغط للتغيير': mode==='light'?'المظهر: نهاري — اضغط للتغيير':'المظهر: تلقائي — اضغط للتغيير');
+  }
+  function init(){
+    let saved=null;try{saved=localStorage.getItem(KEY)}catch(e){}
+    apply(saved==='light'||saved==='dark'||saved==='system'?saved:'system');
+  }
+  init();
+  btn.addEventListener('click',()=>{
+    let saved=null;try{saved=localStorage.getItem(KEY)}catch(e){}
+    const cur = saved==='light'||saved==='dark'||saved==='system'?saved:'system';
+    const next = ORDER[(ORDER.indexOf(cur)+1)%ORDER.length];
+    try{localStorage.setItem(KEY,next)}catch(e){}
+    apply(next);
+  });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{
+    let saved=null;try{saved=localStorage.getItem(KEY)}catch(e){}
+    if(saved!=='light'&&saved!=='dark') apply('system');
+  });
+
+  // Clock
+  const clockTime=document.getElementById('clockTime');
+  const clockAmpm=document.getElementById('clockAmpm');
+  function pad(n){return String(n).padStart(2,'0')}
+  function toAr(n){return n.toLocaleString('ar-EG')}
+  function tick(){
+    const now=new Date();
+    const h=now.getHours();const m=now.getMinutes();const s=now.getSeconds();
+    const ampm = h>=12?'م':'ص';
+    const h12 = h%12||12;
+    clockTime.textContent = toAr(h12)+':'+pad(m).replace(/\d/g,d=>String.fromCharCode(0x0660+d.charCodeAt(0)-0x30)) +':'+pad(s).replace(/\d/g,d=>String.fromCharCode(0x0660+d.charCodeAt(0)-0x30));
+    clockAmpm.textContent=ampm;
+  }
+  tick(); setInterval(tick,1000);
+
+  // Hijri date
+  function updateDates(){
+    const now=new Date();
+    const greg = new Intl.DateTimeFormat('ar-EG',{weekday:'long',day:'numeric',month:'long'}).format(now);
+    document.getElementById('gregDate').textContent=greg;
+    const hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'}).format(now);
+    document.getElementById('hijriDate').textContent=hijri+' هـ';
+  }
+  updateDates(); setInterval(updateDates,60000);
+
+  // Scroll shadow
+  const header=document.getElementById('siteHeader');
+  window.addEventListener('scroll',()=>{ header.classList.toggle('scrolled', window.scrollY>4) }, {passive:true});
+})();
+</script>
+</body>
+</html>

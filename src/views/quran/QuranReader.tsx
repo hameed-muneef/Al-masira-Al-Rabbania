@@ -8,11 +8,12 @@ import type {QuranAsset} from '../../quran/types';
 import type {QuranLearningState, QuranReflection} from '../../quran/types';
 import {
   basmalaText, findVerse, navigationTarget, referenceLabel, searchVerses,
-  showsBasmala, surahInfo, surahVerses, toArabicNumber, verseBody
+  showsBasmala, surahInfo, surahVerses, toArabicNumber, verseBody, verseMarker
 } from '../../quran/content';
 import {dateKey} from '../../quran/learning';
 import {uid} from '../../id';
 import {EmptyNote, QuranVerseText, ReferenceBadge, copyText, shareText} from './ui';
+import {fetchTranslation, fetchTafsir, fetchAsbabNuzul, TRANSLATIONS, TAFSIRS, type FetchState} from '../../quran/content-api';
 import {loadReciters, audioUrl, defaultMoshaf, type Reciter} from '../../quran/audio';
 import {fetchAyahAudioUrl, fetchSurahAyahAudioUrls} from '../../quran/ayah-audio';
 import {passageAyahs, progressLabel, clampRepeat, type MemorizationProgress} from '../../quran/memorization-audio';
@@ -41,12 +42,45 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
   const [surahNumber, setSurahNumber] = useState(start?.surah ?? 1);
   const [focusAyah, setFocusAyah] = useState(start?.ayah ?? 1);
   const [surahFilter, setSurahFilter] = useState('');
+  const [readingMode, setReadingMode] = useState<'continuous' | 'verse'>(() => {
+    try { return localStorage.getItem('quran-reading-mode') === 'continuous' ? 'continuous' : 'verse'; } catch { return 'verse'; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('quran-reading-mode', readingMode); } catch { /* ignore */ }
+  }, [readingMode]);
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [rangeStart, setRangeStart] = useState(1);
   const [rangeEnd, setRangeEnd] = useState(1);
   const [noteText, setNoteText] = useState('');
   const [noteAyah, setNoteAyah] = useState<number | null>(null);
+  const [contentAyah, setContentAyah] = useState<number | null>(null);
+  const [contentTab, setContentTab] = useState<'translation' | 'tafsir' | 'asbab'>('tafsir');
+  const [translationId, setTranslationId] = useState<number>(TRANSLATIONS[0].id);
+  const [tafsirId, setTafsirId] = useState<number>(TAFSIRS[0].id);
+  const [contentState, setContentState] = useState<FetchState<string>>({ status: 'idle', data: null });
+
+  useEffect(() => {
+    if (contentAyah == null) { setContentState({ status: 'idle', data: null }); return; }
+    const key = `${surahNumber}:${contentAyah}`;
+    const controller = new AbortController();
+    setContentState({ status: 'loading', data: null });
+    const run = async () => {
+      try {
+        let text: string | null = null;
+        if (contentTab === 'translation') text = await fetchTranslation(key, translationId, controller.signal);
+        else if (contentTab === 'tafsir') text = await fetchTafsir(key, tafsirId, controller.signal);
+        else text = await fetchAsbabNuzul(key, controller.signal);
+        if (controller.signal.aborted) return;
+        setContentState(text ? { status: 'success', data: text } : { status: 'empty', data: null });
+      } catch (e) {
+        if (controller.signal.aborted) return;
+        setContentState({ status: 'error', data: null, error: 'تعذّر جلب البيانات. تحقق من الاتصال.' });
+      }
+    };
+    void run();
+    return () => controller.abort();
+  }, [contentAyah, contentTab, translationId, tafsirId, surahNumber]);
   const [reflectAyah, setReflectAyah] = useState<number | null>(null);
   const [reflection, setReflection] = useState(emptyReflection);
   const [jumpKind, setJumpKind] = useState<'juz' | 'hizb' | 'page'>('juz');
@@ -408,27 +442,51 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
 
   return <div className="quran-reader">
     <div className="quran-reader-toolbar panel">
-      <label className="quran-toolbar-group quran-surah-group">السورة
-        <select value={surahNumber} onChange={event => setSurahNumber(Number(event.target.value))}>
-          {asset.surahs.map(item => <option key={item.n} value={item.n}>{item.n}. {item.name}</option>)}
-        </select>
-      </label>
-      <div className="quran-jump quran-toolbar-group">
-        <label>الانتقال
-          <select value={jumpKind} onChange={event => { setJumpKind(event.target.value as typeof jumpKind); setJumpValue(1); }}>
-            <option value="juz">جزء</option>
-            <option value="hizb">حزب</option>
-            <option value="page">صفحة</option>
+      <div className="quran-toolbar-column quran-nav-column">
+        <div className="quran-section-label">التنقل</div>
+        <label className="quran-toolbar-group quran-surah-group">السورة
+          <select value={surahNumber} onChange={event => setSurahNumber(Number(event.target.value))}>
+            {asset.surahs.map(item => <option key={item.n} value={item.n}>{item.n}. {item.name}</option>)}
           </select>
         </label>
-        <label>الرقم
-          <select value={jumpValue} onChange={event => setJumpValue(Number(event.target.value))}>
-            {Array.from({length: jumpKind === 'juz' ? 30 : jumpKind === 'hizb' ? 60 : 604}, (_, index) => index + 1)
-              .map(value => <option key={value} value={value}>{toArabicNumber(value)}</option>)}
-          </select>
-        </label>
-        <button className="soft-btn quran-jump-go" onClick={jump}>انتقال</button>
+        <div className="quran-jump quran-toolbar-group">
+          <label>الانتقال
+            <select value={jumpKind} onChange={event => { setJumpKind(event.target.value as typeof jumpKind); setJumpValue(1); }}>
+              <option value="juz">جزء</option>
+              <option value="hizb">حزب</option>
+              <option value="page">صفحة</option>
+            </select>
+          </label>
+          <label>الرقم
+            <select value={jumpValue} onChange={event => setJumpValue(Number(event.target.value))}>
+              {Array.from({length: jumpKind === 'juz' ? 30 : jumpKind === 'hizb' ? 60 : 604}, (_, index) => index + 1)
+                .map(value => <option key={value} value={value}>{toArabicNumber(value)}</option>)}
+            </select>
+          </label>
+          <button className="soft-btn quran-jump-go" onClick={jump}>انتقال</button>
+        </div>
+        <div className="quran-section-label">القراءة</div>
+        <div className="quran-reading-mode-group quran-toolbar-group" aria-label="وضع القراءة">
+          <span className="quran-toolbar-title">وضع القراءة</span>
+          <div className="quran-reading-mode">
+            <button type="button" className={readingMode === 'continuous' ? 'selected' : ''} onClick={() => setReadingMode('continuous')}>متواصل</button>
+            <button type="button" className={readingMode === 'verse' ? 'selected' : ''} onClick={() => setReadingMode('verse')}>آية بآية</button>
+          </div>
+        </div>
+        <div className="quran-scroll-controls quran-toolbar-group">
+          <span className="quran-toolbar-title">سرعة التمرير</span>
+          <div className="quran-scroll-actions">
+            <button type="button" className={autoScroll?'soft-btn selected':'soft-btn'} aria-pressed={autoScroll} onClick={() => setAutoScroll(value=>!value)}>
+              {autoScroll ? <Pause size={16}/> : <Play size={16}/>} {autoScroll ? 'إيقاف' : 'تمرير تلقائي'}
+            </button>
+            <select value={autoScrollSpeed} onChange={event=>setAutoScrollSpeed(Number(event.target.value))} aria-label="سرعة التمرير التلقائي">
+              {AUTO_SCROLL_SPEEDS.map(speed=><option key={speed.value} value={speed.value}>{speed.label}</option>)}
+            </select>
+          </div>
+        </div>
       </div>
+      <div className="quran-toolbar-column quran-options-column">
+        <div className="quran-section-label">القراءة</div>
       <div className="quran-font-controls quran-toolbar-group" aria-label="حجم الخط">
         <span className="quran-toolbar-title">حجم الخط</span>
         <div className="quran-font-actions">
@@ -437,17 +495,7 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
           <button type="button" className="quran-font-step" aria-label="تكبير الخط" title="تكبير الخط" onClick={() => patch({settings: {...state.settings, fontSize: Math.min(64, state.settings.fontSize + 2)}})}>A+</button>
         </div>
       </div>
-      <div className="quran-scroll-controls quran-toolbar-group">
-        <span className="quran-toolbar-title">سرعة التمرير</span>
-        <div className="quran-scroll-actions">
-          <button type="button" className={autoScroll?'soft-btn selected':'soft-btn'} aria-pressed={autoScroll} onClick={() => setAutoScroll(value=>!value)}>
-            {autoScroll ? <Pause size={16}/> : <Play size={16}/>} {autoScroll ? 'إيقاف' : 'تمرير تلقائي'}
-          </button>
-          <select value={autoScrollSpeed} onChange={event=>setAutoScrollSpeed(Number(event.target.value))} aria-label="سرعة التمرير التلقائي">
-            {AUTO_SCROLL_SPEEDS.map(speed=><option key={speed.value} value={speed.value}>{speed.label}</option>)}
-          </select>
-        </div>
-      </div>
+      <div className="quran-section-label">الصوت</div>
       <div className="quran-audio-controls">
         <label>القارئ
           <select value={reciterId ?? ''} onChange={event => {
@@ -475,6 +523,7 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
         {audioError && <span className="muted small" role="alert">{audioError}</span>}
       </div>
 
+      <div className="quran-section-label">الحفظ</div>
       {/* Memorization mode */}
       <div className="quran-memo-controls">
         <button type="button" className={`soft-btn ${memoMode ? 'active' : ''}`} onClick={() => { if (memoMode) stopMemo(); setMemoMode(v => !v); }} aria-pressed={memoMode}>
@@ -544,6 +593,7 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
           )}
         </>}
       </div>
+      </div>
     </div>
 
     {scrollMenu && <div className="quran-scroll-menu-backdrop" onClick={()=>setScrollMenu(null)}>
@@ -603,7 +653,7 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
         {showsBasmala(surahNumber) && basmala && <p className="quran-basmala">{basmala}</p>}
         <p className="quran-source-note">النص العثماني من {asset.source} · رواية {asset.narration}. العرض آية بآية، وليس صورة صفحة مطابقة للمصحف المطبوع.</p>
 
-        <div className="quran-verses">
+        {readingMode === 'verse' ? <div className="quran-verses">
           {verses.map(verse => {
             const bookmarked = surahBookmarks.some(item => item.ayah === verse.a);
             return <div key={verse.a} id={`ayah-${verse.a}`} className={`quran-verse ${focusAyah === verse.a ? 'focused' : ''}`} data-surah={verse.s} data-ayah={verse.a}>
@@ -619,6 +669,33 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
                 <button className={noteAyah === verse.a ? 'icon-btn active' : 'icon-btn'} aria-label="ملاحظة شخصية" onClick={() => setNoteAyah(noteAyah === verse.a ? null : verse.a)}><StickyNote size={15}/></button>
                 <button className={reflectAyah === verse.a ? 'icon-btn active' : 'icon-btn'} aria-label="تأمل وتطبيق" onClick={() => { setReflectAyah(reflectAyah === verse.a ? null : verse.a); setReflection(emptyReflection()); }}>تأمل</button>
               </div>
+              <div className="quran-content-tabs">
+                <button type="button" className={contentAyah === verse.a && contentTab === 'tafsir' ? 'active' : ''} onClick={() => { if (contentAyah === verse.a && contentTab === 'tafsir') setContentAyah(null); else { setContentAyah(verse.a); setContentTab('tafsir'); } }}>تفسير</button>
+                <button type="button" className={contentAyah === verse.a && contentTab === 'translation' ? 'active' : ''} onClick={() => { if (contentAyah === verse.a && contentTab === 'translation') setContentAyah(null); else { setContentAyah(verse.a); setContentTab('translation'); } }}>ترجمة</button>
+                <button type="button" className={contentAyah === verse.a && contentTab === 'asbab' ? 'active' : ''} onClick={() => { if (contentAyah === verse.a && contentTab === 'asbab') setContentAyah(null); else { setContentAyah(verse.a); setContentTab('asbab'); } }}>سبب النزول</button>
+              </div>
+              {contentAyah === verse.a && (
+                <div className="quran-content-panel">
+                  {contentTab === 'translation' && (
+                    <label className="quran-content-select">الترجمة
+                      <select value={translationId} onChange={e => setTranslationId(Number(e.target.value))}>
+                        {TRANSLATIONS.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      </select>
+                    </label>
+                  )}
+                  {contentTab === 'tafsir' && (
+                    <label className="quran-content-select">التفسير
+                      <select value={tafsirId} onChange={e => setTafsirId(Number(e.target.value))}>
+                        {TAFSIRS.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      </select>
+                    </label>
+                  )}
+                  {contentState.status === 'loading' && <p className="muted small">جارٍ التحميل…</p>}
+                  {contentState.status === 'error' && <p className="muted small" role="alert">{contentState.error}</p>}
+                  {contentState.status === 'empty' && <p className="muted small">لا توجد بيانات متاحة.</p>}
+                  {contentState.status === 'success' && <p className="quran-content-text">{contentState.data}</p>}
+                </div>
+              )}
               {noteAyah === verse.a && <div className="quran-inline-form">
                 <textarea value={noteText} onChange={event => setNoteText(event.target.value)} maxLength={4000} placeholder="ملاحظة شخصية خاصة بك على هذه الآية…"/>
                 <div><button className="primary" onClick={addNote}><Save size={15}/> حفظ الملاحظة</button><button className="soft-btn" onClick={() => { setNoteAyah(null); setNoteText(''); }}>إلغاء</button></div>
@@ -636,7 +713,13 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
               </div>}
             </div>;
           })}
-        </div>
+        </div> : <p className="quran-continuous-flow">
+          {verses.map(verse => (
+            <span key={verse.a} className={`quran-flow-ayah ${playingAyah === verse.a ? 'is-playing' : ''} ${focusAyah === verse.a ? 'focused' : ''}`} id={`ayah-${verse.a}`} data-ayah={verse.a} onClick={() => setFocusAyah(verse.a)}>
+              {verseBody(verse.t)} <span className="quran-flow-marker">{verseMarker(verse.t) || `۝${toArabicNumber(verse.a)}`}</span>{' '}
+            </span>
+          ))}
+        </p>}
 
         <div className="quran-verse-footer">
           <button className="soft-btn" disabled={surahNumber === 1} onClick={() => goTo(surahNumber - 1, 1)}><ChevronRight size={16}/> السورة السابقة</button>

@@ -47,9 +47,11 @@ export default function QuranSunnahView({state, onState, tasks, onTasks, notify,
   const [asset, setAsset] = useState<QuranAsset | null>(null);
   const [error, setError] = useState('');
   const firstRender = useRef(true);
+  const [navToken, setNavToken] = useState(0);
 
   const handleSectionChange = (id: QuranSection) => {
     setSection(id);
+    setNavToken(value => value + 1);
   };
 
   useLayoutEffect(() => {
@@ -57,11 +59,18 @@ export default function QuranSunnahView({state, onState, tasks, onTasks, notify,
     const frame = requestAnimationFrame(() => {
       if (sectionHeaderRef.current) {
         const top = sectionHeaderRef.current.offsetTop - 80;
-        document.documentElement.scroll(0, top);
+        document.documentElement.scrollTo({top, behavior: 'auto'});
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [section]);
+  }, [navToken]);
+
+  useEffect(() => {
+    if (initialSection) {
+      setSection(initialSection);
+      setNavToken(value => value + 1);
+    }
+  }, [initialSection]);
 
   useEffect(() => {
     let active = true;

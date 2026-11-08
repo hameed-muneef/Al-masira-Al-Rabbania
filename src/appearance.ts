@@ -41,9 +41,11 @@ export function systemDark(): boolean {
 /** يطبّق الوضع الفعلي على المستند: السمة + لون شريط المتصفح. */
 export function applyTheme(mode: Appearance, doc: Document = document): void {
   const dark = resolvedTheme(mode, systemDark()) === 'dark';
-  doc.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const root = doc.documentElement;
+  root.setAttribute('data-theme', dark ? 'dark' : 'light');
+  root.style.colorScheme = dark ? 'dark' : 'light';
   const meta = doc.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', dark ? '#161D1A' : '#173F35');
+  if (meta) meta.setAttribute('content', dark ? '#08192B' : '#173F35');
 }
 
 export function installAppearance(doc: Document = document, win: Window = window): void {

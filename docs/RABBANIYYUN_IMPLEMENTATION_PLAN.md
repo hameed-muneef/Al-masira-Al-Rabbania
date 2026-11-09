@@ -578,3 +578,5 @@ Fixed daily/weekly/monthly recurrence, prayerNotificationTimes duplicate, hhmmTo
 | 2026-11-09 | THEME-001 (إصلاح جوال قارئ) | mobile guard + min-width responsive | `npm run build` ناجح | تحقق بصري via DevTools |
 
 | 2026-11-09 | THEME-001 (ترحيل learning-redesign.css) | aliases → semantic tokens; --learn-* retained | `npm run build` ناجح | dark-auto-sweep.css (intentional dark overrides, skipped) |
+
+| 2026-11-10 | CACHE-001 (Cloudflare caching) | _headers rewrite (no overlap) + cache:purge script | `npm run build:cloudflare` ناجح | deploy + purge + verify headers (cf-cache-status) |

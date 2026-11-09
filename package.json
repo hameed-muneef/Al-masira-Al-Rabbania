@@ -19,7 +19,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "db:plan": "node scripts/apply-cloud-schema.mjs --dry-run",
     "db:migrate": "node scripts/apply-cloud-schema.mjs",
-    "prayer:check": "node scripts/check-prayer-accuracy.mjs"
+    "prayer:check": "node scripts/check-prayer-accuracy.mjs",
+    "cache:purge": "node scripts/purge-cloudflare-cache.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

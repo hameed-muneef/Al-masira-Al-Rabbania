@@ -24,7 +24,20 @@ export async function fetchQuranLearningState(): Promise<QuranLearningState | nu
 
 export async function saveQuranLearningState(state: QuranLearningState): Promise<void> {
   if (!authClient) return;
-  const {error} = await authClient.rpc('save_quran_learning_state', {p_state: state});
+  // Guard against DB constraint violations that surface as HTTP 400:
+  // drop entries missing required keys and de-duplicate bookmarks.
+  const safe: QuranLearningState = {
+    ...state,
+    bookmarks: Array.from(new Map(state.bookmarks
+      .filter(b => Number.isFinite(b.surah) && Number.isFinite(b.ayah) && b.id)
+      .map(b => [`${b.surah}:${b.ayah}:${b.label}`, b])).values()),
+    notes: state.notes.filter(n => Number.isFinite(n.surah) && Number.isFinite(n.ayahStart) && Number.isFinite(n.ayahEnd) && n.id && n.body),
+    history: state.history.filter(h => Number.isFinite(h.surah) && Number.isFinite(h.ayahStart) && Number.isFinite(h.ayahEnd) && h.id),
+    reflections: state.reflections.filter(r => r.id),
+    routine: state.routine.filter(r => r.id && r.kind),
+    hadithBookmarks: state.hadithBookmarks.filter(h => h.id && h.collectionKey && Number.isFinite(h.hadithNumber)),
+  };
+  const {error} = await authClient.rpc('save_quran_learning_state', {p_state: safe});
   if (error) throw error;
 }
 

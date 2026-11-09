@@ -13,6 +13,8 @@ import './dark-auto-sweep.css';
 // profile.css يحمل أنماط `.user-chip` في الشريط العلوي (شل التطبيق) — لا يجوز
 // تركها في chunk كسول لـ ProfileView وإلا ظهر الزر بتنسيق المتصفح الافتراضي.
 import './profile.css';
+// Must load last: this is the single semantic theme boundary for all shared UI.
+import './theme-engine.css';
 import {installSectionTheme} from './section-theme';
 import {installAppearance} from './appearance';
 installSectionTheme();

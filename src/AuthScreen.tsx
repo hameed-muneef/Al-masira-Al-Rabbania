@@ -1,4 +1,4 @@
-import {useEffect,useState,type FormEvent} from 'react';
+import {useState,type FormEvent} from 'react';
 import {ArrowLeft,Eye,EyeOff,LockKeyhole,Mail,ShieldCheck,UserRound} from 'lucide-react';
 import {authClient} from './auth';
 import CountrySelector from './CountrySelector';
@@ -18,12 +18,6 @@ function authMessage(err:unknown,fallback:string){
 }
 
 export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;reset?:boolean}){
-  useEffect(()=>{
-    const root=document.documentElement;
-    const previousTheme=root.getAttribute('data-theme');
-    root.setAttribute('data-theme','light');
-    return ()=>{if(previousTheme) root.setAttribute('data-theme',previousTheme); else root.removeAttribute('data-theme')};
-  },[]);
   const [mode,setMode]=useState<'login'|'register'>(admin?'login':'register');
   const [forgot,setForgot]=useState(false);
   const [email,setEmail]=useState('');

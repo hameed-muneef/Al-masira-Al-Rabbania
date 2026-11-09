@@ -10,6 +10,7 @@
     "deploy:check": "node scripts/check-deploy-env.mjs",
     "prebuild": "node scripts/generate-book-manifest.mjs",
     "test": "node --test \"tests/*.test.mjs\"",
+    "test:e2e": "playwright test",
     "manifest": "node scripts/generate-book-manifest.mjs",
     "quran:generate": "node scripts/generate-quran-asset.mjs",
     "quran:check": "node scripts/check-quran-content.mjs",
@@ -28,11 +29,13 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.11",
+    "@playwright/test": "^1.65.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "adhan": "^4.4.6",
     "pg": "^8.23.1",
+    "playwright": "^1.65.0",
     "typescript": "~5.7.3",
     "vite": "^6.0.5",
     "vite-plugin-pwa": "^2.0.0"

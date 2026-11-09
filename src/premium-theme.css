@@ -191,7 +191,7 @@ body:has(.learning-content) body::before{opacity:.18}
 :root:not([data-theme="dark"]) #root .app .mobile-nav{
   background:#F8F6EF;
   -webkit-backdrop-filter:none;backdrop-filter:none;
-  border-top-color:#D4DDD3;
+  border-top-color:var(--color-border);
   box-shadow:0 -8px 24px rgba(24,55,43,.16);
 }
 [data-theme="light"] #root .app .mobile-nav button,
@@ -543,22 +543,48 @@ body:has(.learning-content) body::before{opacity:.18}
 #root .app .quran-surah-scroll button.active small{color:var(--dark-muted)}
 /* القارئ يملك ثيمته (نهاري/ليلي) — must not follow app theme's colors */
 #root .app .quran-reader{--color-ink:#27332E;--color-body:#27332E}
+[data-theme="dark"] #root .app .quran-reader{--color-ink:#EDEDED;--color-body:#EDEDED}
 #root .app .quran-reader.theme-dark{--color-ink:#EDEDED;--color-body:#EDEDED}
 /* ورقة المصحف النهارية داخل التطبيق الداكن تتبع ثيمة القارئ لا سطح اللوحة */
-[data-theme="light"] #root .app .quran-mushaf,
-[data-theme="dark"] #root .app .quran-mushaf{background:linear-gradient(165deg,#FDFCF7,#F4F1E7);color:#27332E}
+[data-theme="light"] #root .app .quran-mushaf{background:linear-gradient(165deg,#FDFCF7,#F4F1E7);color:#27332E}
 [data-theme="light"] #root .app .quran-reader.theme-dark .quran-mushaf,
 [data-theme="dark"] #root .app .quran-reader.theme-dark .quran-mushaf{background:linear-gradient(165deg,#25332C,#1C2821);color:#EDEDED}
 /* القارئ يملك surfaces وtext مستقلة عن تطبيق (لا تُجبرها قاعدة .panel الداكنة) */
 #root .app .quran-reader .panel,#root .app .quran-reader .quran-surah-list,#root .app .quran-reader .quran-surah-scroll,#root .app .quran-reader .quran-mushaf,#root .app .quran-reader .quran-surah-number{
-  background:linear-gradient(165deg,#FDFCF7,#F4F1E7);color:#27332E;border-color:#D4DDD3;
+  background:linear-gradient(165deg,#FDFCF7,#F4F1E7);color:#27332E;border-color:var(--color-border);
+}
+[data-theme="dark"] #root .app .quran-reader .panel,[data-theme="dark"] #root .app .quran-reader .quran-surah-list,[data-theme="dark"] #root .app .quran-reader .quran-surah-scroll,[data-theme="dark"] #root .app .quran-reader .quran-mushaf,[data-theme="dark"] #root .app .quran-reader .quran-surah-number{
+  background:linear-gradient(165deg,#1B3A56,#132D46);color:#EDEDED;border-color:#35473D;
+}
+/* The Quran reader is an intentional light paper surface in both app themes. */
+[data-theme="dark"] #root .app .quran-reader .quran-mushaf { color: #27332E !important; }
+[data-theme="dark"] #root .app .quran-reader .quran-mushaf .quran-verse,
+[data-theme="dark"] #root .app .quran-reader .quran-mushaf h2,
+[data-theme="dark"] #root .app .quran-reader .quran-mushaf .eyebrow,
+[data-theme="dark"] #root .app .quran-reader .quran-mushaf p { color: #27332E !important; }
+
+/* Fallback: also match when theme-dark class is present on quran-reader */
+.quran-reader.theme-dark .quran-mushaf { color: #27332E !important; }
+.quran-reader.theme-dark .quran-mushaf .quran-verse,
+.quran-reader.theme-dark .quran-mushaf h2,
+.quran-reader.theme-dark .quran-mushaf .eyebrow,
+.quran-reader.theme-dark .quran-mushaf p { color: #27332E !important; }
+
+/* **Force Quran to light mode** – always use cream paper background + dark ink,
+    regardless of overall app theme. This respects the user's preference for
+    readable Quran text in all themes. */
+[data-theme="dark"] #root .app .quran-reader .quran-mushaf,
+[data-theme="light"] #root .app .quran-reader .quran-mushaf {
+  /* Force light-mode (cream) background and dark ink; do NOT switch to navy */
+  background: linear-gradient(165deg, #FDFCF7, #F4F1E7) !important;
+  color: #27332E !important;
 }
 #root .app .quran-reader.theme-dark .panel,#root .app .quran-reader.theme-dark .quran-surah-list,#root .app .quran-reader.theme-dark .quran-surah-scroll,#root .app .quran-reader.theme-dark .quran-mushaf,#root .app .quran-reader.theme-dark .quran-surah-number{
   background:linear-gradient(165deg,#25332C,#1C2821);color:#EDEDED;border-color:#35473D;
 }
 /* عنوان شريط «السير إلى الله» الداكن يبقى فاتحًا في الوضعين (page-intro h1 يلوّنه primary) */
-#root .app .learning-overview{color:#F2EFE5}
-#root .app .learning-overview .learning-intro h1{color:#F2EFE5}
+#root .app .learning-overview{color:var(--color-surface)}
+#root .app .learning-overview .learning-intro h1{color:var(--color-surface)}
 #root .app .learning-overview .learning-intro p{color:#DCE5DC}
 #root .app .learning-overview .eyebrow{color:#D9C08C}
 /* زر الهيرو: ذهب + أخضر داكن = 4.2 فقط — يُعمَّق النص */
@@ -727,7 +753,7 @@ body::after{
   border:1px solid rgba(197,164,95,.34);
   box-shadow:0 22px 48px rgba(12,20,16,.35),inset 0 0 0 1px rgba(255,255,255,.04);
 }
-#root .app .hero p{color:#F2EFE5;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+#root .app .hero p{color:var(--color-surface);text-shadow:0 1px 6px rgba(0,0,0,.4)}
 #root .app .hero-btn{background:linear-gradient(160deg,var(--art-gold),#A08448);color:#0F2A21;box-shadow:0 8px 20px rgba(197,164,95,.35)}
 /* sidebar: deep navy + gold accents */
 #root .app .sidebar{

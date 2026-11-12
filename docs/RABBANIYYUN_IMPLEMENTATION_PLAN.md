@@ -580,3 +580,7 @@ Fixed daily/weekly/monthly recurrence, prayerNotificationTimes duplicate, hhmmTo
 | 2026-11-09 | THEME-001 (ترحيل learning-redesign.css) | aliases → semantic tokens; --learn-* retained | `npm run build` ناجح | dark-auto-sweep.css (intentional dark overrides, skipped) |
 
 | 2026-11-10 | CACHE-001 (Cloudflare caching) | _headers rewrite (no overlap) + cache:purge script | `npm run build:cloudflare` ناجح | deploy + purge + verify headers (cf-cache-status) |
+
+| 2026-11-12 | QURAN-AUDIO-001 (ayah audio one-at-a-time) | QuranReader.tsx: stop-current-before-start + token guard in playAyah; stopAyahAudio in togglePlay/runMemo | build ✓، Theme/Section 10/10 ✓، browser audio-log verification ✓ | — |
+
+| 2026-11-13 | MOBILE-001 (PWA installability) | PNG icons + maskable + apple-touch-icon, manifest/index updated | build ✓، preview verification ✓، tests 10/10 ✓ | deploy → قائمة Chrome «تثبيت التطبيق»؛ iOS لاحقًا عند توفر Mac/حساب مطوّر |

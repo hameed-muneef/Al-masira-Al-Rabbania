@@ -12,6 +12,7 @@
     "test": "node --test \"tests/*.test.mjs\"",
     "test:e2e": "playwright test",
     "manifest": "node scripts/generate-book-manifest.mjs",
+    "icons:generate": "node scripts/generate-app-icons.mjs",
     "quran:generate": "node scripts/generate-quran-asset.mjs",
     "quran:check": "node scripts/check-quran-content.mjs",
     "quran:import": "node scripts/import-quran-content.mjs",
@@ -37,6 +38,7 @@
     "adhan": "^4.4.6",
     "pg": "^8.23.1",
     "playwright": "^1.65.0",
+    "sharp": "^0.35.5",
     "typescript": "~5.7.3",
     "vite": "^6.0.5",
     "vite-plugin-pwa": "^2.0.0"

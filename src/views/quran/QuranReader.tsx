@@ -141,6 +141,8 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
 
   const togglePlay = () => {
     if (memoStatus === 'playing' || memoStatus === 'paused') stopMemo();
+    // تلاوة السورة تُوقف صوت الآية المنفردة — صوت واحد فقط في كل لحظة.
+    stopAyahAudio();
     if (!audioRef.current) { playSurah(); return; }
     if (isPlaying) {
       audioRef.current.pause();
@@ -164,6 +166,17 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
   const [ayahAudioUrls, setAyahAudioUrls] = useState<Map<number, string>>(new Map());
   const [playingAyah, setPlayingAyah] = useState<number | null>(null);
   const ayahAudioRef = useRef<HTMLAudioElement | null>(null);
+  // يضمن أن صوت آية واحدة فقط يعمل في أي لحظة: كل تشغيل جديد يُبطل الطلبات السابقة.
+  const ayahPlayTokenRef = useRef(0);
+
+  const stopAyahAudio = () => {
+    ayahPlayTokenRef.current += 1;
+    if (ayahAudioRef.current) {
+      ayahAudioRef.current.pause();
+      ayahAudioRef.current = null;
+    }
+    setPlayingAyah(null);
+  };
 
   const playAyah = async (ayah: number) => {
     // Stop memo if running
@@ -174,34 +187,33 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
       audioRef.current = null;
       setIsPlaying(false);
     }
+    // Stop the currently playing ayah — only one ayah voice runs at a time
+    if (ayahAudioRef.current) {
+      ayahAudioRef.current.pause();
+      ayahAudioRef.current = null;
+    }
+    const token = ++ayahPlayTokenRef.current;
     setPlayingAyah(ayah);
     let url: string | null = ayahAudioUrls.get(ayah) ?? null;
     if (!url) {
       url = await fetchAyahAudioUrl(ayahReciterId, surahNumber, ayah);
+      // تم تشغيل آية أخرى أثناء جلب الرابط — لا تُشغّل هذه.
+      if (token !== ayahPlayTokenRef.current) return;
       if (url) setAyahAudioUrls(prev => new Map(prev).set(ayah, url!));
     }
-    if (!url) { setPlayingAyah(null); return; }
+    if (!url) { if (token === ayahPlayTokenRef.current) setPlayingAyah(null); return; }
     const audio = new Audio(url);
     ayahAudioRef.current = audio;
     audio.addEventListener('ended', () => {
       // Auto-play next ayah
       const idx = verses.findIndex(v => v.a === ayah);
-      if (idx >= 0 && idx < verses.length - 1) {
-        playAyah(verses[idx + 1].a);
-      } else {
-        setPlayingAyah(null);
+      if (token === ayahPlayTokenRef.current) {
+        if (idx >= 0 && idx < verses.length - 1) playAyah(verses[idx + 1].a);
+        else setPlayingAyah(null);
       }
     });
-    audio.addEventListener('error', () => setPlayingAyah(null));
-    audio.play().catch(() => setPlayingAyah(null));
-  };
-
-  const stopAyahAudio = () => {
-    if (ayahAudioRef.current) {
-      ayahAudioRef.current.pause();
-      ayahAudioRef.current = null;
-    }
-    setPlayingAyah(null);
+    audio.addEventListener('error', () => { if (token === ayahPlayTokenRef.current) setPlayingAyah(null); });
+    audio.play().catch(() => { if (token === ayahPlayTokenRef.current) setPlayingAyah(null); });
   };
 
   // Stop audio when surah changes
@@ -248,6 +260,9 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
   const memoAyahs = useMemo(() => passageAyahs(memoStart, memoEnd), [memoStart, memoEnd]);
 
   const runMemo = async () => {
+    // وضع الحفظ يوقف أي تلاوة جارية — صوت واحد فقط في كل لحظة.
+    stopAyahAudio();
+    stopAudio();
     memoAbortRef.current = false;
     memoPausedRef.current = false;
     setMemoStatus('playing');

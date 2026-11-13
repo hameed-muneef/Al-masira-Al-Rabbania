@@ -584,3 +584,5 @@ Fixed daily/weekly/monthly recurrence, prayerNotificationTimes duplicate, hhmmTo
 | 2026-11-12 | QURAN-AUDIO-001 (ayah audio one-at-a-time) | QuranReader.tsx: stop-current-before-start + token guard in playAyah; stopAyahAudio in togglePlay/runMemo | build ✓، Theme/Section 10/10 ✓، browser audio-log verification ✓ | — |
 
 | 2026-11-13 | MOBILE-001 (PWA installability) | PNG icons + maskable + apple-touch-icon, manifest/index updated | build ✓، preview verification ✓، tests 10/10 ✓ | deploy → قائمة Chrome «تثبيت التطبيق»؛ iOS لاحقًا عند توفر Mac/حساب مطوّر |
+
+| 2026-11-13 | MOBILE-001 (install discoverability) | InstallApp.tsx (زر تثبيت بالشريط العلوي + لوحة إرشاد بالإعدادات) | build ✓، preview ✓، tests 10/10 ✓ | نشر ثم اختبار على هاتف حقيقي (Chrome: ⋮ ← تثبيت التطبيق) |

@@ -1,5 +1,5 @@
-import {useEffect, useMemo, useState} from 'react';
-import {BookOpen, Search, Volume2, RotateCcw, CheckCircle2} from 'lucide-react';
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {BookOpen, Search, Volume2, Square, RotateCcw, CheckCircle2} from 'lucide-react';
 import type {AzkarAsset, AzkarCategory} from '../azkar/types';
 import {loadAzkar, azkarAudioUrl, resetAzkarCache} from '../azkar/content';
 
@@ -19,7 +19,11 @@ export default function AzkarLibrary() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState<Set<number>>(new Set());
   const [counts, setCounts] = useState<Record<string, number>>(readCounts);
-  // audio element created on demand; no persistent playing state needed.
+  // صوت واحد فقط في كل لحظة (نفس سلوك تلاوة القرآن): عنصر صوت واحد + عند انتهاء
+  // الذكر ينتقل تلقائيًا للذكر التالي في نفس الفئة.
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playingKey, setPlayingKey] = useState<string | null>(null);
+  const playTokenRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -68,12 +72,46 @@ export default function AzkarLibrary() {
     setCounts(prev => ({...prev, [key]: 0}));
   };
 
-  const play = (path?: string) => {
-    const url = azkarAudioUrl(path);
-    if (!url) return;
-    const audio = new Audio(url);
-    audio.play().catch(() => {});
+  const stopAudio = () => {
+    playTokenRef.current += 1;
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setPlayingKey(null);
   };
+
+  const play = (cat: AzkarCategory, itemId: number) => {
+    const idx = cat.array.findIndex(item => item.id === itemId);
+    if (idx < 0) return;
+    // إيقاف أي صوت جارٍ — صوت ذكر واحد فقط يعمل في أي لحظة.
+    stopAudio();
+    const url = azkarAudioUrl(cat.array[idx].audio);
+    if (!url) return;
+    const token = ++playTokenRef.current;
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    setPlayingKey(`${lang}:${cat.id}:${itemId}`);
+    audio.addEventListener('ended', () => {
+      if (token !== playTokenRef.current) return;
+      // عند الانتهاء: انتقل تلقائيًا للذكر التالي في نفس الفئة
+      // (وإن لم يملك صوتًا تجاوزه) حتى نهاية القائمة.
+      let next = idx + 1;
+      while (next < cat.array.length && !azkarAudioUrl(cat.array[next].audio)) next += 1;
+      if (next < cat.array.length) play(cat, cat.array[next].id);
+      else setPlayingKey(null);
+    });
+    audio.addEventListener('error', () => { if (token === playTokenRef.current) setPlayingKey(null); });
+    audio.play().catch(() => { if (token === playTokenRef.current) setPlayingKey(null); });
+  };
+
+  // إيقاف الصوت عند مغادرة الصفحة.
+  useEffect(() => {
+    return () => {
+      playTokenRef.current += 1;
+      if (audioRef.current) audioRef.current.pause();
+    };
+  }, []);
 
   if (loading) return <section className="panel"><p>جارٍ تحميل الأذكار…</p></section>;
   if (error) return <section className="panel quran-error"><h3>تعذر التحميل</h3><p>{error}</p><button className="soft-btn" onClick={() => { resetAzkarCache(); window.location.reload(); }}>إعادة المحاولة</button></section>;
@@ -122,7 +160,7 @@ export default function AzkarLibrary() {
                     <span style={{width: `${Math.min(100, (done / Math.max(1, item.count)) * 100)}%`}} />
                   </div>
                   <span className="azkar-done">{done}/{item.count}</span>
-                  {item.audio && <button className="icon-btn" title="استماع" onClick={() => play(item.audio)}><Volume2 size={15} /></button>}
+                  {item.audio && <button className="icon-btn" title={playingKey === key ? 'إيقاف' : 'استماع'} aria-label={playingKey === key ? 'إيقاف' : 'استماع'} onClick={() => playingKey === key ? stopAudio() : play(cat, item.id)}>{playingKey === key ? <Square size={15}/> : <Volume2 size={15}/>}</button>}
                   <button className="soft-btn" onClick={() => bump(cat.id, item.id, item.count)}>+1</button>
                   <button className="icon-btn" title="إعادة" onClick={() => reset(cat.id, item.id)}><RotateCcw size={14} /></button>
                   {complete && <CheckCircle2 size={16} className="azkar-complete" />}

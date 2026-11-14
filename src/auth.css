@@ -109,7 +109,7 @@
 .auth-admin-note{line-height:1.9}
 .admin-access-card{width:min(620px,100%);padding:32px;border:1px solid #d7e2dc;border-radius:20px;background:#fbfaf5;box-shadow:0 16px 40px #123b2510;font-weight:400;text-align:right}
 .admin-access-card h1{margin:0 0 18px;font-size:24px}.admin-access-card p{line-height:1.9;overflow-wrap:anywhere}.admin-access-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}.admin-access-actions a{text-decoration:none}
-.cloud-status{display:inline-flex;align-items:center;margin-inline-end:14px;padding:3px 9px;border:1px solid #cbd8ca;border-radius:20px;background:#ecf3e9;color:#496a55;font-size:11px;font-weight:700;white-space:nowrap}
+.cloud-status{display:inline-flex;align-items:center;margin-inline-end:14px;padding:3px 9px;border:1px solid #cbd8ca;border-radius:20px;background:#ecf3e9;color:#496a55;font-size:11px;font-weight:700;white-space:nowrap;min-width:116px;justify-content:center}
 .cloud-status.saving{background:#f4efdf;color:#7a6643}.cloud-status.offline{border-color:#ead0c9;background:#f9ece9;color:#9b493d;cursor:pointer}.cloud-status.offline:hover{text-decoration:underline}
 .session-button{margin-top:8px!important;color:#6a7165!important;font-size:12px!important;min-height:35px!important}
 @media(max-width:1020px) and (min-width:801px){

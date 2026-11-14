@@ -9,3 +9,12 @@ tmp/
 book-page-5.png
 book-reader-preview.png
 learning-preview.png
+
+# Capacitor Android (مخرجات البناء والملفات المولَّدة)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/capacitor-cordova-android-plugins/
+android/app/src/main/assets/public/
+android/keystores/

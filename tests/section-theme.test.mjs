@@ -8,10 +8,11 @@ const source = readFileSync(new URL('../src/section-theme.ts', import.meta.url),
 const {outputText} = ts.transpileModule(source, {compilerOptions: {module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022}});
 const theme = await import('data:text/javascript;base64,' + Buffer.from(outputText).toString('base64'));
 
-test('seven sections with the specified accents', () => {
-  assert.equal(theme.SECTION_THEMES.length, 7);
+test('eight sections with the specified accents', () => {
+  assert.equal(theme.SECTION_THEMES.length, 8);
   const accents = Object.fromEntries(theme.SECTION_THEMES.map(item => [item.id, [item.accent, item.soft]]));
   assert.deepEqual(accents.quran, ['#174C3C', '#9BBEC5']);
+  assert.deepEqual(accents.haramain, ['#8A6A38', '#E5D9C0']);
   assert.deepEqual(accents.journey, ['#527F8B', '#D3E2E0']);
   assert.deepEqual(accents.daily, ['#32412F', '#B99A5D']);
   assert.deepEqual(accents.tazkiya, ['#294039', '#A8B9A0']);

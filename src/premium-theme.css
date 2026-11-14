@@ -508,7 +508,7 @@ body:has(.learning-content) body::before{opacity:.18}
   margin-inline-start:auto;flex:none;min-width:0;position:relative;z-index:1;
 }
 #root .app .topbar .top-actions .top-date{flex:none;white-space:nowrap}
-#root .app .topbar .top-actions .top-clock{font-size:13px;font-weight:700;color:var(--color-body);font-variant-numeric:tabular-nums;white-space:nowrap;padding:0 4px;margin-inline:6px}
+#root .app .topbar .top-actions .top-clock{font-size:13px;font-weight:700;color:var(--color-body);font-variant-numeric:tabular-nums;font-feature-settings:'tnum';white-space:nowrap;padding:0 4px;margin-inline:6px;display:inline-block;width:6.5em;text-align:center}
 /* الآية الزخرفية تُخفى قبل أن تضيق — لا فيض ولا ازدحام */
 @media(max-width:1200px){#root .app .topbar>.top-reminder{display:none}}
 @media(max-width:1100px){#root .app .topbar .top-actions .top-date{display:none;visibility:hidden;overflow:hidden;height:0;width:0}}

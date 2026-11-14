@@ -10,6 +10,8 @@ import './brand-identity.css';
 import './section-theme.css';
 import './premium-theme.css';
 import './dark-auto-sweep.css';
+// أنماط قسم «من الحرمين الشريفين» (بث علولاء الرسمي) — عامة لأن القسم يُحمَّل كسولًا.
+import './haramain.css';
 // profile.css يحمل أنماط `.user-chip` في الشريط العلوي (شل التطبيق) — لا يجوز
 // تركها في chunk كسول لـ ProfileView وإلا ظهر الزر بتنسيق المتصفح الافتراضي.
 import './profile.css';

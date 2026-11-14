@@ -31,8 +31,9 @@ type Props = {notify: (message: string) => void; prayerLocation?: PrayerLocation
 export default function PrayerNotifications({notify, prayerLocation, onPrayerLocation}: Props) {
   const [prefs, setPrefs] = useState<NotificationPreference>(DEFAULT_NOTIFICATION_PREFERENCE);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
+  const [savingPrayer, setSavingPrayer] = useState<PrayerName | null>(null);
+  // الحفظ لكل صلاة على حدة: تعديل صلاة لا يلمس إعدادات باقي الصلوات.
+  const [dirtyPrayers, setDirtyPrayers] = useState<ReadonlySet<PrayerName>>(new Set());
 
   useEffect(() => {
     let active = true;
@@ -52,25 +53,30 @@ export default function PrayerNotifications({notify, prayerLocation, onPrayerLoc
         [prayer]: {...DEFAULT_PRAYER_PREFERENCES[prayer], ...old.prayer_settings[prayer], ...patch},
       },
     }));
-    setDirty(true);
+    setDirtyPrayers(old => new Set(old).add(prayer));
   };
 
-  const save = async () => {
-    setSaving(true);
+  // يحفظ إعدادات صلاة واحدة فقط مدمجًا معها أحدث نسخة محفوظة لباقي الإعدادات.
+  const savePrayer = async (prayer: PrayerName) => {
+    setSavingPrayer(prayer);
     try {
-      // يدمج إعدادات الصلاة فقط في أحدث نسخة محفوظة كي لا يمحو الإعدادات العامة
+      const setting: PrayerSetting = {...DEFAULT_PRAYER_PREFERENCES[prayer], ...prefs.prayer_settings[prayer]};
       const {prefs: fresh} = await loadPrefs();
-      const result = await savePrefs({...fresh, prayer_settings: prefs.prayer_settings});
-      setDirty(false);
-      notify(result.source === 'cloud' ? 'حُفظت إعدادات الصلاة في حسابك' : 'حُفظت إعدادات الصلاة على هذا الجهاز');
+      const result = await savePrefs({...fresh, prayer_settings: {...fresh.prayer_settings, [prayer]: setting}});
+      setDirtyPrayers(old => {
+        const next = new Set(old);
+        next.delete(prayer);
+        return next;
+      });
+      notify(result.source === 'cloud' ? `حُفظت إعدادات صلاة ${prayer} في حسابك` : `حُفظت إعدادات صلاة ${prayer} على هذا الجهاز`);
     } finally {
-      setSaving(false);
+      setSavingPrayer(null);
     }
   };
 
-  const restore = () => {
-    setPrefs(old => ({...old, prayer_settings: structuredClone(DEFAULT_PRAYER_PREFERENCES)}));
-    setDirty(true);
+  const restorePrayer = (prayer: PrayerName) => {
+    setPrefs(old => ({...old, prayer_settings: {...old.prayer_settings, [prayer]: structuredClone(DEFAULT_PRAYER_PREFERENCES[prayer])}}));
+    setDirtyPrayers(old => new Set(old).add(prayer));
   };
 
   if (loading) return <p className="muted" role="status">جارٍ تحميل إعدادات الصلاة…</p>;
@@ -123,13 +129,15 @@ export default function PrayerNotifications({notify, prayerLocation, onPrayerLoc
                 </label>
               </div>
             )}
+            <div className="notif-form-actions">
+              <button type="button" className="primary" disabled={savingPrayer !== null || !dirtyPrayers.has(prayer)} onClick={() => void savePrayer(prayer)}>
+                {savingPrayer === prayer ? 'جارٍ الحفظ…' : `حفظ إعدادات ${prayer}`}
+              </button>
+              <button type="button" className="soft-btn" disabled={savingPrayer !== null} onClick={() => restorePrayer(prayer)}>استعادة الافتراضي</button>
+            </div>
           </fieldset>
         );
       })}
-      <div className="notif-form-actions">
-        <button type="button" className="primary" disabled={saving || !dirty} onClick={() => void save()}>{saving ? 'جارٍ الحفظ…' : 'حفظ إعدادات الصلاة'}</button>
-        <button type="button" className="soft-btn" disabled={saving} onClick={restore}>استعادة الافتراضي</button>
-      </div>
     </div>
   );
 }

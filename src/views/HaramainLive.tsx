@@ -125,6 +125,7 @@ export default function HaramainLive() {
     </div>
 
     <Player channel={active} mode={mode} onHlsFailed={onHlsFailed}/>
+    <p className="haramain-hint" dir="rtl">إن ظهرت رسالة «يود علولاء إرسال إشعارات إليك» فاختر <strong>كلا</strong> ولن تظهر لك مجددًا.</p>
     {mode === 'embed' && channelHlsNote(active)}
 
     <p className="haramain-attribution">

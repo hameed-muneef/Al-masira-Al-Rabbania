@@ -52,7 +52,7 @@ const crumbs:Record<View,string>={home:'الرئيسية',day:'يومي مع ا�
 const TopClock=()=>{
   const [now,setNow]=useState(new Date());
   useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
-  return <span className="top-clock" dir="ltr" aria-label="الوقت الحالي">{now.toLocaleTimeString('ar-EG-u-nu-latn',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true})}</span>;
+  return <span className="top-clock" dir="ltr" aria-label="الوقت الحالي">{now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true})}</span>;
 };
 export default function App(){
   const [user,setUser]=useState<User|null>(null);
@@ -248,7 +248,7 @@ function Workspace({user,admin}:{user:User;admin:boolean}){
     {view==='payment'&&<PaymentCheckout user={user} featureKey={paymentFeature} onBack={()=>navigate('home')}/>}
     {view==='paymentHistory'&&<PaymentHistory user={user} onBack={()=>navigate('home')} onNotify={notify}/>}
     </Suspense></ErrorBoundary>}
-  </div><footer>© 2026 الربانيون — جميع الحقوق محفوظة <span>المصحف من مصدر معتمد؛ مكتبة الحديث بانتظار المصدر المرخص</span></footer></main>{toast&&<div className="toast"><Check size={16}/>{toast}</div>}<nav className="mobile-nav"><button className={view==='home'?'active':''} onClick={()=>navigate('home')}><Home size={21}/>الرئيسية</button><button data-section="daily" className={['day','week','month','goals'].includes(view)?'active':''} onClick={()=>navigate('day')}><CalendarDays size={21}/>حياتي</button><button data-section="quran" className={view==='quran'?'active':''} onClick={()=>navigate('quran')}><BookMarked size={21}/>القرآن</button><button data-section="journey" className={view==='learn'?'active':''} onClick={()=>navigate('learn')}><Compass size={21}/>السير</button><button data-section="accountability" className={['reflect','wird'].includes(view)?'active':''} onClick={()=>navigate('reflect')}><Heart size={21}/>المحاسبة</button><button className={view==='settings'?'active':''} onClick={()=>navigate('settings')}><Settings2 size={21}/>الإعدادات</button></nav></div>;
+  </div><footer>© 2026 الربانيون — جميع الحقوق محفوظة <span>المصحف من مصدر معتمد؛ مكتبة الحديث بانتظار المصدر المرخص</span></footer></main>{toast&&<div className="toast"><Check size={16}/>{toast}</div>}<nav className="mobile-nav"><button className={view==='home'?'active':''} onClick={()=>navigate('home')}><Home size={21}/>الرئيسية</button><button data-section="daily" className={['day','week','month','goals'].includes(view)?'active':''} onClick={()=>navigate('day')}><CalendarDays size={21}/>حياتي</button><button data-section="quran" className={view==='quran'?'active':''} onClick={()=>navigate('quran')}><BookMarked size={21}/>القرآن</button><button data-section="haramain" className={view==='haramain'?'active':''} onClick={()=>navigate('haramain')}><MonitorPlay size={21}/>الحرمين</button><button data-section="journey" className={view==='learn'?'active':''} onClick={()=>navigate('learn')}><Compass size={21}/>السير</button><button data-section="accountability" className={['reflect','wird'].includes(view)?'active':''} onClick={()=>navigate('reflect')}><Heart size={21}/>المحاسبة</button><button className={view==='settings'?'active':''} onClick={()=>navigate('settings')}><Settings2 size={21}/>الإعدادات</button></nav></div>;
 }
 
 

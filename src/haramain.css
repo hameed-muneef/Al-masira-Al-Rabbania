@@ -45,6 +45,8 @@
 .haramain-error p{margin:0}
 .haramain-error-actions{display:flex;gap:10px;flex-wrap:wrap}
 .haramain-fallback-note{margin:0;font-size:13px;font-weight:700;color:var(--section-accent)}
+.haramain-hint{margin:-6px 0 0;font-size:12.5px;color:var(--color-body);opacity:.85}
+.haramain-hint strong{font-weight:800}
 
 .haramain-attribution{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0;font-size:12.5px;color:var(--color-body);opacity:.9}
 .haramain-attribution a{display:inline-flex;align-items:center;gap:5px;font-weight:800;color:var(--section-accent);text-decoration:none}

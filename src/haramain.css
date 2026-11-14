@@ -1,7 +1,7 @@
 /* قسم «من الحرمين الشريفين» — يستخدم متغيرات القسم المولَّدة من section-theme
    (accent/soft/strong) لا قيمًا ثابتة، فتعمل مع النظام الفاتح والداكن تلقائيًا. */
 
-.haramain{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:18px;max-height:calc(100vh - 90px);overflow-y:auto;overflow-x:hidden}
+.haramain{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 
 .haramain-head{display:flex;flex-direction:column;gap:6px}
 .haramain-eyebrow{display:inline-flex;align-items:center;gap:7px;color:var(--section-strong);font-size:13px;font-weight:800}
@@ -48,7 +48,14 @@
 .haramain-hint{margin:-6px 0 0;font-size:12.5px;color:var(--color-body);opacity:.85}
 .haramain-hint strong{font-weight:800}
 
-.haramain-attribution{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0;font-size:12.5px;color:var(--color-body);opacity:.9}
+/* أثناء عرض قسم الحرمين: السكرول داخل منطقة المحتوى (الـ widget) فقط،
+   وليس على مستوى المنصة (html/body مُقفلة من HaramainLive). */
+main[data-section="haramain"] .content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 82px);
+  -webkit-overflow-scrolling: touch;
+}
 .haramain-attribution a{display:inline-flex;align-items:center;gap:5px;font-weight:800;color:var(--section-accent);text-decoration:none}
 .haramain-attribution a:hover{text-decoration:underline}
 

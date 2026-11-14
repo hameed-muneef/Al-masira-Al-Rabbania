@@ -19,6 +19,8 @@ import './profile.css';
 import './theme-engine.css';
 import {installSectionTheme} from './section-theme';
 import {installAppearance} from './appearance';
+// تسجيل service worker مع تحديث تلقائي (إعادة تحميل واحدة عند جاهزية نسخة جديدة).
+import './sw-register';
 installSectionTheme();
 installAppearance();
 createRoot(document.getElementById('root')!).render(<React.StrictMode><ErrorBoundary><App/></ErrorBoundary></React.StrictMode>);

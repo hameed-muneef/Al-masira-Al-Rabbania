@@ -10,7 +10,7 @@
 .notif-mark-all{white-space:nowrap;font-size:12px;display:inline-flex;align-items:center;gap:5px}
 .notif-filters{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 8px}
 .notif-filters button{border:1px solid transparent;background:rgba(31,92,74,.07);color:inherit;border-radius:999px;padding:5px 10px;font-size:12px;cursor:pointer}
-.notif-filters button.active{background:var(--color-accent, #1f5c4a);color:#fff}
+#root .app .notif-panel .notif-filters button.active{background:var(--color-accent, #1f5c4a);color:#fff;font-weight:700}
 .notif-filters button:focus-visible{outline:2px solid var(--color-accent, #1f5c4a);outline-offset:1px}
 .notif-unread-toggle{display:flex;align-items:center;gap:7px;font-size:12.5px;padding:4px 0 10px;cursor:pointer}
 .notif-error{margin:6px 0;padding:8px 10px;border-radius:10px;background:#f7e4e1;color:#8b2f27;font-size:12.5px}

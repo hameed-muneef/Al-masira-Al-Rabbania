@@ -473,7 +473,7 @@ body:has(.learning-content) body::before{opacity:.18}
   font-size:16px;font-weight:800;letter-spacing:.3px;
   padding:0;margin:0 0 10px;
   background:transparent;border:0;backdrop-filter:none;
-  color:var(--art-gold);
+  color:#E3C991;
   text-shadow:0 2px 8px rgba(0,0,0,.5);
 }
 [data-theme="dark"] #root .app main .page-intro h1{
@@ -759,7 +759,8 @@ body::after{
 #root .app .sidebar{
   background:linear-gradient(180deg,var(--art-navy) 0%,var(--art-deep-teal) 100%);
 }
-#root .app .sidebar .brand strong,#root .app .sidebar .side-label{color:var(--art-gold)}
+#root .app .sidebar .brand strong,#root .app .sidebar .side-label{color:#7A5A12}
+[data-theme="dark"] #root .app .sidebar .side-label{color:#E3C98F}
 #root .app .sidebar nav button.active{box-shadow:inset -3px 0 0 var(--art-gold),0 6px 18px rgba(0,0,0,.22)}
 /* header glass */
 #root .app .topbar{
@@ -819,7 +820,7 @@ body::after{
   font-size:16px;font-weight:800;letter-spacing:.3px;
   padding:0;margin:0 0 10px;
   background:transparent;border:0;backdrop-filter:none;
-  color:var(--art-gold);
+  color:#E3C991;
   text-shadow:0 2px 8px rgba(0,0,0,.5);
 }
 [data-theme="dark"] #root .app main .page-intro h1{
@@ -848,7 +849,7 @@ html #root .app .sidebar .brand,
 html #root .app .sidebar .brand strong{color:#EDEDED}
 html #root .app .sidebar .brand strong{font-size:26px}
 html #root .app .sidebar .brand small{color:#A9B7C9;font-size:13px}
-html #root .app .sidebar .side-label{color:#E3C98F;font-size:15px;letter-spacing:.3px}
+html #root .app .sidebar .side-label{color:#7A5A12;font-size:15px;letter-spacing:.3px}
 html #root .app .sidebar nav button,
 html #root .app .sidebar .side-bottom button{
   color:#C9D4E2;font-size:17px;font-weight:700;min-height:54px;
@@ -860,7 +861,8 @@ html #root .app .sidebar .side-bottom button:hover{
   background:rgba(214,183,123,.12);color:#EDEDED;transform:translateX(-2px);
 }
 html #root .app .sidebar nav button svg,
-html #root .app .sidebar .side-bottom button svg{color:#D9B777;width:20px;height:20px}
+html #root .app .sidebar .side-bottom button svg{color:#7A5A12;width:20px;height:20px}
+[data-theme="dark"] #root .app .sidebar .side-bottom button svg{color:#D9B777}
 html #root .app .sidebar nav button.active{
   background:linear-gradient(90deg,rgba(214,183,123,.24),rgba(214,183,123,.08));
   color:#EDEDED;box-shadow:inset -3px 0 0 #D9B777,0 6px 18px rgba(0,0,0,.22);
@@ -874,3 +876,6 @@ html #root .app .sidebar .side-bottom p span{color:#8C9BB0;font-size:12px}
   #root .app .topbar>.top-reminder{position:absolute;left:50%;transform:translateX(-50%);width:min(52vw,640px);max-width:640px;margin:0;z-index:0}
   #root .app .topbar>.crumb,#root .app .topbar>.top-actions{position:relative;z-index:1}
 }
+#
+#root .app .primary{color:#fff}
+#root .app .switch-row button.selected{color:#fff}

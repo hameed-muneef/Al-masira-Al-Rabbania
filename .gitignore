@@ -18,3 +18,24 @@ android/local.properties
 android/capacitor-cordova-android-plugins/
 android/app/src/main/assets/public/
 android/keystores/
+
+# QA artifacts (generated, not to be committed)
+qa/shots/
+qa/results.json
+qa/scan-log.txt
+qa/login-state.json
+qa/run*.log
+
+
+# Test artifacts
+test-results/
+playwright-report/
+
+
+# Playwright visual baselines & reports
+tests/e2e/*.spec.ts-snapshots/
+*.png
+*.mp3
+_defs.sql
+*-redesign.html
+

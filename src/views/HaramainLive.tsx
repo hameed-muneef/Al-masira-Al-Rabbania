@@ -81,6 +81,20 @@ export default function HaramainLive() {
     return () => {active = false};
   }, [retry]);
 
+  // أثناء عرض قسم الحرمين: السكرول يكون داخل الـ widget (الإطار) فقط،
+  // ولا يُطبَّق على المنصة (الصفحة) ككل.
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.overflow;
+    const prevBody = body.style.overflow;
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = prevHtml;
+      body.style.overflow = prevBody;
+    };
+  }, []);
   const active = channels.find(channel => channel.id === activeId) ?? channels[0];
   const mode: Mode = active?.hls_url && !hlsFailedIds.has(active.id) ? 'hls' : 'embed';
   const onHlsFailed = () => {

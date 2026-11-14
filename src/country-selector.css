@@ -24,3 +24,5 @@
 @keyframes country-menu-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.country-selector-menu{position:fixed;top:auto;bottom:12px;inset-inline:12px;max-height:70vh;border-radius:14px}.country-selector-menu ul{max-height:calc(70vh - 74px)}}
 @media(prefers-reduced-motion:reduce){.country-selector-menu{animation:none}}
+
+#root .app .country-selector-control .country-selector-toggle{color:#263c32}

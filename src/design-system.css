@@ -39,7 +39,7 @@ button:disabled{opacity:.56;cursor:not-allowed}
 .back{margin-bottom:18px;color:var(--color-muted);font-size:13px;min-height:36px}
 .hero{min-height:236px;padding:30px clamp(28px,4vw,48px);border-radius:var(--radius-lg);background:linear-gradient(115deg,#263c32,#244638);box-shadow:0 16px 36px #263c3220}
 .hero-pattern{opacity:.07}
-.hero h1{font-size:clamp(29px,3vw,39px);line-height:1.4;margin:10px 0 4px}
+.hero h1{font-size:clamp(29px,3vw,39px);line-height:1.4;margin:10px 0 4px;color:#e1ebe1}
 .hero p{font-size:15px;line-height:1.85;margin:0;max-width:540px;color:#e1ebe1}
 .hero-btn{margin-top:20px;min-height:44px;background:#dce5dc;color:#263c32;border-radius:var(--radius-sm)}
 .hero-btn:hover{background:#f2efe5}

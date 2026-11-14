@@ -394,7 +394,6 @@
 [data-theme="dark"] .crumb{color:var(--dark-muted)}
 [data-theme="dark"] .crumb strong{color:var(--dark-body)}
 [data-theme="dark"] .top-date{color:var(--dark-body)}
-[data-theme="dark"] .hero-btn{color:var(--dark-body)}
 [data-theme="dark"] .section-title p{color:var(--dark-body)}
 [data-theme="dark"] .feature-icon{color:var(--dark-body)}
 [data-theme="dark"] .icon-1{color:var(--color-gold-ink)}
@@ -431,7 +430,6 @@
 [data-theme="dark"] .subtle-tag{color:var(--dark-body)}
 [data-theme="dark"] .switch-row button{color:var(--dark-body)}
 [data-theme="dark"] .reflection-entry small{color:var(--dark-muted)}
-[data-theme="dark"] .wird-flower{color:var(--dark-body)}
 [data-theme="dark"] .wird-card p{color:var(--dark-muted)}
 [data-theme="dark"] .count-row span{color:var(--dark-muted)}
 [data-theme="dark"] .counter-actions button{color:var(--dark-body)}

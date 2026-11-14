@@ -151,12 +151,12 @@
   height: 38px;
   border-radius: 10px;
   background: var(--color-surface-soft);
-  color: var(--color-primary);
+  color: var(--text-primary);
 }
 
 .quran-section-grid button.active .quran-section-icon {
   background: var(--color-primary);
-  color: var(--gold-soft, #e7dbb9);
+  color: #fff;
 }
 
 .quran-section-grid strong {
@@ -525,7 +525,7 @@
   text-align: center;
   font-size: 13px;
   font-weight: 800;
-  color: var(--color-primary);
+  color: var(--text-primary);
 }
 
 

@@ -66,7 +66,8 @@ html #root .app .sidebar .brand,
 html #root .app .sidebar .brand strong{color:#EDEDED}
 html #root .app .sidebar .brand strong{font-size:26px}
 html #root .app .sidebar .brand small{color:#A9B7C9;font-size:13px}
-html #root .app .sidebar .side-label{color:#E3C98F;font-size:15px;letter-spacing:.3px}
+html #root .app .sidebar .side-label{color:#7A5A12;font-size:15px;letter-spacing:.3px}
+[data-theme="dark"] #root .app .sidebar .side-label{color:#E3C98F}
 html #root .app .sidebar nav button,
 html #root .app .sidebar .side-bottom button{
   color:#C9D4E2;font-size:17px;font-weight:700;min-height:54px;
@@ -78,7 +79,7 @@ html #root .app .sidebar .side-bottom button:hover{
   background:rgba(214,183,123,.12);color:#EDEDED;transform:translateX(-2px);
 }
 html #root .app .sidebar nav button svg,
-html #root .app .sidebar .side-bottom button svg{color:#D9B777;width:20px;height:20px}
+html #root .app .sidebar .side-bottom button svg{color:#7A5A12;width:20px;height:20px}
 html #root .app .sidebar nav button.active{
   background:linear-gradient(90deg,rgba(214,183,123,.24),rgba(214,183,123,.08));
   color:#EDEDED;box-shadow:inset -3px 0 0 #D9B777,0 6px 18px rgba(0,0,0,.22);
@@ -131,7 +132,7 @@ html #root .app .sidebar .side-bottom p span{color:#8C9BB0;font-size:12px}
   --color-gold:#B99A5D;--color-bronze:#615A41;--color-ivory:#F2EBD9;
   --color-stone:#D8D0BB;--color-charcoal:#172921;
   --color-emerald:#1D3E3C;--color-success:#164F59;--color-warning:#B99A5D;--color-error:#C57F6B;
-  --color-accent:#527F8B;
+  --color-accent:#3a6b64;
   #root .app .page-intro h1,#root .app .section-title h2{color:var(--section-strong)}
 }
 [data-theme="dark"] .quran-reader{color:var(--dark-body)}

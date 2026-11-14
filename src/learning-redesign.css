@@ -87,7 +87,7 @@
 .path-station-name{min-width:0;font-size:15px;font-weight:700;line-height:1.6;overflow-wrap:anywhere}
 .path-station-focus{display:block;margin-top:2px;color:#4A544D;font-size:13px;font-weight:500;line-height:1.55}
 .path-station-summary{display:block;color:#3e5548;font-size:13px;font-weight:500;line-height:1.6}
-.path-station-name small{display:block;margin-top:2px;font-size:12px;font-weight:400;line-height:1.7;color:var(--learn-muted)}
+.path-station-name small{display:block;margin-top:2px;font-size:12px;font-weight:400;line-height:1.7;color:#4A5A52}
 .path-station.done .path-station-name{color:var(--learn-green-soft)}
 .path-station.locked .path-station-name,.path-station:disabled .path-station-name{color:#5A6A61;font-weight:600}
 .path-station.locked .path-station-focus,.path-station.locked .path-station-summary{color:#5A6A61}

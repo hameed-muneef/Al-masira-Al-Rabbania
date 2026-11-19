@@ -1,10 +1,10 @@
 // «المصحف الشريف» بترتيب صفحات المصحف (٦٠٤ صفحة): تمرير رأسي متصل،
 // بحدود الصفحات وأرقامها وأسماء السور ومواضع الأجزاء والأحزاب.
 // النص من أصل معتمد محلي، ولا يُعدّل حرف منه.
-import {memo, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Bookmark, BookmarkCheck, ChevronLeft, Copy, Loader2, Pause, Play, Search,
-  Share2, Square, StickyNote, Trash2, X, WifiOff
+  Share2, Square, StickyNote, Trash2, X, WifiOff, BookOpen, TrendingUp
 } from 'lucide-react';
 import type {QuranAsset, QuranLearningState, QuranVerse} from '../../quran/types';
 import {
@@ -97,7 +97,11 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [active, setActive] = useState<QuranVerse | null>(null);
-  const [sheetTab, setSheetTab] = useState<'actions' | 'tafsir' | 'translation'>('actions');
+  const [sheetTab, setSheetTab] = useState<'actions' | 'tafsir' | 'translation'>('tafsir');
+  const [popoverPos, setPopoverPos] = useState<{top: number; left: number; placement: 'below' | 'above'}>({top: 0, left: 0, placement: 'below'});
+  const [isMobileSheet, setIsMobileSheet] = useState<boolean>(() => (typeof window !== 'undefined' ? window.innerWidth <= 767 : false));
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+  const ayahRef = useRef<QuranVerse | null>(null);
   const [tafsirId, setTafsirId] = useState<number>(TAFSIRS[0].id);
   const [translationId, setTranslationId] = useState<number>(TRANSLATIONS[0].id);
   const [content, setContent] = useState<FetchState<string>>({status: 'idle', data: null});
@@ -134,6 +138,7 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
 
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const autoScrollingRef = useRef<boolean>(false);
   const speedRef = useRef(autoSpeed);
   const stateRef = useRef(state);
   const onStateRef = useRef(onState);
@@ -177,8 +182,9 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
   useEffect(() => {
     let last = 0;
     const onScroll = () => {
+      if (autoScrollingRef.current) return;
       const now = performance.now();
-      if (now - last < 120) return;
+      if (now - last < 200) return;
       last = now;
       const els = pageRefs.current;
       let low = 0;
@@ -244,6 +250,20 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
     setPlayingKey('');
   }, []);
 
+  const closePopover = useCallback(() => {
+    continuousRef.current.running = false;
+    restartRef.current = false;
+    const r = currentResolveRef.current;
+    currentResolveRef.current = null;
+    if (r) r();
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    playStateRef.current = 'idle';
+    setPlayState('idle');
+    setCurrentKey('');
+    setPlayingKey('');
+    setActive(null);
+  }, []);
+
   const pauseContinuous = useCallback(() => {
     if (playStateRef.current !== 'playing') return;
     playStateRef.current = 'paused';
@@ -259,6 +279,8 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
   }, []);
 
   const playContinuousFrom = useCallback(async (startIndex: number, stopSurah?: number) => {
+    const cur = audioRef.current;
+    if (cur) { cur.pause(); audioRef.current = null; }
     if (playStateRef.current !== 'idle') {
       continuousRef.current.running = false;
       const r = currentResolveRef.current;
@@ -368,7 +390,22 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
 
   // التمرير التلقائي: سلس، قابل للإيقاف، ويُبقي الشاشة مستيقظة إن أمكن.
   useEffect(() => {
-    if (!autoScroll) return;
+    if (!autoScroll) {
+      autoScrollingRef.current = false;
+      // update page state once when stopping
+      const els = pageRefs.current;
+      let low = 0, high = els.length - 1, found = 1;
+      while (low <= high) {
+        const mid = (low + high) >> 1;
+        const el = els[mid];
+        if (!el) { low = mid + 1; continue; }
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom > TOOLBAR_OFFSET + 8) { found = mid + 1; high = mid - 1; } else { low = mid + 1; }
+      }
+      setPage(found);
+      return;
+    }
+    autoScrollingRef.current = true;
     const root = document.documentElement;
     const prevBehavior = root.style.scrollBehavior;
     root.style.scrollBehavior = 'auto';
@@ -382,11 +419,20 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
     void acquire();
     let frame = 0;
     let last = performance.now();
+    let acc = root.scrollTop;
     const tick = (now: number) => {
-      const delta = Math.min(0.25, Math.max(0, (now - last) / 1000));
+      const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
       last = now;
-      root.scrollTop += speedRef.current * delta;
-      if (window.innerHeight + window.scrollY >= root.scrollHeight - 4) { setAutoScroll(false); return; }
+      const speed = speedRef.current;
+      acc += speed * dt;
+      const maxScroll = root.scrollHeight - window.innerHeight;
+      if (acc >= maxScroll - 2) {
+        acc = maxScroll;
+        root.scrollTop = acc;
+        setAutoScroll(false);
+        return;
+      }
+      root.scrollTop = acc;
       frame = requestAnimationFrame(tick);
     };
     const pause = () => setAutoScroll(false);
@@ -394,6 +440,7 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
     window.addEventListener('touchstart', pause, {passive: true});
     frame = requestAnimationFrame(tick);
     return () => {
+      autoScrollingRef.current = false;
       cancelAnimationFrame(frame);
       window.removeEventListener('wheel', pause);
       window.removeEventListener('touchstart', pause);
@@ -504,16 +551,189 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playScope]);
 
+  // Handler for the single Play/Pause button (shared by desktop & mobile).
+  const togglePlay = () => {
+    if (playState === 'idle') {
+      let startIndex = 0;
+      const startSurah = pages[page - 1]?.verses[0]?.s ?? 1;
+      if (playScope === 'surah') {
+        const idx = asset.verses.findIndex(v => v.s === startSurah && v.a === 1);
+        if (idx >= 0) startIndex = idx;
+      } else if (playScope === 'fromHere') {
+        const first = pages[page - 1]?.verses[0];
+        const idx = first ? asset.verses.findIndex(v => v.s === first.s && v.a === first.a) : 0;
+        if (idx >= 0) startIndex = idx;
+      } else {
+        startIndex = 0;
+      }
+      const stopSurah = playScope === 'surah' ? startSurah : undefined;
+      setActive(null);
+      void playContinuousFrom(startIndex, stopSurah);
+    } else if (playState === 'playing') {
+      pauseContinuous();
+    } else {
+      resumeContinuous();
+    }
+  };
+
+  // Track mobile breakpoint for sheet vs popover.
+  useEffect(() => {
+    const onResize = () => setIsMobileSheet(window.innerWidth <= 767);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Outside click / Esc / focus / swipe for ayah popover.
+  useEffect(() => {
+    if (!active) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closePopover(); }
+    };
+    const onClickOutside = (e: MouseEvent) => {
+      if (isMobileSheet) return;
+      const pop = popoverRef.current;
+      if (pop && !pop.contains(e.target as Node)) { closePopover(); }
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onClickOutside);
+    // focus first focusable
+    const t = setTimeout(() => {
+      const pop = popoverRef.current;
+      if (pop) {
+        const focusable = pop.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable) focusable.focus();
+      }
+    }, 50);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onClickOutside);
+      clearTimeout(t);
+    };
+  }, [active, isMobileSheet]);
+
+  // Compute popover position when active ayah changes.
+  const computePosition = useCallback(() => {
+    if (!active || isMobileSheet) return;
+    const ayahEl = document.querySelector(`[data-ayah="${active.s}:${active.a}"]`) as HTMLElement | null;
+    if (!ayahEl) return;
+    const rect = ayahEl.getBoundingClientRect();
+    const popWidth = Math.min(560, window.innerWidth - 32);
+    const col = document.querySelector('.mf-pages') as HTMLElement | null;
+    const colRect = col ? col.getBoundingClientRect() : {left: 0, width: window.innerWidth};
+    const colWidth = colRect.width > 0 ? colRect.width : Math.min(760, window.innerWidth);
+    const colLeft = colRect.left > 0 ? colRect.left : (window.innerWidth - colWidth) / 2;
+    let left = colLeft + (colWidth - popWidth) / 2;
+    left = Math.max(16, Math.min(left, window.innerWidth - popWidth - 16));
+    const gap = 12;
+    const pop = popoverRef.current;
+    const popH = pop ? pop.offsetHeight : 360;
+    const spaceBelow = window.innerHeight - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+    let placement: 'below' | 'above' = 'below';
+    let top = rect.bottom + gap;
+    if (spaceBelow < popH && spaceAbove >= popH) {
+      placement = 'above';
+      top = rect.top - popH - gap;
+    } else if (spaceBelow < popH && spaceAbove < popH) {
+      placement = 'below';
+      top = Math.max(gap, window.innerHeight - popH - 16);
+    }
+    setPopoverPos({top, left, placement});
+  }, [active, isMobileSheet]);
+
+  useEffect(() => {
+    if (!active) return;
+    ayahRef.current = active;
+    if (isMobileSheet) {
+      const ayahEl = document.querySelector(`[data-ayah="${active.s}:${active.a}"]`) as HTMLElement | null;
+      if (ayahEl) {
+        const rect = ayahEl.getBoundingClientRect();
+        const target = window.scrollY + rect.top - window.innerHeight / 3;
+        window.scrollTo({top: Math.max(0, target), behavior: 'smooth'});
+      }
+      return;
+    }
+    const t = setTimeout(computePosition, 0);
+    return () => clearTimeout(t);
+  }, [active, isMobileSheet, computePosition]);
+
+  useEffect(() => {
+    if (!active || isMobileSheet) return;
+    const onScrollResize = () => {
+      computePosition();
+    };
+    window.addEventListener('scroll', onScrollResize, {passive: true});
+    window.addEventListener('resize', onScrollResize);
+    return () => {
+      window.removeEventListener('scroll', onScrollResize);
+      window.removeEventListener('resize', onScrollResize);
+    };
+  }, [active, isMobileSheet, computePosition]);
+
+  // Track mobile breakpoint
+  useEffect(() => {
+    const onResize = () => setIsMobileSheet(window.innerWidth <= 767);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const results = useMemo(() => (search.trim().length >= 2 ? searchVerses(asset, search, 30) : []), [asset, search]);
+
+  // Outside click / Esc / focus / swipe for ayah popover.
+  useEffect(() => {
+    if (!active) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { closePopover(); }
+    };
+    const onClickOutside = (e: MouseEvent) => {
+      if (isMobileSheet) return;
+      const pop = popoverRef.current;
+      if (pop && !pop.contains(e.target as Node)) { closePopover(); }
+    };
+    document.addEventListener('keydown', onKey);
+    if (!isMobileSheet) document.addEventListener('mousedown', onClickOutside);
+    const t = setTimeout(() => {
+      const pop = popoverRef.current;
+      if (pop) {
+        const focusable = pop.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable) focusable.focus();
+      }
+    }, 50);
+    let startY = 0;
+    const handle = popoverRef.current?.querySelector('.mf-drag-handle');
+    const onTouchStart = (e: Event) => { startY = (e as TouchEvent).touches[0].clientY; };
+    const onTouchEnd = (e: Event) => {
+      const endY = (e as TouchEvent).changedTouches[0].clientY;
+      if (endY - startY > 60) { closePopover(); }
+    };
+    if (isMobileSheet && handle) {
+      handle.addEventListener('touchstart', onTouchStart, {passive: true});
+      handle.addEventListener('touchend', onTouchEnd, {passive: true});
+    }
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onClickOutside);
+      clearTimeout(t);
+      if (isMobileSheet && handle) {
+        handle.removeEventListener('touchstart', onTouchStart);
+        handle.removeEventListener('touchend', onTouchEnd);
+      }
+    };
+  }, [active, isMobileSheet]);
 
   const meta = pageMeta.get(page);
   const progress = Math.round((page / pages.length) * 100);
 
   const selectVerse = useCallback((verse: QuranVerse) => {
+    if (active && active.s === verse.s && active.a === verse.a) {
+      setActive(null);
+      stopAudio();
+      return;
+    }
     setActive(verse);
-    setSheetTab('actions');
+    setSheetTab('tafsir');
     setNoteText('');
-  }, []);
+  }, [active]);
 
   if (mode === 'reflow') {
     return <div className="mf-reflow-wrap">
@@ -527,75 +747,100 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
 
   return <div className="mf-shell">
     <div className="mf-toolbar" role="toolbar" aria-label="أدوات المصحف">
-      <div className="mf-toolbar-row">
-        <div className="mf-nav">
-          <select value={jumpKind} onChange={event => setJumpKind(event.target.value as typeof jumpKind)} aria-label="نوع الانتقال">
-            <option value="surah">سورة</option>
-            <option value="juz">جزء</option>
-            <option value="hizb">حزب</option>
-            <option value="page">صفحة</option>
-          </select>
-          <select value={jumpValue} onChange={event => setJumpValue(event.target.value)} aria-label="الانتقال إلى">
-            {jumpOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-          <button type="button" className="soft-btn" onClick={jump}><ChevronLeft size={15}/> انتقال</button>
-        </div>
-        <button type="button" className="soft-btn" onClick={() => setSearchOpen(value => !value)} aria-pressed={searchOpen}><Search size={16}/> بحث</button>
+      <div className="mf-toolbar-head">
+        <h1 className="mf-toolbar-title">المصحف الشريف</h1>
+        <p className="mf-toolbar-desc">تمرير رأسي متصل — قراءة على هدي الكتاب والسنة.</p>
       </div>
-
-      <div className="mf-toolbar-row">
-        <div className="mf-controls">
-          <button type="button" className={autoScroll ? 'soft-btn selected' : 'soft-btn'} aria-pressed={autoScroll} onClick={() => setAutoScroll(value => !value)}>
-            {autoScroll ? <Pause size={16}/> : <Play size={16}/>} {autoScroll ? 'إيقاف التمرير' : 'تمرير تلقائي'}
-          </button>
-          <select value={autoSpeed} onChange={event => setAutoSpeed(Number(event.target.value))} aria-label="سرعة التمرير التلقائي">
-            {AUTO_SCROLL_SPEEDS.map(speed => <option key={speed.value} value={speed.value}>{speed.label}</option>)}
-          </select>
-          <input type="range" min={40} max={1400} step={20} value={autoSpeed} onChange={event => setAutoSpeed(Number(event.target.value))} aria-label="ضبط دقيق لسرعة التمرير" className="mf-slider"/>
-          <select value={reciterId} onChange={event => setReciterId(Number(event.target.value))} aria-label="القارئ" title="القارئ">
-            {QURAN_COM_RECITERS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
-          <select value={playScope} onChange={event => setPlayScope(event.target.value as 'surah' | 'fromHere' | 'all')} aria-label="نطاق التشغيل" title="نطاق التشغيل">
-            <option value="surah">هذه السورة</option>
-            <option value="fromHere">من هنا</option>
-            <option value="all">المصحف كاملًا</option>
-          </select>
-          {playState === 'idle'
-            ? <button type="button" className="soft-btn" onClick={() => {
-                let startIndex = 0;
-                const startSurah = pages[page - 1]?.verses[0]?.s ?? 1;
-                if (playScope === 'surah') {
-                  const idx = asset.verses.findIndex(v => v.s === startSurah && v.a === 1);
-                  if (idx >= 0) startIndex = idx;
-                } else if (playScope === 'fromHere') {
-                  const first = pages[page - 1]?.verses[0];
-                  const idx = first ? asset.verses.findIndex(v => v.s === first.s && v.a === first.a) : 0;
-                  if (idx >= 0) startIndex = idx;
-                } else {
-                  startIndex = 0;
-                }
-                const stopSurah = playScope === 'surah' ? startSurah : undefined;
-                setActive(null);
-                void playContinuousFrom(startIndex, stopSurah);
-              }}><Play size={15}/> تشغيل</button>
-            : playState === 'playing'
-              ? <button type="button" className="soft-btn selected" onClick={pauseContinuous}><Pause size={15}/> إيقاف مؤقت</button>
-              : <button type="button" className="soft-btn selected" onClick={resumeContinuous}><Play size={15}/> تشغيل</button>}
-        </div>
-        <div className="mf-font">
-          <span className="muted small">حجم الخط</span>
-          <button type="button" className="icon-btn" onClick={() => setFontSize(value => Math.max(18, value - 1))} aria-label="تصغير الخط">−</button>
-          <span className="small">{toArabicNumber(fontSize)}</span>
-          <button type="button" className="icon-btn" onClick={() => setFontSize(value => Math.min(42, value + 1))} aria-label="تكبير الخط">+</button>
-          <button type="button" className="soft-btn" onClick={() => setMode('reflow')}>قراءة مرنة</button>
-          <button type="button" className="soft-btn" onClick={() => setBookmarksOpen(true)}>علاماتي ({toArabicNumber(bookmarks.length)})</button>
-          <button type="button" className="soft-btn" onClick={() => setKhatmahOpen(true)}>تقدم الختمة</button>
-        </div>
+      <div className="mf-grid mf-grid-3">
+        <section className="mf-section mf-sec-nav">
+          <h3 className="mf-sec-title"><Search size={17}/> التنقل والبحث</h3>
+          <div className="mf-row mf-row-nav">
+            <div className="mf-field">
+              <label className="mf-field-label">النوع</label>
+              <div className="mf-select-wrap">
+                <select value={jumpKind} onChange={event => setJumpKind(event.target.value as typeof jumpKind)} aria-label="نوع الانتقال">
+                  <option value="surah">سورة</option><option value="juz">جزء</option><option value="hizb">حزب</option><option value="page">صفحة</option>
+                </select>
+              </div>
+            </div>
+            <div className="mf-field mf-field-grow">
+              <label className="mf-field-label">الانتقال إلى</label>
+              <div className="mf-select-wrap">
+                <select value={jumpValue} onChange={event => setJumpValue(event.target.value)} aria-label="الانتقال إلى">
+                  {jumpOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <button type="button" className="mf-btn primary" onClick={jump} aria-label="انتقال"><ChevronLeft size={17}/>انتقال</button>
+            <button type="button" className={`mf-btn ${searchOpen ? 'primary' : 'soft'}`} onClick={() => setSearchOpen(value => !value)} aria-pressed={searchOpen} aria-label="بحث"><Search size={17}/>بحث</button>
+          </div>
+        </section>
+        <section className="mf-section mf-sec-audio">
+          <h3 className="mf-sec-title"><Play size={17}/> الاستماع</h3>
+          <div className="mf-row mf-row-audio">
+            <div className="mf-field mf-field-grow">
+              <label className="mf-field-label">القارئ</label>
+              <div className="mf-select-wrap">
+                <select value={reciterId} onChange={event => setReciterId(Number(event.target.value))} aria-label="القارئ">
+                  {QURAN_COM_RECITERS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="mf-field mf-field-grow">
+              <label className="mf-field-label">النطاق</label>
+              <div className="mf-select-wrap">
+                <select value={playScope} onChange={event => setPlayScope(event.target.value as 'surah' | 'fromHere' | 'all')} aria-label="نطاق التشغيل">
+                  <option value="surah">هذه السورة</option><option value="fromHere">من هنا</option><option value="all">المصحف كاملًا</option>
+                </select>
+              </div>
+            </div>
+            <button type="button" className="mf-btn primary" onClick={togglePlay} aria-pressed={playState === 'playing'}>
+              {playState === 'idle' ? <><Play size={17}/>تشغيل</> : playState === 'playing' ? <><Pause size={17}/>إيقاف مؤقت</> : <><Play size={17}/>تشغيل</>}
+            </button>
+          </div>
+          {(playState !== 'idle' || currentKey) && <div className="mf-nowplaying">
+            <Play size={13}/> الآن يُشغَّل: {currentKey ? `${surahInfo(asset, Number(currentKey.split(':')[0]))?.name ?? ''} — ${QURAN_COM_RECITERS.find(r => r.id === reciterId)?.name ?? ''}` : '—'}
+          </div>}
+        </section>
+        <section className="mf-section mf-sec-reading">
+          <h3 className="mf-sec-title"><BookOpen size={17}/> القراءة</h3>
+          <div className="mf-reading-grid">
+            <div className="mf-group">
+              <span className="mf-group-label">تمرير تلقائي</span>
+              <button type="button" className={autoScroll ? 'mf-btn primary' : 'mf-btn soft'} aria-pressed={autoScroll} onClick={() => setAutoScroll(value => !value)}>{autoScroll ? <Pause size={16}/> : <Play size={16}/>}{autoScroll ? 'إيقاف التمرير' : 'تمرير تلقائي'}</button>
+            </div>
+            <div className="mf-group">
+              <span className="mf-group-label">سرعة التمرير</span>
+              <div className="mf-speed">
+                <div className="mf-speed-head">
+                  <span className="mf-speed-val">{AUTO_SCROLL_SPEEDS.find(s => s.value === autoSpeed)?.label ?? 'متوسط'}</span>
+                </div>
+                <input type="range" min={40} max={1400} step={20} value={autoSpeed} onChange={event => setAutoSpeed(Number(event.target.value))} aria-label="سرعة التمرير التلقائي" className="mf-slider"/>
+              </div>
+            </div>
+            <div className="mf-group">
+              <span className="mf-group-label">حجم الخط</span>
+              <div className="mf-font">
+                <button type="button" className="mf-btn sm" aria-label="تصغير الخط" onClick={() => setFontSize(value => Math.max(18, value - 1))}>−</button>
+                <span className="mf-font-val">{toArabicNumber(fontSize)}</span>
+                <button type="button" className="mf-btn sm" aria-label="تكبير الخط" onClick={() => setFontSize(value => Math.min(42, value + 1))}>+</button>
+              </div>
+            </div>
+            <div className="mf-group">
+              <span className="mf-group-label">قراءة مرنة</span>
+              <button type="button" className="mf-btn soft" onClick={() => setMode('reflow')}><BookOpen size={16}/>قراءة مرنة</button>
+            </div>
+            <div className="mf-group">
+              <span className="mf-group-label">علاماتي</span>
+              <button type="button" className="mf-btn soft" onClick={() => setBookmarksOpen(true)}><Bookmark size={16}/>علاماتي <span className="mf-badge">{toArabicNumber(bookmarks.length)}</span></button>
+            </div>
+            <div className="mf-group">
+              <span className="mf-group-label">تقدم الختمة</span>
+              <button type="button" className="mf-btn soft" onClick={() => setKhatmahOpen(true)}><TrendingUp size={16}/>تقدم الختمة</button>
+            </div>
+          </div>
+        </section>
       </div>
-
-      {(playState !== 'idle' || currentKey) && <div className="mf-nowplaying">
-        <Play size={13}/> الآن يُشغَّل: {currentKey ? `${surahInfo(asset, Number(currentKey.split(':')[0]))?.name ?? ''} — ${QURAN_COM_RECITERS.find(r => r.id === reciterId)?.name ?? ''}` : '—'}
-      </div>}
       {searchOpen && <div className="mf-search">
         <label><Search size={15}/><input autoFocus value={search} onChange={event => setSearch(event.target.value)} placeholder="ابحث بالكلمة (بحث إملائي منفصل عن نص المصحف)"/></label>
         {search.trim().length >= 2 && <p className="muted small">{toArabicNumber(results.length)} نتيجة{results.length >= 30 ? ' (أول ٣٠)' : ''}</p>}
@@ -609,11 +854,40 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
         ))}</ul>
         {search.trim().length >= 2 && results.length === 0 && <p className="muted small">لا توجد نتائج مطابقة.</p>}
       </div>}
-
       <div className="mf-statusbar">
-        <span>{meta ? `صفحة ${toArabicNumber(page)} من ${toArabicNumber(pages.length)} · الجزء ${toArabicNumber(meta.juz)} · الحزب ${toArabicNumber(meta.hizb)}` : `صفحة ${toArabicNumber(page)}`}</span>
-        <span className="mf-progress" aria-hidden="true"><span style={{width: `${progress}%`}}/></span>
+        <span className="mf-status-text">{meta ? `صفحة ${toArabicNumber(page)} من ${toArabicNumber(pages.length)} · الجزء ${toArabicNumber(meta.juz)} · الحزب ${toArabicNumber(meta.hizb)}` : `صفحة ${toArabicNumber(page)}`}</span>
+        <div className="mf-progress" aria-hidden="true"><span style={{width: `${progress}%`}}/></div>
       </div>
+    </div>
+    <div className="mf-bottom-bar">
+      <button type="button" className={`mf-btn sm ${playState === 'playing' ? 'primary' : 'primary'}`} onClick={togglePlay} aria-pressed={playState === 'playing'} aria-label="تشغيل أو إيقاف القراءة">
+        {playState === 'playing' ? <Pause size={17}/> : <Play size={17}/>} {playState === 'playing' ? 'إيقاف مؤقت' : 'تشغيل'}
+      </button>
+      <button type="button" className={autoScroll ? 'mf-btn sm primary' : 'mf-btn sm soft'} onClick={() => setAutoScroll(value => !value)} aria-pressed={autoScroll} aria-label="تمرير تلقائي">
+        {autoScroll ? <Pause size={15}/> : <Play size={15}/>} {autoScroll ? 'إيقاف التمرير' : 'تمرير تلقائي'}
+      </button>
+      <button type="button" className={`mf-btn sm ${searchOpen ? 'primary' : 'soft'}`} onClick={() => setSearchOpen(value => !value)} aria-pressed={searchOpen} aria-label="بحث">
+        <Search size={16}/> بحث
+      </button>
+      <button type="button" className="mf-btn sm soft" onClick={() => setBookmarksOpen(true)} aria-label="علاماتي">
+        <Bookmark size={16}/> علاماتي
+      </button>
+    </div>
+
+    {/* Mobile sticky bottom bar */}
+    <div className="mf-bottom-bar">
+      <button type="button" className={`mf-btn sm ${playState === 'playing' ? 'primary' : 'primary'}`} onClick={togglePlay} aria-pressed={playState === 'playing'} aria-label="تشغيل أو إيقاف القراءة">
+        {playState === 'playing' ? <Pause size={17}/> : <Play size={17}/>} {playState === 'playing' ? 'إيقاف مؤقت' : 'تشغيل'}
+      </button>
+      <button type="button" className={autoScroll ? 'mf-btn sm primary' : 'mf-btn sm soft'} onClick={() => setAutoScroll(value => !value)} aria-pressed={autoScroll} aria-label="تمرير تلقائي">
+        {autoScroll ? <Pause size={15}/> : <Play size={15}/>} {autoScroll ? 'إيقاف التمرير' : 'تمرير تلقائي'}
+      </button>
+      <button type="button" className={`mf-btn sm ${searchOpen ? 'primary' : 'soft'}`} onClick={() => setSearchOpen(value => !value)} aria-pressed={searchOpen} aria-label="بحث">
+        <Search size={16}/> بحث
+      </button>
+      <button type="button" className="mf-btn sm soft" onClick={() => setBookmarksOpen(true)} aria-label="علاماتي">
+        <Bookmark size={16}/> علاماتي
+      </button>
     </div>
 
     <MushafPageList
@@ -629,27 +903,39 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
       registerPage={registerPage}
     />
 
-    {active && <div className="mf-sheet-backdrop" onClick={() => { setActive(null); stopAudio(); }}>
-      <div className="mf-sheet" role="dialog" aria-label="خيارات الآية" onClick={event => event.stopPropagation()}>
+    {active && <div
+      className={isMobileSheet ? 'mf-sheet-backdrop mf-scrim-light' : 'mf-popover-anchor'}
+      onClick={isMobileSheet ? (e => { if (e.target === e.currentTarget) { closePopover(); } }) : undefined}
+    >
+      <div
+        ref={popoverRef}
+        className={isMobileSheet ? 'mf-sheet mf-sheet-mobile' : 'mf-popover'}
+        role="dialog"
+        aria-modal={isMobileSheet ? 'true' : 'false'}
+        aria-label={`${surahInfo(asset, active.s)?.name ?? `سورة ${active.s}`}: ${toArabicNumber(active.a)}`}
+        style={isMobileSheet ? undefined : { top: popoverPos.top, left: popoverPos.left, width: Math.min(560, (typeof window !== 'undefined' ? window.innerWidth : 560) - 32), maxWidth: 560 }}
+        onClick={event => event.stopPropagation()}
+      >
+        {isMobileSheet && <div className="mf-drag-handle" aria-hidden="true"/>}
         <div className="mf-sheet-head">
           <div>
             <strong>{surahInfo(asset, active.s)?.name ?? `سورة ${active.s}`}: {toArabicNumber(active.a)}</strong>
             <small className="muted">صفحة {toArabicNumber(active.p)} · الجزء {toArabicNumber(active.j)}</small>
           </div>
-          <button type="button" className="icon-btn" onClick={() => { setActive(null); stopAudio(); }} aria-label="إغلاق"><X size={18}/></button>
+          <button type="button" className="mf-icon-btn" onClick={() => { closePopover(); }} aria-label="إغلاق"><X size={18}/></button>
         </div>
 
         <div className="mf-sheet-actions">
-          <button type="button" className={sheetTab === 'tafsir' ? 'soft-btn selected' : 'soft-btn'} onClick={() => setSheetTab('tafsir')}>تفسير</button>
-          <button type="button" className={sheetTab === 'translation' ? 'soft-btn selected' : 'soft-btn'} onClick={() => setSheetTab('translation')}>ترجمة</button>
-          <button type="button" className={playingKey === `${active.s}:${active.a}` ? 'soft-btn selected' : 'soft-btn'} onClick={() => void playAyah(active)}>
-            {audioLoading ? <Loader2 size={15} className="spin"/> : playingKey === `${active.s}:${active.a}` ? <Square size={15}/> : <Play size={15}/>} تشغيل
+          <button type="button" className={sheetTab === 'tafsir' ? 'mf-btn selected' : 'mf-btn soft'} onClick={() => setSheetTab('tafsir')}>تفسير</button>
+          <button type="button" className={sheetTab === 'translation' ? 'mf-btn selected' : 'mf-btn soft'} onClick={() => setSheetTab('translation')}>ترجمة</button>
+          <button type="button" className={playingKey === `${active.s}:${active.a}` ? 'mf-btn selected' : 'mf-btn soft'} onClick={() => void playAyah(active)}>
+            {audioLoading ? <Loader2 size={18} className="spin"/> : playingKey === `${active.s}:${active.a}` ? <Square size={18}/> : <Play size={18}/>} تشغيل
           </button>
-          <button type="button" className="soft-btn" onClick={() => { if (active) { const idx = asset.verses.findIndex(v => v.s === active.s && v.a === active.a); if (idx >= 0) { setActive(null); void playContinuousFrom(idx, undefined); } } }}><Play size={15}/> متواصل من هنا</button>
-          <button type="button" className="soft-btn" onClick={async () => { await copyText(`${verseBody(active.t)} (${surahInfo(asset, active.s)?.name ?? active.s}: ${toArabicNumber(active.a)})`); notify('نُسخت الآية مع مرجعها.'); }}><Copy size={15}/> نسخ</button>
-          <button type="button" className="soft-btn" onClick={async () => { const result = await shareText(`${verseBody(active.t)} (${surahInfo(asset, active.s)?.name ?? active.s}: ${toArabicNumber(active.a)})`); notify(result === 'shared' ? 'فُتحت المشاركة.' : 'نُسخت الآية للمشاركة.'); }}><Share2 size={15}/> مشاركة</button>
-          <button type="button" className={isBookmarked(active) ? 'soft-btn selected' : 'soft-btn'} onClick={() => toggleBookmark(active)}>
-            {isBookmarked(active) ? <BookmarkCheck size={15}/> : <Bookmark size={15}/>} علامة
+          <button type="button" className="mf-btn soft" onClick={() => { if (active) { const idx = asset.verses.findIndex(v => v.s === active.s && v.a === active.a); if (idx >= 0) { setActive(null); void playContinuousFrom(idx, undefined); } } }}><Play size={18}/> متواصل من هنا</button>
+          <button type="button" className="mf-btn soft" onClick={async () => { await copyText(`${verseBody(active.t)} (${surahInfo(asset, active.s)?.name ?? active.s}: ${toArabicNumber(active.a)})`); notify('نُسخت الآية مع مرجعها.'); }}><Copy size={18}/> نسخ</button>
+          <button type="button" className="mf-btn soft" onClick={async () => { const result = await shareText(`${verseBody(active.t)} (${surahInfo(asset, active.s)?.name ?? active.s}: ${toArabicNumber(active.a)})`); notify(result === 'shared' ? 'فُتحت المشاركة.' : 'نُسخت الآية للمشاركة.'); }}><Share2 size={18}/> مشاركة</button>
+          <button type="button" className={isBookmarked(active) ? 'mf-btn selected' : 'mf-btn soft'} onClick={() => toggleBookmark(active)}>
+            {isBookmarked(active) ? <BookmarkCheck size={18}/> : <Bookmark size={18}/>} علامة
           </button>
         </div>
 
@@ -670,7 +956,7 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
           <label>ملاحظة شخصية على هذه الآية
             <textarea value={noteText} onChange={event => setNoteText(event.target.value)} maxLength={4000} placeholder="تأمل أو فائدة خاصة بك… تبقى على هذا الجهاز."/>
           </label>
-          <button type="button" className="primary" onClick={addNote}><StickyNote size={15}/> حفظ الملاحظة</button>
+          <button type="button" className="mf-btn primary mf-btn-full" onClick={addNote}><StickyNote size={18}/> حفظ الملاحظة</button>
         </div>
         <p className="mf-sheet-foot"><InternetBadge compact/> التلاوة: {QURAN_COM_RECITERS.find(r => r.id === reciterId)?.name ?? 'مشاري راشد العفاسي'} — تحتاج إنترنت؛ النص والتفسير المحفوظ لا يحتاجان.</p>
       </div>
@@ -744,7 +1030,7 @@ type ListProps = {
 
 // قائمة الصفحات معزولة عن تحديثات التمرير: لا تُعاد إلا عند تغيّر محتوى فعلي،
 // وكل صفحة خارج الشاشة تُستبعد من التخطيط والرسم عبر content-visibility.
-const MushafPageList = memo(function MushafPageList({asset, pages, surahStarts, sajdaKeys, basmala, fontSize, activeKey, playingKey, onSelect, registerPage}: ListProps) {
+const MushafPageList = function MushafPageList({asset, pages, surahStarts, sajdaKeys, basmala, fontSize, activeKey, playingKey, onSelect, registerPage}: ListProps) {
   return <div className="mf-pages" style={{fontSize: `${fontSize}px`}} dir="rtl">
     {pages.map(block => {
       const starts = surahStarts.get(block.page);
@@ -782,4 +1068,4 @@ const MushafPageList = memo(function MushafPageList({asset, pages, surahStarts, 
     })}
     <p className="mf-source">النص العثماني من {asset.source} · رواية {asset.narration}. حدود الصفحات والأجزاء والأحزاب كما في مصدر المجمع. التلاوات الصوتية والبث المباشر يعملان عبر الإنترنت فقط.</p>
   </div>;
-});
+}

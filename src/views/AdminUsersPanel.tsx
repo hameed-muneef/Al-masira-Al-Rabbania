@@ -2,11 +2,11 @@ import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {Search,Users,ChevronLeft,ChevronRight,RefreshCw,ShieldCheck} from 'lucide-react';
 import {authClient} from '../auth';
 
-type RoleFilter='all'|'admin'|'approved_teacher'|'pending_teacher'|'member';
+type RoleFilter='all'|'admin'|'member';
 type AdminUser={
   user_id:string;email:string|null;email_confirmed:boolean;created_at:string;last_sign_in_at:string|null;
-  first_name:string;last_name:string;country:string;is_admin:boolean;teacher_status:string|null;is_approved_teacher:boolean;
-  total_count:number|string;confirmed_count:number|string;admin_count:number|string;approved_teacher_count:number|string;
+  first_name:string;last_name:string;country:string;is_admin:boolean;
+  total_count:number|string;confirmed_count:number|string;admin_count:number|string;
 };
 type FeatureOption={key:string;title:string;enabled:boolean;requires_premium:boolean};
 type PermissionEvent={id:string;feature_key:string;feature_title:string;allowed:boolean|null;changed_by_email:string|null;changed_at:string};
@@ -17,7 +17,7 @@ type PermissionStatus={
 };
 
 const pageSize=25;
-const roleOptions:[RoleFilter,string][]=[['all','كل المستخدمين'],['admin','مشرفو المنصة'],['approved_teacher','المعلمون المعتمدون'],['pending_teacher','طلبات تدريس معلقة'],['member','الأعضاء']];
+const roleOptions:[RoleFilter,string][]=[['all','كل المستخدمين'],['admin','مشرفو المنصة'],['member','الأعضاء']];
 const dateFormat=new Intl.DateTimeFormat('ar-EG',{dateStyle:'medium'});
 const dateTimeFormat=new Intl.DateTimeFormat('ar-EG',{dateStyle:'medium',timeStyle:'short'});
 const dateTime=(value:string)=>new Intl.DateTimeFormat('ar-EG',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value));
@@ -26,13 +26,6 @@ function formatDate(value:string|null,time=false){
   if(!value)return 'لم يسجل دخولًا بعد';
   const date=new Date(value);
   return Number.isNaN(date.getTime())?'غير متاح':(time?dateTimeFormat:dateFormat).format(date);
-}
-
-function teacherStatus(status:string|null){
-  if(status==='submitted')return 'طلب اعتماد قيد المراجعة';
-  if(status==='rejected')return 'طلب تدريس مرفوض';
-  if(status==='suspended')return 'اعتماد المعلم معلّق';
-  return '';
 }
 
 function permissionSource(status:PermissionStatus){
@@ -181,7 +174,6 @@ export default function AdminUsersPanel(){
       <div><span>المطابقون</span><strong>{loading?'…':total}</strong></div>
       <div><span>بريد مؤكد</span><strong>{loading?'…':Number(summary?.confirmed_count??0)}</strong></div>
       <div><span>مشرفون</span><strong>{loading?'…':Number(summary?.admin_count??0)}</strong></div>
-      <div><span>معلمون معتمدون</span><strong>{loading?'…':Number(summary?.approved_teacher_count??0)}</strong></div>
     </div>
     <form className="admin-users-filters" onSubmit={search}>
       <label className="admin-users-search"><span>بحث بالاسم أو البريد أو البلد</span><div><Search size={17}/><input value={queryInput} maxLength={120} onChange={event=>setQueryInput(event.target.value)} placeholder="ابحث عن مستخدم"/></div></label>
@@ -192,7 +184,7 @@ export default function AdminUsersPanel(){
     {error&&<p className="admin-users-error" role="alert">{error}</p>}{roleNotice&&<p className="admin-users-success" role="status">{roleNotice}</p>}{roleFailure&&<p className="admin-users-error" role="alert">{roleFailure}</p>}
     {loading?<p className="admin-users-empty" role="status">جارٍ تحميل المستخدمين…</p>:!error&&users.length===0?<p className="admin-users-empty">لا توجد حسابات مطابقة.</p>:!error&&<>
       <div className="admin-users-table-wrap"><table className="admin-users-table"><thead><tr><th>الحساب</th><th>البلد</th><th>حالة البريد</th><th>الصلاحيات</th><th>تاريخ التسجيل</th><th>آخر دخول</th><th>إجراءات</th></tr></thead><tbody>
-        {users.map(account=><tr key={account.user_id}><td><strong>{[account.first_name,account.last_name].filter(Boolean).join(' ')||'اسم غير مسجل'}</strong><bdi className="admin-user-email">{account.email||'بلا بريد'}</bdi><small className="admin-user-id"><bdi>{account.user_id}</bdi></small></td><td>{account.country||'—'}</td><td><span className={account.email_confirmed?'admin-user-state confirmed':'admin-user-state'}>{account.email_confirmed?'مؤكد':'غير مؤكد'}</span></td><td><div className="admin-user-roles">{account.is_admin&&<span className="admin-user-role admin">مشرف المنصة</span>}{account.is_approved_teacher&&<span className="admin-user-role teacher">معلم معتمد</span>}{!account.is_approved_teacher&&teacherStatus(account.teacher_status)&&<span className="admin-user-role pending">{teacherStatus(account.teacher_status)}</span>}{!account.is_admin&&!account.is_approved_teacher&&!teacherStatus(account.teacher_status)&&<span className="admin-user-role member">عضو</span>}</div></td><td>{formatDate(account.created_at,true)}</td><td>{formatDate(account.last_sign_in_at,true)}</td><td><button type="button" className="admin-user-manage" disabled={!account.email_confirmed||!account.email} onClick={()=>managePermissions(account)}><ShieldCheck size={15}/> إدارة المزايا</button><button type="button" className={account.is_admin?'admin-permission-revoke':'admin-user-manage'} disabled={roleBusy===account.user_id||(!account.is_admin&&!account.email_confirmed)} onClick={()=>void setAdminRole(account,!account.is_admin)}>{account.is_admin?'إزالة الإشراف':'جعله مشرفًا'}</button></td></tr>)}
+        {users.map(account=><tr key={account.user_id}><td><strong>{[account.first_name,account.last_name].filter(Boolean).join(' ')||'اسم غير مسجل'}</strong><bdi className="admin-user-email">{account.email||'بلا بريد'}</bdi><small className="admin-user-id"><bdi>{account.user_id}</bdi></small></td><td>{account.country||'—'}</td><td><span className={account.email_confirmed?'admin-user-state confirmed':'admin-user-state'}>{account.email_confirmed?'مؤكد':'غير مؤكد'}</span></td><td><div className="admin-user-roles">{account.is_admin&&<span className="admin-user-role admin">مشرف المنصة</span>}{!account.is_admin&&<span className="admin-user-role member">عضو</span>}</div></td><td>{formatDate(account.created_at,true)}</td><td>{formatDate(account.last_sign_in_at,true)}</td><td><button type="button" className="admin-user-manage" disabled={!account.email_confirmed||!account.email} onClick={()=>managePermissions(account)}><ShieldCheck size={15}/> إدارة المزايا</button><button type="button" className={account.is_admin?'admin-permission-revoke':'admin-user-manage'} disabled={roleBusy===account.user_id||(!account.is_admin&&!account.email_confirmed)} onClick={()=>void setAdminRole(account,!account.is_admin)}>{account.is_admin?'إزالة الإشراف':'جعله مشرفًا'}</button></td></tr>)}
       </tbody></table></div>
       <footer className="admin-users-pagination"><span>صفحة {page} من {Math.max(1,Math.ceil(total/pageSize))}</span><div><button onClick={()=>setOffset(Math.max(0,offset-pageSize))} disabled={offset===0||loading} aria-label="الصفحة السابقة"><ChevronRight size={17}/></button><button onClick={()=>setOffset(offset+pageSize)} disabled={offset+pageSize>=total||loading} aria-label="الصفحة التالية"><ChevronLeft size={17}/></button></div></footer>
       {selectedUser&&<section ref={permissionsRef} className="admin-user-permissions" aria-labelledby="admin-user-permissions-title">

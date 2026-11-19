@@ -2,7 +2,7 @@ import {useEffect,useState,type FormEvent} from 'react';
 import {Globe,Lock,LogOut,Mail,Save,ShieldCheck,Trash2,UserRound} from 'lucide-react';
 import {authClient} from '../auth';
 import CountrySelector from '../CountrySelector';
-import {ageFrom,displayName,emptyProfile,fetchProfile,saveProfile,saveSettings,type Profile} from '../user-profile';
+import {displayName,emptyProfile,fetchProfile,saveProfile,saveSettings,type Profile} from '../user-profile';
 import '../profile.css';
 
 type Props={user:{id:string;email?:string}|null;notify:(message:string)=>void;onProfileSaved?:()=>void};
@@ -14,7 +14,7 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
-  const [draft,setDraft]=useState({firstName:'',lastName:'',country:'',age:'',gender:''});
+  const [draft,setDraft]=useState({firstName:'',lastName:'',country:'',gender:''});
   const [settings,setSettings]=useState({timezone:'Africa/Cairo',locale:'ar',city:'',workStart:'',sleepTime:'',notifications:true,prayerTimes:{} as Record<string,string>});
   const [confirmDelete,setConfirmDelete]=useState(false);
 
@@ -29,7 +29,6 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
         firstName:base.first_name,
         lastName:base.last_name,
         country:base.country,
-        age:ageFrom(base.birth_year)!==null?String(ageFrom(base.birth_year)): '',
         gender:base.gender,
       });
       setSettings(current=>({
@@ -52,8 +51,7 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
     if(!draft.country){setError('اختر بلدك من قائمة البلدان.');return}
     setBusy(true);setError('');
     try{
-      const age=draft.age?Number(draft.age):null;
-      await saveProfile({firstName:draft.firstName,lastName:draft.lastName,country:draft.country,age,gender:draft.gender});
+      await saveProfile({firstName:draft.firstName,lastName:draft.lastName,country:draft.country,gender:draft.gender});
       await load();
       notify('حُفظ ملفك الشخصي.');
       onProfileSaved?.();
@@ -95,10 +93,9 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
   if(!user)return <section className="panel"><h2>تسجيل الدخول مطلوب</h2><p>سجّل الدخول لعرض ملفك الشخصي وإعداداتك.</p></section>;
   if(loading)return <p role="status">جارٍ تحميل حسابك…</p>;
   const name=displayName(profile,user.email);
-  const age=ageFrom(profile?.birth_year??null);
   return <div className="profile-view">
     <div className="page-intro"><span className="eyebrow">حسابي</span><h1>{name}</h1><p>ملفك الشخصي وإعدادات حسابك. هذه البيانات لك وحدك.</p></div>
-    {error&&<p className="teacher-notice error" role="alert">{error}</p>}
+    {error&&<p className="muted" role="alert">{error}</p>}
 
     <section className="panel" aria-labelledby="identity-title">
       <div className="panel-head"><UserRound size={20}/><h2 id="identity-title">الملف الشخصي</h2></div>
@@ -107,9 +104,8 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
           <label>الاسم الأول<input required maxLength={60} value={draft.firstName} onChange={event=>setDraft(current=>({...current,firstName:event.target.value}))}/></label>
           <label>الاسم الأخير<input required maxLength={60} value={draft.lastName} onChange={event=>setDraft(current=>({...current,lastName:event.target.value}))}/></label>
           <label>البلد<CountrySelector id="profile-country" value={draft.country} onChange={country=>setDraft(current=>({...current,country}))} required/></label>
-          <label>العمر<input type="number" min={13} max={100} inputMode="numeric" value={draft.age} onChange={event=>setDraft(current=>({...current,age:event.target.value}))} placeholder="مثال: 28"/></label>
         </div>
-        <p className="muted small">البريد الإلكتروني: <bdi dir="ltr">{user.email}</bdi>{age!==null&&` · العمر: ${age} سنة`} — العمر يُحفظ كسنة ميلاد ليبقى صحيحًا مع مرور الوقت.</p>
+        <p className="muted small">البريد الإلكتروني: <bdi dir="ltr">{user.email}</bdi> — هذه البيانات لك وحدك.</p>
         <button className="primary" type="submit" disabled={busy}><Save size={17}/> {busy?'جارٍ الحفظ…':'حفظ الملف الشخصي'}</button>
       </form>
     </section>
@@ -140,7 +136,7 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
         <button className="soft-btn" onClick={()=>void signOut()}><LogOut size={17}/> تسجيل الخروج</button>
         <button className="soft-btn" onClick={()=>setConfirmDelete(!confirmDelete)}><Trash2 size={17}/> حذف الحساب</button>
       </div>
-      {confirmDelete&&<div className="teacher-notice error" role="alert">
+      {confirmDelete&&<div className="muted" role="alert">
         <p>حذف الحساب يزيل بياناتك من المنصة ولا يمكن التراجع. هل تريد المتابعة؟</p>
         <div className="course-actions"><button className="soft-btn" disabled={busy} onClick={()=>void deleteAccount()}>تأكيد الحذف</button><button className="soft-btn" onClick={()=>setConfirmDelete(false)}>تراجع</button></div>
       </div>}
@@ -149,7 +145,7 @@ export default function ProfileView({user,notify,onProfileSaved}:Props){
     <section className="panel" aria-labelledby="privacy-title">
       <div className="panel-head"><Lock size={20}/><h2 id="privacy-title">خصوصيتك</h2></div>
       <ul className="circle-meta">
-        <li>اسمك وبلدك وعمرك لا يظهران لغيرك، ولا يُشاركان مع أي جهة.</li>
+        <li>اسمك وبلدك لا يظهران لغيرك، ولا يُشاركان مع أي جهة.</li>
         <li>محاسبة نفسك («حاسب نفسك») لا تُعرض على أحد، ولا تدخل في أي إجمالي.</li>
       </ul>
       <p className="muted small"><Mail size={14}/> للاستفسار عن بياناتك: <bdi dir="ltr">{user.email}</bdi></p>

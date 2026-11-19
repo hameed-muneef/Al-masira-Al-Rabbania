@@ -791,9 +791,7 @@ html[data-theme="dark"] #root .app .home-today-entry svg {
 .admin-users-search-button { background: var(--accent-primary); border-color: var(--accent-primary); color: var(--text-on-accent); }
 .admin-users-error { background: var(--status-error-bg); color: var(--status-error); }
 .admin-user-state.confirmed,
-.admin-user-role.teacher,
 .admin-permission-current.is-available { background: var(--status-success-bg); color: var(--status-success); }
-.admin-user-role.pending { background: var(--status-warning-bg); color: var(--status-warning); }
 .admin-user-role.admin { background: var(--status-info-bg); color: var(--status-info); }
 .admin-permission-current.is-unavailable { background: var(--status-error-bg); border-inline-start-color: var(--status-error); }
 

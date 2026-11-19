@@ -25,7 +25,9 @@
     "db:plan": "node scripts/apply-cloud-schema.mjs --dry-run",
     "db:migrate": "node scripts/apply-cloud-schema.mjs",
     "prayer:check": "node scripts/check-prayer-accuracy.mjs",
-    "cache:purge": "node scripts/purge-cloudflare-cache.mjs"
+    "cache:purge": "node scripts/purge-cloudflare-cache.mjs",
+    "build:local": "node scripts/build-local.mjs",
+    "dev:local": "node -e \"process.env.VITE_LOCAL_ONLY='true';require('child_process').spawn('npx', ['vite','--host','0.0.0.0'],{stdio:'inherit',shell:true,env:process.env})\""
   },
   "dependencies": {
     "@capacitor/android": "^8.6.2",

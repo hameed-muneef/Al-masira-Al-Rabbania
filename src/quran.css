@@ -980,11 +980,19 @@
 
 .quran-verse-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px solid var(--color-border);
+}
+
+/* أزرار التنقل بين السور: حجم نص ثابت معقول (لا يورث حجم خط الآيات الضخم)
+   حتى لا يتضخم الزر ويخرج نصفه خارج شاشة الهاتف. */
+.quran-verse-footer .soft-btn {
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 .quran-side {
@@ -1744,6 +1752,10 @@
   border-top: 1px dashed var(--color-border);
 }
 
+/* زر «أضف الورد المقترح» نصه طويل؛ nowrap العام لـ .soft-btn (styles.css)
+   يمنع انكماشه فيفجر عمود .quran-page على الهاتف (minC 354 > 343). */
+.quran-routine-suggest .soft-btn { white-space: normal; }
+
 .quran-routine-config small {
   font-size: 10.5px;
   color: var(--color-muted);
@@ -2258,7 +2270,11 @@
 
 .azkar-search { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border: 1px solid var(--color-border); border-radius: 9px; background: #fff; color: var(--color-muted); }
 
-.azkar-search input { border: 0; padding: 0; background: transparent; font-size: 13px; min-width: min(180px, 100%); }
+/* input كعنصر flex قابل للانكماش: عرضه الجوهري (size=20 ≈ 265px) كان يمنع
+   انكماش الحاوية فيفجر عمود .quran-page على الهاتف (scrollWidth 386 > 375).
+   width:0 يلغي المساهمة الجوهرية (min-width:0 وحده لا يكفي في Chrome)،
+   وflex-grow يمدّده إلى العرض المتاح في التخطيط الفعلي. */
+.azkar-search input { border: 0; padding: 0; background: transparent; font-size: 13px; flex: 1 1 0; min-width: 160px; width: 0; }
 
 .azkar-search input:focus-visible { outline: 0; }
 
@@ -2328,3 +2344,6 @@
 .quran-journey-backlog{display:flex;gap:8px;align-items:flex-start;margin:14px 0 0;padding:10px 12px;border-radius:12px;background:var(--q-pale);font-size:14px}
 @keyframes quran-journey-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.quran-journey{animation:none}.quran-journey-cta{transition:none}.quran-journey-cta:hover{transform:none}}
+n . q u r a n - s c r o l l - s l i d e r w i d t h : 1 2 0 p x ; v e r t i c a l - a l i g n : m i d d l e ; a c c e n t - c o l o r : v a r ( - - c o l o r - p r i m a r y ) n 
+
+.quran-scroll-slider{width:120px;vertical-align:middle;accent-color:var(--color-primary)}

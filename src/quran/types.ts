@@ -26,7 +26,7 @@ export type QuranAsset = {
 
 export type QuranSettings = {fontSize: number; theme: 'light' | 'dark'};
 export type ReadingPosition = {surah: number; ayah: number; juz?: number; page?: number; updatedAt: string};
-export type QuranBookmark = {id: string; surah: number; ayah: number; label: string; createdAt: string};
+export type QuranBookmark = {id: string; surah: number; ayah: number; label: string; name?: string; page?: number; createdAt: string};
 export type QuranNote = {id: string; surah: number; ayahStart: number; ayahEnd: number; body: string; createdAt: string; updatedAt: string};
 export type QuranHistory = {id: string; surah: number; ayahStart: number; ayahEnd: number; readAt: string};
 

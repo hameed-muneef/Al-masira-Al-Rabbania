@@ -16,13 +16,14 @@ import {EmptyNote, QuranVerseText, ReferenceBadge, copyText, shareText} from './
 import {fetchTranslation, fetchTafsir, fetchAsbabNuzul, TRANSLATIONS, TAFSIRS, type FetchState} from '../../quran/content-api';
 import {loadReciters, audioUrl, defaultMoshaf, type Reciter} from '../../quran/audio';
 import {fetchAyahAudioUrl, fetchSurahAyahAudioUrls} from '../../quran/ayah-audio';
+import {InternetBadge, useOnline} from '../../online';
 import {passageAyahs, progressLabel, clampRepeat, type MemorizationProgress} from '../../quran/memorization-audio';
 
 const AUTO_SCROLL_SPEEDS = [
-  {value: 120, label: 'بطيء'},
-  {value: 240, label: 'متوسط'},
-  {value: 450, label: 'سريع'},
-  {value: 800, label: 'سريع جدًا'},
+  {value: 120, label: 'بطيء جدًا'},
+  {value: 240, label: 'بطيء'},
+  {value: 450, label: 'متوسط'},
+  {value: 800, label: 'سريع'},
   {value: 1400, label: 'الأسرع'},
 ];
 
@@ -38,6 +39,7 @@ const emptyReflection = (): Omit<QuranReflection, 'id' | 'createdAt' | 'updatedA
 });
 
 export default function QuranReader({asset, state, onState, notify}: Props) {
+  const online = useOnline();
   const start = state.readingPosition;
   const [surahNumber, setSurahNumber] = useState(start?.surah ?? 1);
   const [focusAyah, setFocusAyah] = useState(start?.ayah ?? 1);
@@ -86,7 +88,9 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
   const [jumpKind, setJumpKind] = useState<'juz' | 'hizb' | 'page'>('juz');
   const [jumpValue, setJumpValue] = useState(1);
   const [autoScroll, setAutoScroll] = useState(false);
-  const [autoScrollSpeed, setAutoScrollSpeed] = useState(240);
+  const [autoScrollSpeed, setAutoScrollSpeed] = useState<number>(() => {
+    try { const v = Number(localStorage.getItem('quran-autoscroll-speed')); return Number.isFinite(v) && v > 0 ? v : 240; } catch { return 240; }
+  });
   const [scrollMenu, setScrollMenu] = useState<{x:number;y:number}|null>(null);
   const autoScrollSpeedRef = useRef(autoScrollSpeed);
 
@@ -223,12 +227,21 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
   useEffect(() => { return () => { stopAudio(); stopAyahAudio(); }; }, []);
 
   useEffect(()=>{autoScrollSpeedRef.current=autoScrollSpeed},[autoScrollSpeed]);
+useEffect(() => { try { localStorage.setItem('quran-autoscroll-speed', String(autoScrollSpeed)); } catch { /* ignore */ } }, [autoScrollSpeed]);
   useEffect(()=>{
     if(!autoScroll) return;
     let frame=0;
     let last=performance.now();
     const root=document.documentElement;
     root.style.scrollBehavior='auto';
+    // Keep screen awake while auto-scrolling (best-effort, supported browsers only).
+    let wakeLock: any = null;
+    const acquireWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) wakeLock = await (navigator as any).wakeLock.request('screen');
+      } catch { /* ignore unsupported / denied */ }
+    };
+    void acquireWakeLock();
     const tick=(now:number)=>{
       const delta=Math.max(0,(now-last)/1000);
       last=now;
@@ -241,7 +254,7 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
     window.addEventListener('wheel',pauseOnManualScroll,{passive:true});
     window.addEventListener('touchstart',pauseOnManualScroll,{passive:true});
     frame=requestAnimationFrame(tick);
-    return ()=>{cancelAnimationFrame(frame);window.removeEventListener('wheel',pauseOnManualScroll);window.removeEventListener('touchstart',pauseOnManualScroll);root.style.scrollBehavior='smooth'};
+    return ()=>{cancelAnimationFrame(frame);window.removeEventListener('wheel',pauseOnManualScroll);window.removeEventListener('touchstart',pauseOnManualScroll);root.style.scrollBehavior='smooth'; if (wakeLock) try { wakeLock.release(); } catch {}};
   },[autoScroll]);
   useEffect(()=>{setAutoScroll(false)},[surahNumber]);
 
@@ -497,6 +510,7 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
             <select value={autoScrollSpeed} onChange={event=>setAutoScrollSpeed(Number(event.target.value))} aria-label="سرعة التمرير التلقائي">
               {AUTO_SCROLL_SPEEDS.map(speed=><option key={speed.value} value={speed.value}>{speed.label}</option>)}
             </select>
+            <input type="range" min={60} max={1600} step={30} value={autoScrollSpeed} onChange={event=>setAutoScrollSpeed(Number(event.target.value))} aria-label="ضبط دقيق لسرعة التمرير" className="quran-scroll-slider" />
           </div>
         </div>
       </div>
@@ -510,7 +524,7 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
           <button type="button" className="quran-font-step" aria-label="تكبير الخط" title="تكبير الخط" onClick={() => patch({settings: {...state.settings, fontSize: Math.min(64, state.settings.fontSize + 2)}})}>A+</button>
         </div>
       </div>
-      <div className="quran-section-label">الصوت</div>
+      <div className="quran-section-label">الصوت <InternetBadge compact/></div>
       <div className="quran-audio-controls">
         <label>القارئ
           <select value={reciterId ?? ''} onChange={event => {
@@ -705,9 +719,10 @@ export default function QuranReader({asset, state, onState, notify}: Props) {
                       </select>
                     </label>
                   )}
+                  {!online && <p className="quran-online-note"><InternetBadge compact/> التفسير والترجمة يُجلبان عبر الإنترنت؛ ما فتحته سابقًا محفوظ على الجهاز.</p>}
                   {contentState.status === 'loading' && <p className="muted small">جارٍ التحميل…</p>}
-                  {contentState.status === 'error' && <p className="muted small" role="alert">{contentState.error}</p>}
-                  {contentState.status === 'empty' && <p className="muted small">لا توجد بيانات متاحة.</p>}
+                  {contentState.status === 'error' && <p className="muted small" role="alert">{online ? contentState.error : 'لا يوجد اتصال، ولم يُحفظ هذا المحتوى على الجهاز بعد.'}</p>}
+                  {contentState.status === 'empty' && <p className="muted small">{online ? 'لا توجد بيانات متاحة.' : 'غير متاح دون اتصال.'}</p>}
                   {contentState.status === 'success' && <p className="quran-content-text">{contentState.data}</p>}
                 </div>
               )}

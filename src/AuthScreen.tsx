@@ -26,7 +26,6 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
   const [firstName,setFirstName]=useState('');
   const [lastName,setLastName]=useState('');
   const [country,setCountry]=useState('');
-  const [age,setAge]=useState('');
   const [visible,setVisible]=useState(false);
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState('');
@@ -63,19 +62,17 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
     if(mode==='register'&&password!==confirm){setError('كلمتا المرور غير متطابقتين.');return}
     if(mode==='register'){
       const first=firstName.trim(), last=lastName.trim();
-      const ageNumber=Number(age);
       if(!first||!last){setError('الاسم الأول والاسم الأخير مطلوبان.');return}
       if(!country){setError('اختر بلدك من قائمة البلدان.');return}
-      if(!age||!Number.isInteger(ageNumber)||ageNumber<13||ageNumber>100){setError('أدخل عمرًا بين 13 و100 سنة.');return}
     }
     setBusy(true);
     try{
       if(mode==='register'){
-        const {data,error}=await authClient.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:window.location.origin+(admin?'/admin':'/'),data:{first_name:firstName.trim(),last_name:lastName.trim(),country,age:Number(age)}}});
+        const {data,error}=await authClient.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:window.location.origin+(admin?'/admin':'/'),data:{first_name:firstName.trim(),last_name:lastName.trim(),country}}});
         if(error)throw error;
         // The profile is attached right after the account is confirmed and the
         // user signs in; until then it waits in this browser only.
-        try{sessionStorage.setItem('rabbani-profile-draft',JSON.stringify({firstName:firstName.trim(),lastName:lastName.trim(),country,age:Number(age)}))}catch{}
+        try{sessionStorage.setItem('rabbani-profile-draft',JSON.stringify({firstName:firstName.trim(),lastName:lastName.trim(),country}))}catch{}
         if(!data.session)setMessage(admin?'افتح رسالة التأكيد في بريدك، ثم عُد إلى صفحة /admin لتسجيل الدخول بصلاحية المشرف.':'تم إرسال رسالة تأكيد إلى بريدك الإلكتروني. افتحها لتفعيل حسابك ثم سجّل الدخول، وسنكمل ملفك الشخصي مباشرة.');
       }else{
         const {error}=await authClient.auth.signInWithPassword({email:email.trim(),password});
@@ -108,10 +105,6 @@ export default function AuthScreen({admin=false,reset=false}:{admin?:boolean;res
                 <div className="auth-field-row">
                   <label htmlFor="auth-country">البلد</label>
                   <CountrySelector id="auth-country" value={country} onChange={setCountry} required/>
-                </div>
-                <div className="auth-field-row">
-                  <label htmlFor="auth-age">العمر</label>
-                  <div className="auth-input"><UserRound size={18}/><input id="auth-age" type="number" inputMode="numeric" min={13} max={100} value={age} onChange={e=>setAge(e.target.value)} placeholder="مثال: 28" required/></div>
                 </div>
                 <p className="auth-hint">تُحفظ هذه البيانات في حسابك وحده، ولا تظهر لغيرك. لا نشاركها مع أي جهة.</p>
               </fieldset>

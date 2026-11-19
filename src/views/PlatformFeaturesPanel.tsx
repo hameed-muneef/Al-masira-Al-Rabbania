@@ -1,6 +1,5 @@
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {authClient} from '../auth';
-import '../teacher.css';
 
 type Feature={key:string;title:string;description:string;enabled:boolean;requires_premium:boolean;price_amount:number|null;currency_code:string|null;billing_interval:string|null};
 type FeatureEvent={id:string;feature_key:string;before_state:Record<string,unknown>|null;after_state:Record<string,unknown>;changed_by_email:string|null;changed_at:string};
@@ -11,8 +10,6 @@ type PermissionStatus={
   latest_allowed:boolean|null;latest_changed_by_email:string|null;latest_changed_at:string|null;
 };
 const message=(error:unknown)=>error instanceof Error?error.message:'تعذّر تنفيذ العملية.';
-// Sections removed from the product; they must not appear as sellable features.
-const retiredFeatures=new Set(['private_circles','courses','study_circles','circle_live','member_shares','teacher_portal']);
 const intervalName=(value:string|null)=>value==='monthly'?'شهريًا':value==='yearly'?'سنويًا':'';
 const formatPrice=(feature:Feature)=>feature.price_amount===null||!feature.currency_code?'السعر غير محدد':`${new Intl.NumberFormat('ar-EG',{style:'currency',currency:feature.currency_code,maximumFractionDigits:3}).format(feature.price_amount)} ${intervalName(feature.billing_interval)}`;
 const formatDate=(value:string)=>new Intl.DateTimeFormat('ar-EG',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value));
@@ -44,7 +41,7 @@ export default function PlatformFeaturesPanel(){
       ]);
       if(featureResult.error)throw featureResult.error;
       if(eventResult.error)throw eventResult.error;
-      setFeatures(((featureResult.data??[]) as Feature[]).filter(feature=>!retiredFeatures.has(feature.key)));
+      setFeatures(((featureResult.data??[]) as Feature[]));
       setFeatureEvents((eventResult.data??[]) as FeatureEvent[]);
     }catch(caught){setError(message(caught))}
     finally{setLoading(false)}
@@ -113,8 +110,8 @@ export default function PlatformFeaturesPanel(){
   return <section className="panel teacher-review-panel" aria-labelledby="platform-features-title">
     <h2 id="platform-features-title">مميزات المنصة واشتراكات Premium</h2>
     <p className="muted">جميع الميزات مجانية مبدئيًا. اختر ميزة موجودة إذا أردت تغييرها إلى مدفوعة وتحديد سعرها. تبقى الحسابات والخصوصية والأمان مجانية دائمًا. إعداد "مدفوعة" (requires_premium) + السعر/العملة/الفترة يحدد ما يُعرض للمستخدم كاشتراك. التفعيل (تفعيل الميزة) يتحكم في ظهورها. الدفع (sandbox) متاح عبر "اشترك الآن" في واجهة المستخدم؛ التفعيل (access) يتم بعد تحقق المزود (webhook)، وليس بمجرد إعادة التوجيه. لا تُخزّن بيانات البطاقة (CVV) أبدًا.</p>
-    {error&&<p className="teacher-notice error" role="alert">{error}</p>}
-    {notice&&<p className="teacher-notice" role="status">{notice}</p>}
+    {error&&<p className="muted" role="alert">{error}</p>}
+    {notice&&<p className="muted" role="status">{notice}</p>}
     {loading?<p role="status">جارٍ تحميل المميزات…</p>:<ul className="teacher-review-list">{features.map(feature=><li key={feature.key}><strong>{feature.title}</strong><span>{feature.enabled?'مفعّلة':'معطلة'} · {feature.requires_premium?`مدفوعة · ${formatPrice(feature)}`:'مجانية'}</span><button type="button" className="soft-btn" aria-label={`تعديل ${feature.title}`} onClick={()=>editFeature(feature)}>تعديل</button></li>)}</ul>}
     <form ref={editorRef} className="teacher-review-form" onSubmit={event=>void saveFeature(event)}>
       <h3>اختيار ميزة موجودة وتعديلها</h3>

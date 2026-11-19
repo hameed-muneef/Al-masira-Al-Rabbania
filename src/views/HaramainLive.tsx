@@ -7,6 +7,7 @@
 import {lazy, useEffect, useRef, useState} from 'react';
 import {AlertTriangle, Expand, ExternalLink, MonitorPlay, RefreshCw, Satellite} from 'lucide-react';
 import {loadHaramainChannels, type HaramainChannel} from '../haramain/channels';
+import {InternetBadge, OfflineNotice, useOnline} from '../online';
 
 // hls.js يُحمَّل كسولًا فقط عند توفّر رابط HLS رسمي.
 const HlsPlayer = lazy(() => import('./HaramainHls'));
@@ -61,6 +62,7 @@ function Player({channel, mode, onHlsFailed}: {channel: HaramainChannel; mode: M
 }
 
 export default function HaramainLive() {
+  const online = useOnline();
   const [channels, setChannels] = useState<HaramainChannel[]>([]);
   const [activeId, setActiveId] = useState<string>('');
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -102,6 +104,16 @@ export default function HaramainLive() {
     setHlsFailedIds(old => new Set(old).add(active.id));
   };
 
+  if (!online) {
+    return <div className="haramain" dir="rtl">
+      <header className="haramain-head">
+        <span className="haramain-eyebrow"><MonitorPlay size={16}/> البث المباشر <InternetBadge/></span>
+        <h1>من الحرمين الشريفين</h1>
+      </header>
+      <OfflineNotice title="البث المباشر يحتاج اتصالًا بالإنترنت" onRetry={() => setRetry(value => value + 1)}/>
+    </div>;
+  }
+
   if (loadState === 'loading') {
     return <div className="haramain" dir="rtl"><div className="auth-loading" role="status">جارٍ تحميل قنوات البث…</div></div>;
   }
@@ -122,7 +134,7 @@ export default function HaramainLive() {
 
   return <div className="haramain" dir="rtl">
     <header className="haramain-head">
-      <span className="haramain-eyebrow"><MonitorPlay size={16}/> البث المباشر</span>
+      <span className="haramain-eyebrow"><MonitorPlay size={16}/> البث المباشر <InternetBadge/></span>
       <h1>من الحرمين الشريفين</h1>
       <p>نقل حيّ لصلوات الحرمين عبر قناتي القرآن الكريم والسنة النبوية — مصدر البث الرسمي: هيئة الإذاعة السعودية (علولاء).</p>
     </header>
@@ -139,7 +151,6 @@ export default function HaramainLive() {
     </div>
 
     <Player channel={active} mode={mode} onHlsFailed={onHlsFailed}/>
-    <p className="haramain-hint" dir="rtl">إن ظهرت رسالة «يود علولاء إرسال إشعارات إليك» فاختر <strong>كلا</strong> ولن تظهر لك مجددًا.</p>
     {mode === 'embed' && channelHlsNote(active)}
 
     <p className="haramain-attribution">

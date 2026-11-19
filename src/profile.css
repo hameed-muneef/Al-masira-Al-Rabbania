@@ -21,3 +21,5 @@
   .profile-view .form-grid{grid-template-columns:1fr}
   .profile-view .primary{width:100%;justify-content:center;justify-self:stretch}
 }
+/* .course-actions مستخدمة في ProfileView (تسجيل الخروج/حذف الحساب). */
+.course-actions{display:flex;flex-wrap:wrap;gap:8px;align-content:start}

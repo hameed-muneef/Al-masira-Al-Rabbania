@@ -7,7 +7,6 @@ export type Profile={
   first_name:string;
   last_name:string;
   country:string;
-  birth_year:number|null;
   gender:''|'male'|'female';
   timezone:string;
   locale:string;
@@ -19,7 +18,7 @@ export type Profile={
 };
 
 export const emptyProfile:Profile={
-  first_name:'',last_name:'',country:'',birth_year:null,gender:'',
+  first_name:'',last_name:'',country:'',gender:'',
   timezone:'Africa/Cairo',locale:'ar',city:null,work_start:null,sleep_time:null,
   prayer_settings:{},notification_preferences:{},
 };
@@ -34,15 +33,6 @@ export const displayName=(profile:Profile|null,email?:string|null):string=>{
   return mail?mail.split('@')[0]:'مستخدم';
 };
 
-export const ageFrom=(birthYear:number|null):number|null=>{
-  if(!birthYear)return null;
-  const now=new Date();
-  let age=now.getFullYear()-birthYear;
-  const month=now.getMonth()+1;
-  if(month<7)age-=1; // قاعدة النصف السنوي تُبقي العمر قريبًا من الواقع
-  return age;
-};
-
 export async function fetchProfile(userId:string):Promise<Profile|null>{
   if(!authClient)return null;
   const {data,error}=await authClient.from('user_preferences').select('*').eq('user_id',userId).maybeSingle();
@@ -52,7 +42,6 @@ export async function fetchProfile(userId:string):Promise<Profile|null>{
     first_name:data.first_name??'',
     last_name:data.last_name??'',
     country:data.country??'',
-    birth_year:data.birth_year??null,
     gender:(data.gender??'') as Profile['gender'],
     timezone:data.timezone??'Africa/Cairo',
     locale:data.locale??'ar',
@@ -64,13 +53,12 @@ export async function fetchProfile(userId:string):Promise<Profile|null>{
   };
 }
 
-export async function saveProfile(input:{firstName:string;lastName:string;country:string;age:number|null;gender:string}):Promise<void>{
+export async function saveProfile(input:{firstName:string;lastName:string;country:string;gender:string}):Promise<void>{
   if(!authClient)throw new Error('خدمة الحسابات غير مفعّلة.');
   const {error}=await authClient.rpc('save_user_profile',{
     p_first_name:input.firstName.trim(),
     p_last_name:input.lastName.trim(),
     p_country:input.country.trim(),
-    p_age:input.age,
     p_gender:input.gender,
   });
   if(error)throw error;

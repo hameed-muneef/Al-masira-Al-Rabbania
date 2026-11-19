@@ -1,13 +1,14 @@
 import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {
   BookOpen, Brain, RotateCcw, Library, ScrollText, CalendarClock, TrendingUp,
-  Flower2
+  Flower2, BookType, Languages
 } from 'lucide-react';
 import '../quran.css';
 import type {QuranAsset, QuranLearningState} from '../quran/types';
 import type {Task} from '../app-state';
 import {loadQuran} from '../quran/content';
-import QuranReader from './quran/QuranReader';
+import MushafPages from './quran/MushafPages';
+import OfflineLibrary from './quran/OfflineLibrary';
 import QuranMemorization from './quran/QuranMemorization';
 import QuranRevision from './quran/QuranRevision';
 import HadithLibrary from './quran/HadithLibrary';
@@ -17,7 +18,7 @@ import QuranJourney from './quran/QuranJourney';
 import AzkarLibrary from './AzkarLibrary';
 import {EmptyNote} from './quran/ui';
 
-export type QuranSection = 'mushaf' | 'hifz' | 'revision' | 'bukhari' | 'muslim' | 'sunnah' | 'routine' | 'progress' | 'azkar';
+export type QuranSection = 'mushaf' | 'tafsir' | 'translations' | 'hifz' | 'revision' | 'bukhari' | 'muslim' | 'sunnah' | 'routine' | 'progress' | 'azkar';
 
 type Props = {
   state: QuranLearningState;
@@ -30,7 +31,9 @@ type Props = {
 };
 
 const SECTIONS: {id: QuranSection; title: string; description: string; icon: typeof BookOpen}[] = [
-  {id: 'mushaf', title: 'المصحف الشريف', description: 'قراءة بالرسم العثماني، بحث، علامات، ملاحظات وسجل قراءة.', icon: BookOpen},
+  {id: 'mushaf', title: 'المصحف الشريف', description: 'تمرير رأسي متصل على صفحات المصحف (٦٠٤)، مع انتقال بالسورة والجزء والحزب والصفحة والآية، وتفسير وترجمة وعلامات وملاحظات.', icon: BookOpen},
+  {id: 'tafsir', title: 'مكتبة التفسير', description: 'نزّل التفاسير على جهازك مرة واحدة، ثم اقرأها كاملة دون إنترنت.', icon: BookType},
+  {id: 'translations', title: 'مكتبة الترجمات', description: 'ترجمات معتمدة قابلة للتنزيل والقراءة دون اتصال، مع حفظ المصدر.', icon: Languages},
   {id: 'hifz', title: 'حفظ القرآن', description: 'خطط مرنة وتمارين إخفاء وإكمال وترتيب واسترجاع.', icon: Brain},
   {id: 'revision', title: 'مراجعة القرآن', description: 'مراجعة متباعدة تحفظ ما حفظته وتعيد المتعثر.', icon: RotateCcw},
   {id: 'bukhari', title: 'صحيح البخاري', description: '', icon: Library},
@@ -105,7 +108,9 @@ export default function QuranSunnahView({state, onState, tasks, onTasks, notify,
     {error ? <section className="panel quran-error" role="alert"><h3>تعذر فتح المصحف</h3><p>{error}</p><button className="soft-btn" onClick={() => { setError(''); loadQuran().then(setAsset).catch(() => setError('تعذر تحميل أصل المصحف المعتمد مرة أخرى.')); }}>إعادة المحاولة</button></section>
       : !asset ? <section className="panel"><EmptyNote>جارٍ تحميل النص العثماني والبيانات الوصفية…</EmptyNote></section>
       : <>
-        {section === 'mushaf' && <QuranReader asset={asset} state={state} onState={onState} notify={notify}/>}
+        {section === 'mushaf' && <MushafPages asset={asset} state={state} onState={onState} notify={notify}/>}
+        {section === 'tafsir' && <OfflineLibrary kind="tafsir" asset={asset} notify={notify}/>}
+        {section === 'translations' && <OfflineLibrary kind="translation" asset={asset} notify={notify}/>}
         {section === 'hifz' && <><QuranJourney asset={asset} state={state} onOpen={handleSectionChange}/><QuranMemorization asset={asset} state={state} onState={onState} notify={notify}/></>}
         {section === 'revision' && <QuranRevision asset={asset} state={state} onState={onState} notify={notify}/>}
         {section === 'bukhari' && <HadithLibrary collectionKey="bukhari" mode="library" state={state} onState={onState} notify={notify}/>}

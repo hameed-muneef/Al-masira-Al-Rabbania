@@ -29,13 +29,11 @@ const categories:[NotificationCategory|'all',string][] = [
 // shown as plain notifications and never navigated to.
 const viewLabels:Record<string,string>={
   home:'الرئيسية',day:'حياتي مع الله',tasks:'مركز المهام',week:'أسبوعي مع الله',month:'شهري مع الله',
-  goals:'المؤمن القوي',learn:'السير إلى الله',reflect:'محاسبة النفس',wird:'زكِّ نفسك',circles:'التواصي',
-  teacher:'بوابة المعلم',courses:'مجالس العلم',study:'المدارسة',shares:'المشاركات',profile:'حسابي',settings:'الإعدادات',
+  goals:'المؤمن القوي',learn:'السير إلى الله',reflect:'محاسبة النفس',wird:'زكِّ نفسك',profile:'حسابي',settings:'الإعدادات',
 };
 // Sections removed from the product keep their past notifications visible, but
 // no longer offer a navigation button to a page that does not exist.
-const retiredViewLinks=new Set(['circles','courses','study','shares','teacher']);
-const targetLabel=(link:string)=>retiredViewLinks.has(link)?undefined:viewLabels[link];
+const targetLabel=(link:string)=>viewLabels[link];
 
 function categoryOf(kind:string):NotificationCategory{
   if(['prayer','reminder','worship','goal','task'].includes(kind))return 'reminder';

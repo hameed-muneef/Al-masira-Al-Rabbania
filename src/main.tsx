@@ -17,6 +17,8 @@ import './haramain.css';
 import './profile.css';
 // Must load last: this is the single semantic theme boundary for all shared UI.
 import './theme-engine.css';
+import './online.css';
+import './mushaf.css';
 import {installSectionTheme} from './section-theme';
 import {installAppearance} from './appearance';
 // تسجيل service worker مع تحديث تلقائي (إعادة تحميل واحدة عند جاهزية نسخة جديدة).

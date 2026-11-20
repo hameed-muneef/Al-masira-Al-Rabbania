@@ -1,6 +1,4 @@
-// مكتبة الأصوات — معاينة النغمات المدمجة، اختيار الصوت الافتراضي، ورفع ملف صوتي مخصص
-// بتحقق من الصيغة والحجم. الرفع النهائي للسحابة عند توفرها، والتخزين المحلي احتياطيًا.
-
+// لوحة الصوت — اختيار نغمات (مدمجة / سحابية / خارجية).
 import {useEffect, useRef, useState} from 'react';
 import {Play, Square, Upload} from 'lucide-react';
 import {authClient} from '../../auth';
@@ -8,20 +6,21 @@ import {BUILTIN_SOUNDS, previewSound, type SoundOption} from '../../notification
 import {playAudio, stopAudio} from '../../notifications/audio';
 import {listAudioResources, uploadAudioResource} from '../../notifications/service';
 import type {AudioResource, NotificationChannel} from '../../notifications/types';
+import {getCustomAlarmUrl, setCustomAlarmUrl} from '../../notifications/sound-selection';
+import {loadCustomSound, customSoundUrl} from '../../sounds/custom-store';
 
 const ALLOWED_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/webm', 'audio/mp4', 'audio/x-m4a', 'audio/aac'];
 const MAX_SIZE = 10 * 1024 * 1024;
 const CHANNEL_LABELS: Record<NotificationChannel, string> = {
   in_app: 'داخل التطبيق',
   system: 'إشعار النظام',
-  both: 'داخل التطبيق + النظام',
+  both: 'داخل التطبيق + إشعار النظام',
 };
 
 export function channelLabel(channel: NotificationChannel): string {
   return CHANNEL_LABELS[channel] ?? channel;
 }
 
-// تسجيلات الأذان والنغمات التي يديرها المدير؛ تُحمَّل مرة واحدة وتتشاركها الحقول.
 let cloudSounds: AudioResource[] = [];
 let cloudLoading: Promise<void> | null = null;
 
@@ -31,10 +30,10 @@ export function useCloudSounds(): AudioResource[] {
     if (!authClient) return;
     let active = true;
     cloudLoading ??= listAudioResources()
-      .then(rows => {cloudSounds = rows.filter(row => row.kind === 'adhan' || row.kind === 'tone')})
-      .catch(() => {cloudLoading = null});
-    void cloudLoading.then(() => {if (active) setList(cloudSounds)});
-    return () => {active = false};
+      .then(rows => { cloudSounds = rows.filter(row => row.kind === 'adhan' || row.kind === 'tone'); })
+      .catch(() => { cloudLoading = null; });
+    void cloudLoading.then(() => { if (active) setList(cloudSounds); });
+    return () => { active = false; };
   }, []);
   return list;
 }
@@ -42,17 +41,32 @@ export function useCloudSounds(): AudioResource[] {
 export function SoundSelectField({value, onChange, allowNone = true}:
   {value: string | undefined; onChange: (id: string | undefined) => void; allowNone?: boolean}) {
   const cloud = useCloudSounds();
+  const [hasCustom, setHasCustom] = useState(false);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const rec = await loadCustomSound('alarm');
+        if (active && rec) {
+          setCustomAlarmUrl(customSoundUrl(rec));
+          setHasCustom(true);
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { active = false; };
+  }, []);
+  const customUrl = hasCustom ? getCustomAlarmUrl() : undefined;
   return (
     <select value={value ?? ''} onChange={event => onChange(event.target.value || undefined)}>
       {allowNone && <option value="">الافتراضي</option>}
       {BUILTIN_SOUNDS.map(sound => <option key={sound.id} value={sound.id}>{sound.title}</option>)}
       {cloud.length > 0 && <optgroup label="الأذان والنغمات المعتمدة">{cloud.map(sound => <option key={sound.id} value={sound.id}>{sound.title}</option>)}</optgroup>}
       {(soundLibraryCustom ?? []).map(sound => <option key={sound.id} value={sound.id}>{sound.title} (مرفوع)</option>)}
+      {customUrl && <option value="custom:alarm">نغمة خارجية (ملف من جهازك)</option>}
     </select>
   );
 }
 
-// مكتبة الأصوات المرفوعة التي جرى تحميلها لهذه الجلسة — مُبسّطة ومشتركة بين الحقول
 let soundLibraryCustom: AudioResource[] = [];
 
 export default function SoundPanel({notify}: {notify: (message: string) => void}) {
@@ -74,7 +88,7 @@ export default function SoundPanel({notify}: {notify: (message: string) => void}
   const play = (sound: SoundOption) => {
     stop();
     if (sound.kind === 'silent') {
-      setMessage('هذا خيار صامت — لا يُصدر أي صوت.');
+      setMessage('صامت — لا صوت.');
       return;
     }
     if (sound.url) playAudio(sound.url); else previewSound(sound);
@@ -84,13 +98,12 @@ export default function SoundPanel({notify}: {notify: (message: string) => void}
   };
 
   const upload = async (file: File) => {
-    // التحقق من جهة العميل كحرس أول؛ الخادم يعيد التحقق عند توفر الرفع السحابي
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setMessage('صيغة الصوت غير مدعومة. الاستخدام: MP3 أو WAV أو OGG أو M4A.');
+      setMessage('نوع ملف غير مدعوم. الأنواع: MP3 أو WAV أو OGG أو M4A.');
       return;
     }
     if (file.size > MAX_SIZE) {
-      setMessage('حجم الصوت أكبر من 10 ميغابايت.');
+      setMessage('حجم الملف أكبر من 10 ميغابايت.');
       return;
     }
     setBusy(true);
@@ -100,8 +113,8 @@ export default function SoundPanel({notify}: {notify: (message: string) => void}
       if (authClient) {
         const stored = await uploadAudioResource(file, title);
         soundLibraryCustom = [...soundLibraryCustom.filter(item => item.id !== stored.id), stored];
-        setMessage(`رُفع «${stored.title}» إلى حسابك.`);
-        notify('رُفع الصوت بنجاح');
+        setMessage(`تم إضافة «${stored.title}».`);
+        notify('تم إضافة الصوت');
       } else {
         soundLibraryCustom = [...soundLibraryCustom, {
           id: `custom:${Date.now()}`,
@@ -112,10 +125,10 @@ export default function SoundPanel({notify}: {notify: (message: string) => void}
           is_uploaded: true,
           created_at: new Date().toISOString(),
         }];
-        setMessage(`عُرض «${title}» محليًا للمعاينة. سيرفع الخادم الصوت إلى حسابك عند توفر الخدمة السحابية.`);
+        setMessage(`أُضيف «${title}» محليًا. احفظ نسخة احتياطية.`);
       }
     } catch (error) {
-      setMessage(`تعذر رفع الصوت: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+      setMessage(`تعذر إضافة الصوت: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
     } finally {
       setBusy(false);
     }
@@ -132,7 +145,7 @@ export default function SoundPanel({notify}: {notify: (message: string) => void}
             </div>
             {sound.kind === 'silent'
               ? <span className="muted small">—</span>
-              : <button type="button" className="soft-btn notif-play" onClick={() => play(sound)} aria-label={`معاينة ${sound.title}`}>
+              : <button type="button" className="soft-btn notif-play" onClick={() => play(sound)} aria-label={`تشغيل ${sound.title}`}>
                   {playing === sound.id ? <Square size={15}/> : <Play size={15}/>}
                 </button>}
           </li>
@@ -143,7 +156,7 @@ export default function SoundPanel({notify}: {notify: (message: string) => void}
               <strong>{sound.title}</strong>
               <small>{sound.kind === 'adhan' ? 'أذان' : 'نغمة'}</small>
             </div>
-            <button type="button" className="soft-btn notif-play" onClick={() => play(sound)} aria-label={`معاينة ${sound.title}`}>
+            <button type="button" className="soft-btn notif-play" onClick={() => play(sound)} aria-label={`تشغيل ${sound.title}`}>
               {playing === sound.id ? <Square size={15}/> : <Play size={15}/>}
             </button>
           </li>
@@ -152,16 +165,16 @@ export default function SoundPanel({notify}: {notify: (message: string) => void}
           <li key={sound.id}>
             <div className="notif-sound-main">
               <strong>{sound.title}</strong>
-              <small>صوت مرفوع من المستخدم</small>
+              <small>صوت خارجي</small>
             </div>
-            <button type="button" className="soft-btn notif-play" onClick={() => play(sound)} aria-label={`معاينة ${sound.title}`}>
+            <button type="button" className="soft-btn notif-play" onClick={() => play(sound)} aria-label={`تشغيل ${sound.title}`}>
               {playing === sound.id ? <Square size={15}/> : <Play size={15}/>}
             </button>
           </li>
         ))}
       </ul>
       <label className="notif-upload">
-        <Upload size={16}/> رفع ملف صوتي مخصص (حتى 10 ميغابايت)
+        <Upload size={16}/> إضافة صوت (حتى 10 ميغابايت)
         <input type="file" accept="audio/*" disabled={busy} onChange={event => {
           const file = event.target.files?.[0];
           event.target.value = '';

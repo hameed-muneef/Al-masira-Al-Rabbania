@@ -8,6 +8,8 @@ name: Android Build
 on:
   workflow_dispatch:
   push:
+    branches:
+      - hameed/mobile-app
     tags:
       - 'app-v*'
 

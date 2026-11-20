@@ -9,7 +9,6 @@ function run(command, args, env = process.env) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-run('npm', ['run', 'deploy:check']);
-run('npm', ['run', 'build'], {...process.env, VITE_BOOKS_FROM_SUPABASE: 'true'});
+run('npm', ['run', 'build'], {...process.env, VITE_LOCAL_ONLY: 'true'});
 run('npx', ['cap', 'sync', 'android']);
 console.log('Android web assets ready. الخطوة التالية: بناء الـ APK عبر Android Studio أو GitHub Actions.');

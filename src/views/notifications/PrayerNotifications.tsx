@@ -16,6 +16,7 @@ import {
 import {channelLabel, SoundSelectField} from './SoundPanel';
 import PrayerLocationPicker from '../../PrayerLocationPicker';
 import {sanitizePrayerLocation, type PrayerLocation} from '../../prayer-location';
+import NativeAdhanPanel from './NativeAdhanPanel';
 
 type PrayerSetting = NotificationPreference['prayer_settings'][PrayerName];
 
@@ -83,6 +84,7 @@ export default function PrayerNotifications({notify, prayerLocation, onPrayerLoc
 
   return (
     <div className="notif-prayer-panel">
+      <NativeAdhanPanel prayerLocation={prayerLocation} onNotify={notify} />
       {onPrayerLocation && <PrayerLocationPicker location={sanitizePrayerLocation(prayerLocation)} onChange={onPrayerLocation}/>}
       <p className="muted small">
         يمكنك هنا ضبط كل صلاة بشكل مستقل.

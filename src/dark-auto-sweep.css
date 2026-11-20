@@ -177,6 +177,17 @@
 [data-theme="dark"] #root .app .prayer-city-selected{background:#213A32;border:1px solid #527C6A;color:#EDEDED}
 [data-theme="dark"] #root .app .prayer-city-selected select{background:#29483B;color:#EDEDED;border-color:#527C6A}
 [data-theme="dark"] .notif-error{background:var(--dark-surface)}
+
+/* «تذكير: لديك مهام مجدولة لليوم» في مخطط اليوم: بطاقة فاتحة بلا override
+   داكن، فكان النص الفاتح يُرسم فوق أخضر فاتح (تباين 1.07–1.29). */
+[data-theme="dark"] .weekly-due{
+  background:color-mix(in srgb,#3B8061 16%,var(--dark-surface-raised));
+  border-color:color-mix(in srgb,#3B8061 40%,var(--dark-line-card));
+  border-inline-start-color:var(--dark-ink);
+  color:var(--dark-body);
+}
+[data-theme="dark"] .weekly-due h2,
+[data-theme="dark"] .weekly-due strong{color:var(--dark-ink)}
 [data-theme="dark"] .review-filter{background:var(--dark-surface-raised)}
 [data-theme="dark"] .platform-price-fields input{background:var(--dark-surface-raised)}
 [data-theme="dark"] .platform-price-fields select{background:var(--dark-surface-raised)}

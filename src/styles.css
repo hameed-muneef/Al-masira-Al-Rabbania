@@ -12,3 +12,6 @@
 .home-next-body small{color:var(--color-muted);font-size:13px}
 .home-next-body ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .home-next-body li{display:grid;gap:1px}
+.adhan-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.adhan-row select{flex:1;min-width:140px;height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--color-border,#d9e2dc);background:var(--color-surface,#fff);color:inherit;font:inherit;font-size:15px}.adhan-row button{height:44px;padding:0 16px;border-radius:12px;font-weight:600;cursor:pointer}.adhan-player h3{display:flex;align-items:center;gap:8px}
+
+.adhan-external{margin-top:8px}.adhan-ext-row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.adhan-file-label{display:block;padding:10px;border:1px dashed var(--color-border,#d9e2dc);border-radius:12px;cursor:pointer;text-align:center}.adhan-file-label input{display:block;margin-top:6px;width:100%}

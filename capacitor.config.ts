@@ -13,6 +13,13 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
     backgroundColor: '#173F35',
   },
+  plugins: {
+    LocalNotifications: {
+      smallIcon: 'ic_stat_icon_config_sample',
+      iconColor: '#D4B678',
+      sound: 'adhan.mp3',
+    },
+  },
   // الإضافات الرسمية تُقرأ من package.json تلقائيًا عند إضافتها لاحقًا (push، إلخ)
 };
 

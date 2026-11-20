@@ -2,9 +2,8 @@ import type {State} from './app-state';
 import {loadFromRaw} from './app-state';
 import {authClient} from './auth';
 
-export function toCloudPayload(state:State):Omit<State,'curriculum'>&{curriculumProgress:Record<string,number>}{
-  const {curriculum,...personalState}=state;
-  return {...personalState,curriculumProgress:state.curriculumProgress??curriculum?.progress??{}};
+export function toCloudPayload(state:State):State{
+  return state;
 }
 
 export async function fetchCloudState(userId:string):Promise<State|null>{

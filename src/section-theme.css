@@ -27,8 +27,14 @@
 
 /* التنقل: الحالة النشطة بلون القسم */
 #root .app .sidebar nav button[data-section].active{background:var(--section-soft);color:var(--section-strong);box-shadow:inset -3px 0 var(--section-accent)}
+/* داكن: النص ظاهر على سطح اللوح الداكن (القيمة الداكنة للقسم غير ظاهرة علىه). */
+[data-theme="dark"] #root .app .sidebar nav button[data-section].active{background:var(--dark-surface)!important;color:var(--text-primary)!important;}
+[data-theme="dark"] #root .app .sidebar nav button[data-section].active svg{color:var(--text-primary);}
+[data-theme="dark"] #root .app .sidebar nav button[data-section].active svg{color:var(--text-primary);}
 #root .app .sidebar nav button[data-section]:not(.active):hover svg{color:var(--section-accent)}
 #root .app .mobile-nav button[data-section].active{color:var(--section-strong)}
+/* 다크: 모바일 내비 활성 버튼 텍스트가 유휴색(--section-strong)으로 가시성 저하됨 — 어두운 표면에 명확한 텍스트. */
+[data-theme="dark"] #root .app .mobile-nav button[data-section].active{background:var(--dark-surface);color:var(--text-primary);}
 #root .app .mobile-nav button[data-section].active svg{color:var(--section-accent)}
 
 @media (prefers-reduced-motion:reduce){

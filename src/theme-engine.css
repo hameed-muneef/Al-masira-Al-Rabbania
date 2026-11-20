@@ -311,7 +311,7 @@ html[data-theme="dark"] #root .app .sidebar .side-bottom button:hover {
 
 html[data-theme="dark"] #root .app .sidebar nav button.active {
   background: rgba(241, 239, 229, .14) !important;
-  color: var(--text-primary) !important;
+  color: #244638 !important;
   box-shadow: inset -3px 0 #cdb59a;
 }
 

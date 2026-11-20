@@ -807,7 +807,7 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
           <div className="mf-reading-grid">
             <div className="mf-group">
               <span className="mf-group-label">تمرير تلقائي</span>
-              <button type="button" className={autoScroll ? 'mf-btn primary' : 'mf-btn soft'} aria-pressed={autoScroll} onClick={() => setAutoScroll(value => !value)}>{autoScroll ? <Pause size={16}/> : <Play size={16}/>}{autoScroll ? 'إيقاف التمرير' : 'تمرير تلقائي'}</button>
+              <button type="button" className={autoScroll ? 'mf-btn soft selected' : 'mf-btn soft'} aria-pressed={autoScroll} onClick={() => setAutoScroll(value => !value)}>{autoScroll ? <Pause size={16}/> : <Play size={16}/>}{autoScroll ? 'إيقاف التمرير' : 'تمرير تلقائي'}</button>
             </div>
             <div className="mf-group">
               <span className="mf-group-label">سرعة التمرير</span>
@@ -863,7 +863,7 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
       <button type="button" className={`mf-btn sm ${playState === 'playing' ? 'primary' : 'primary'}`} onClick={togglePlay} aria-pressed={playState === 'playing'} aria-label="تشغيل أو إيقاف القراءة">
         {playState === 'playing' ? <Pause size={17}/> : <Play size={17}/>} {playState === 'playing' ? 'إيقاف مؤقت' : 'تشغيل'}
       </button>
-      <button type="button" className={autoScroll ? 'mf-btn sm primary' : 'mf-btn sm soft'} onClick={() => setAutoScroll(value => !value)} aria-pressed={autoScroll} aria-label="تمرير تلقائي">
+      <button type="button" className={autoScroll ? 'mf-btn sm soft selected' : 'mf-btn sm soft'} onClick={() => setAutoScroll(value => !value)} aria-pressed={autoScroll} aria-label="تمرير تلقائي">
         {autoScroll ? <Pause size={15}/> : <Play size={15}/>} {autoScroll ? 'إيقاف التمرير' : 'تمرير تلقائي'}
       </button>
       <button type="button" className={`mf-btn sm ${searchOpen ? 'primary' : 'soft'}`} onClick={() => setSearchOpen(value => !value)} aria-pressed={searchOpen} aria-label="بحث">
@@ -879,7 +879,7 @@ export default function MushafPages({asset, state, onState, notify}: Props) {
       <button type="button" className={`mf-btn sm ${playState === 'playing' ? 'primary' : 'primary'}`} onClick={togglePlay} aria-pressed={playState === 'playing'} aria-label="تشغيل أو إيقاف القراءة">
         {playState === 'playing' ? <Pause size={17}/> : <Play size={17}/>} {playState === 'playing' ? 'إيقاف مؤقت' : 'تشغيل'}
       </button>
-      <button type="button" className={autoScroll ? 'mf-btn sm primary' : 'mf-btn sm soft'} onClick={() => setAutoScroll(value => !value)} aria-pressed={autoScroll} aria-label="تمرير تلقائي">
+      <button type="button" className={autoScroll ? 'mf-btn sm soft selected' : 'mf-btn sm soft'} onClick={() => setAutoScroll(value => !value)} aria-pressed={autoScroll} aria-label="تمرير تلقائي">
         {autoScroll ? <Pause size={15}/> : <Play size={15}/>} {autoScroll ? 'إيقاف التمرير' : 'تمرير تلقائي'}
       </button>
       <button type="button" className={`mf-btn sm ${searchOpen ? 'primary' : 'soft'}`} onClick={() => setSearchOpen(value => !value)} aria-pressed={searchOpen} aria-label="بحث">

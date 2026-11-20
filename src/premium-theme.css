@@ -426,7 +426,8 @@ body:has(.learning-content) body::before{opacity:.18}
 [data-theme="dark"] .quran-journey-head p{color:var(--dark-muted)}
 [data-theme="dark"] .quran-surah-filter{background:var(--dark-surface-raised);border-color:var(--dark-line-card);color:var(--dark-muted)}
 [data-theme="dark"] .quran-hadith-number{background:var(--color-selected);color:var(--dark-body)}
-[data-theme="dark"] #root .app .arch{box-shadow:inset 0 0 0 9px var(--dark-surface-raised),inset 0 0 0 10px color-mix(in srgb,var(--color-gold) 30%,transparent)}
+/* dark: the arch is a dark circle with readable light text */
+[data-theme="dark"] #root .app .arch{background:var(--dark-surface);color:var(--text-primary);box-shadow:inset 0 0 0 9px var(--dark-surface-raised),inset 0 0 0 10px color-mix(in srgb,var(--color-gold) 30%,transparent)}
 
 /* ---------- 9) الحركة: الالتزام prefs ---------- */
 @media (prefers-reduced-motion:reduce){
@@ -754,6 +755,10 @@ body::after{
   box-shadow:0 22px 48px rgba(12,20,16,.35),inset 0 0 0 1px rgba(255,255,255,.04);
 }
 #root .app .hero p{color:var(--color-surface);text-shadow:0 1px 6px rgba(0,0,0,.4)}
+/* dark: hero copy is readable on the dark artwork (light copy) */
+[data-theme="dark"] #root .app .hero p{color:#e1ebe1;}
+[data-theme="dark"] #root .app .hero-btn{color:#e1ebe1;}
+[data-theme="dark"] #root .app .hero-btn:hover{color:#d4e1d8;}
 #root .app .hero-btn{background:linear-gradient(160deg,var(--art-gold),#A08448);color:#0F2A21;box-shadow:0 8px 20px rgba(197,164,95,.35)}
 /* sidebar: deep navy + gold accents */
 #root .app .sidebar{

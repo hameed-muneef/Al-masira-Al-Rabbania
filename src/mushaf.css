@@ -49,6 +49,60 @@
   --text: #e9f1ee;
   --muted: #a8bdb6;
 }
+/* تباين نصوص لوحة التفسير/الترجمة (mf-popover) وورقة الآيات (mf-sheet-mobile)
+   وورقة العلامات (mf-sheet) في الوضع الداكن: اللوحات ما زالت فاتحة، لكن النصوص
+   والعناصر الداخلية يجب أن تحظى بألوان سطح فاتح (القيم الداكنة أعلاه غير
+   مرئية عليها). */
+[data-theme="dark"] .mf-popover,
+[data-theme="dark"] .mf-sheet-mobile,
+[data-theme="dark"] .mf-sheet {
+  color-scheme: light;
+  --text: #1a2a24;
+  --text-primary: #1a2a24;
+  --text-secondary: #304b50;
+  --muted: #5b6b66;
+  --dark-ink: #1a2a24;
+  --dark-body: #1a2a24;
+  --dark-muted: #5b6b66;
+  --surface: #fbf8f1;
+  --surface-2: #f3ecdc;
+  /* الأسطح الداكنة تُعاد تعريفها داخل البطاقة الفاتحة، وإلا صارت عناصر
+     select/input/textarea داكنة والنص داكنًا فوقها (أسماء التفاسير والترجمات). */
+  --dark-surface: #fbf8f1;
+  --dark-surface-raised: #f3ecdc;
+  --dark-surface-sunken: #fffdf8;
+  --dark-line-card: #d4ddd3;
+  --dark-line-soft: #e2e8dd;
+  --primary: #163d34;
+  --primary-dark: #0f2822;
+  --primary-soft: rgba(22, 61, 52, .08);
+  --border: rgba(22, 61, 52, .16);
+  --color-muted: #5b6b66;
+}
+/* عناصر الإدخال داخل اللوحات: قواعد premium-theme الداكنة (#root .app select)
+   أعلى تخصيصًا، فتفرض خلفية داكنة؛ نُعيد الفاتح بـ !important حتى تُقرأ
+   أسماء التفاسير والترجمات (native list) بوضوح. */
+[data-theme="dark"] .mf-popover select,
+[data-theme="dark"] .mf-sheet-mobile select,
+[data-theme="dark"] .mf-sheet select,
+[data-theme="dark"] .mf-popover input,
+[data-theme="dark"] .mf-sheet-mobile input,
+[data-theme="dark"] .mf-sheet input,
+[data-theme="dark"] .mf-popover textarea,
+[data-theme="dark"] .mf-sheet-mobile textarea,
+[data-theme="dark"] .mf-sheet textarea {
+  color-scheme: light;
+  background: #fffdf8 !important;
+  color: #1a2a24 !important;
+  border-color: #d4ddd3 !important;
+}
+[data-theme="dark"] .mf-popover option,
+[data-theme="dark"] .mf-sheet-mobile option,
+[data-theme="dark"] .mf-sheet option {
+  color-scheme: light;
+  background: #fffdf8;
+  color: #1a2a24;
+}
 @media (prefers-color-scheme:dark){
   :root{--surface:#16241f;--surface-2:#101b18;--border:rgba(255,255,255,.12);--text:#e9f1ee;--muted:#a8bdb6;--primary:#7fd2ae;--primary-dark:#5fb892;--primary-soft:rgba(127,210,174,.12)}
 }
@@ -140,11 +194,14 @@
 .mf-sheet-backdrop.mf-scrim-light{background:rgba(0,0,0,.15)}
 .mf-sheet-mobile{position:fixed;bottom:0;left:8px;right:8px;max-height:70dvh;overflow:auto;background:#fffdf8;color:#1a2a24;border-radius:18px 18px 0 0;padding:12px 16px 16px;display:grid;gap:10px;box-shadow:0 -8px 30px rgba(0,0,0,.18);padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));animation:mf-slideup 150ms ease-out;box-sizing:border-box;overflow-x:hidden}
 .mf-drag-handle{width:40px;height:4px;border-radius:999px;background:var(--border);margin:0 auto 8px}
+/* ورقة العلامات/الختمة: خلفية فاتحة دائمًا (كانت شفافة في الوضع الداكن عندما
+   يكون نظام التشغيل فاتحًا، فتظهر الأسماء داكنة على الصفحة الداكنة). */
+.mf-sheet{background:#fffdf8;color:#1a2a24;border-radius:16px;border:1px solid rgba(22,61,52,.16)}
 .mf-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:background .15s}
 .mf-icon-btn:hover{background:var(--primary-soft)}
 .mf-icon-btn:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
-.mf-btn.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
-.mf-btn.selected:hover{background:var(--primary-dark)}
+.mf-btn.selected{background:var(--primary-soft);color:var(--primary);border-color:var(--primary)}
+.mf-btn.selected:hover{background:var(--primary-soft);filter:brightness(.95)}
 .mf-sheet-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .mf-sheet-actions .mf-btn{min-height:44px;font-size:13px;padding:0 8px;flex:1 1 90px;max-width:100%}
 .mf-sheet-content{display:grid;gap:6px;min-width:0;max-width:100%}

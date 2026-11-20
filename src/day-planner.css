@@ -33,7 +33,7 @@
 .tracking-message .day-message-content h3{font-size:18px}
 .day-view-switch{display:flex;gap:6px;background:var(--color-selected);border:1px solid var(--color-border);border-radius:12px;padding:5px;margin-bottom:24px;width:fit-content}
 .day-view-switch button{border:0;background:transparent;color:var(--color-muted);padding:11px 24px;border-radius:8px;font-weight:600}
-.day-view-switch button.selected{background:var(--color-primary);color:white}
+.day-view-switch button.selected{background:#e9f0e9;color:#244638;border-color:#b9cbbd}
 .day-start-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;background:var(--color-surface);border:1px solid var(--color-border);border-radius:13px;padding:18px 22px;margin-bottom:22px}
 .day-start-bar p{font-size:13px;line-height:1.9;color:var(--color-muted);margin:6px 0 0;max-width:580px}
 .day-start-bar .primary{font-size:13px;flex-shrink:0}
@@ -53,7 +53,7 @@
 .prayer-log-options{display:flex;gap:6px;flex-wrap:wrap}
 .prayer-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--color-border);background:var(--color-surface);font-size:12px;color:var(--color-muted);cursor:pointer;transition:background .15s,border-color .15s}
 .prayer-chip:hover{background:var(--color-selected)}
-.prayer-chip.selected{background:var(--color-primary);border-color:var(--color-primary);color:white}
+.prayer-chip.selected{background:#e9f0e9;border-color:#b9cbbd;color:#244638}
 @media(max-width:750px){.prayer-log{padding:15px}.prayer-log-row>span{flex-basis:100%}}
 .tracking-progress{padding:20px;background:white;border:1px solid var(--color-border);border-radius:12px;margin:20px 0}
 .tracking-progress>div{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}

@@ -36,6 +36,11 @@ playwright-report/
 tests/e2e/*.spec.ts-snapshots/
 *.png
 *.mp3
+# Keep the Adhan sound asset for Android notification channel (res/raw)
+!android/app/src/main/res/raw/adhan.mp3
+# Keep the source Adhan audio directory at project root
+!Azan/
+!Azan/*.mp3
 _defs.sql
 *-redesign.html
 
